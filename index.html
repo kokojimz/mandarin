@@ -50,6 +50,18 @@
     background:var(--card-bg); color:var(--text); border:1px solid var(--border);
     border-radius:8px; padding:6px 12px; font-size:1rem; cursor:pointer; font-family:inherit;
   }
+  .tools button.active{ background:var(--accent); color:#fff; border-color:var(--accent); }
+  .quiz-card{ width:min(90vw,420px); }
+  .qz-hanzi{ font-size:2.4rem; font-weight:700; margin-bottom:4px; }
+  .qz-sub{ font-size:.8rem; color:var(--sub); margin-bottom:18px; }
+  .qz-options{ display:flex; flex-direction:column; gap:10px; margin-bottom:6px; }
+  .qz-opt{
+    padding:12px 14px; border-radius:12px; border:1px solid var(--border); background:transparent;
+    color:var(--text); font-size:1rem; font-family:inherit; cursor:pointer; text-align:center;
+  }
+  .qz-options.done .qz-opt{ cursor:default; }
+  .qz-opt.correct{ background:#1e9e5a; color:#fff; border-color:#1e9e5a; }
+  .qz-opt.wrong{ background:#d64545; color:#fff; border-color:#d64545; }
   .grid{
     display:grid; grid-template-columns:repeat(auto-fill,minmax(130px,1fr));
     gap:12px; max-width:960px; margin:0 auto;
@@ -177,7 +189,12 @@
   @media (max-width: 600px){
     body{ padding:20px 10px 60px; }
     .pager button{ min-width:30px; height:30px; padding:0 6px; font-size:.8rem; }
-    .controls button, .more button{ width:36px; height:36px; font-size:.699rem; }
+    /* level circles: always one line, shrink with the screen width */
+    .controls{ flex-wrap:nowrap; gap:clamp(4px,1.8vw,9px); }
+    .controls button, .more button{ flex:1 1 0; min-width:0; max-width:50px; width:auto; height:auto; aspect-ratio:1/1; font-size:clamp(.5rem,2.8vw,.75rem); overflow:hidden; }
+    .tools{ flex-wrap:nowrap; gap:6px; }
+    .tools input{ flex:1 1 0; padding:8px 12px; }
+    .tools button{ flex:0 0 auto; padding:6px 8px; }
     .grid{ grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; }
     .card{ height:138px; border-radius:12px; }
     .face{ padding:6px 5px; }
@@ -209,10 +226,11 @@
 <div class="controls" id="levelBar"></div>
 
 <div class="tools">
-  <input id="q" type="search" placeholder="Search: 漢字 / pinyin / meaning…" autocomplete="off">
+  <input id="q" type="search" placeholder="Search…" autocomplete="off">
   <button id="sortBtn" title="Sort (restore original order)">↕️</button>
   <button id="shuffleBtn" title="Shuffle">🔀</button>
   <button id="revealBtn" title="Reveal / hide all">🔄</button>
+  <button id="quizBtn" title="Quiz mode">🔐</button>
 </div>
 
 <p class="sub" id="countSub"></p>
@@ -237,6 +255,13 @@
       <button type="button" id="cfNo" class="cf-btn cf-no">No</button>
       <button type="button" id="cfYes" class="cf-btn cf-yes">Yes</button>
     </div>
+  </div>
+</div>
+<div id="quizOverlay" class="confirm-overlay" aria-hidden="true">
+  <div class="confirm-card quiz-card" id="quizBox">
+    <div class="qz-hanzi" id="qzHanzi"></div>
+    <div class="qz-sub" id="qzSub">Which pinyin matches this word?</div>
+    <div class="qz-options" id="qzOptions"></div>
   </div>
 </div>
 
@@ -361,6 +386,104 @@ cfYes.addEventListener('click', ()=> closeConfirm(true));
 cfNo.addEventListener('click', ()=> closeConfirm(false));
 cfOverlay.addEventListener('click', ev=>{ if(ev.target === cfOverlay) closeConfirm(false); });
 
+// ---------- quiz mode ----------
+let quizMode = false;
+const quizResults = new Map();   // card key -> true (right) / false (wrong); first answer per card only
+const quizBtn = document.getElementById('quizBtn');
+const quizOverlay = document.getElementById('quizOverlay');
+const qzHanzi = document.getElementById('qzHanzi');
+const qzSub = document.getElementById('qzSub');
+const qzOptions = document.getElementById('qzOptions');
+quizBtn.addEventListener('click', function(){
+  quizMode = !quizMode;
+  quizResults.clear();                   // score starts fresh each time quiz mode is switched
+  quizBtn.textContent = quizMode ? '🔒' : '🔐';
+  updateCountSub();
+});
+let pendingQuizCard = null, pendingQuizKey = null;
+let quizAnswered = false, quizAnsweredAt = 0, quizNext = null;
+function openQuiz(r, card){
+  const w = r[0], correct = r[1];
+  qzHanzi.style.display = '';
+  qzSub.style.display = '';
+  qzHanzi.textContent = w;
+  quizAnswered = false; quizNext = null;
+  qzSub.textContent = 'Which pinyin matches this word?';
+  const targetLen = [...fullWord(w)].length;
+  let wrongPool = D.filter(x => x[1] !== correct && [...fullWord(x[0])].length === targetLen);
+  if(wrongPool.length < 2){
+    wrongPool = D.filter(x => x[1] !== correct);   // fallback if not enough same-length words
+  }
+  const usedIdx = new Set();
+  const wrongs = [];
+  while(wrongs.length < 2 && wrongs.length < wrongPool.length){
+    const idx = Math.floor(Math.random() * wrongPool.length);
+    if(usedIdx.has(idx)) continue;
+    usedIdx.add(idx);
+    wrongs.push(wrongPool[idx][1]);
+  }
+  const options = [correct, ...wrongs];
+  for(let i = options.length - 1; i > 0; i--){
+    const j = Math.floor(Math.random() * (i + 1));
+    const tmp = options[i]; options[i] = options[j]; options[j] = tmp;
+  }
+  qzOptions.innerHTML = '';
+  qzOptions.classList.remove('done');
+  options.forEach(opt => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'qz-opt';
+    btn.textContent = opt;
+    btn.addEventListener('click', ev => {
+      if(quizAnswered) return;            // already answered: let the tap bubble up to the overlay
+      ev.stopPropagation();
+      quizAnswered = true; quizAnsweredAt = Date.now();
+      if(!quizResults.has(keyOf(r))) quizResults.set(keyOf(r), btn.textContent === correct);   // only the first answer per card counts
+      updateCountSub();
+      quizNext = () => showQuizBack(r, card);
+      Array.from(qzOptions.children).forEach(c => {
+        if(c.textContent === correct) c.classList.add('correct');
+        else if(c === btn) c.classList.add('wrong');
+      });
+      qzOptions.classList.add('done');
+      qzSub.textContent = 'Tap anywhere to see the card';
+    });
+    qzOptions.appendChild(btn);
+  });
+  quizOverlay.classList.add('on');
+  quizOverlay.setAttribute('aria-hidden', 'false');
+}
+function showQuizBack(r, card){
+  // Reuse the normal preview card (same back side as long-press) instead of a second, duplicate card.
+  closeQuiz();
+  pendingQuizCard = card;
+  pendingQuizKey = keyOf(r);
+  showPeek(r, true);
+  suppressUntil = Date.now() + 150;
+  peekHeld = false;                 // already "released": tap anywhere to dismiss
+  peekEl.classList.add('stay');
+}
+function closeQuiz(){
+  quizOverlay.classList.remove('on');
+  quizOverlay.setAttribute('aria-hidden', 'true');
+}
+function finishQuiz(){              // called when the preview closes: flip the card in the grid
+  if(pendingQuizCard){
+    pendingQuizCard.classList.add('flipped');
+    flippedKeys.add(pendingQuizKey);
+    pendingQuizCard = null;
+    pendingQuizKey = null;
+  }
+}
+quizOverlay.addEventListener('click', ev => {
+  if(quizAnswered){
+    if(Date.now() - quizAnsweredAt < 250) return;   // ignore an accidental double-tap
+    quizAnswered = false;
+    const go = quizNext; quizNext = null;
+    if(go) go();
+  } else if(ev.target === quizOverlay) closeQuiz();
+});
+
 function peekHTML(r, flipped){
   const [w,py,m,a,l] = r;
   const sc = sizeClass(w);
@@ -380,6 +503,7 @@ function showPeek(r, flipped){
 function closePeek(){
   peekOn = false; peekHeld = false;
   peekEl.classList.remove('on', 'stay');
+  finishQuiz();
 }
 function endPress(){
   clearTimeout(pressTimer); pressTimer = null;
@@ -612,6 +736,7 @@ function makeCard(r){
     </div>`;
   card.addEventListener('click', ()=>{
     if(swallowTap || Date.now() < suppressUntil) return;
+    if(quizMode && !card.classList.contains('flipped')){ openQuiz(r, card); return; }   // already open: no quiz, just toggle
     const isFlipped = card.classList.toggle('flipped');
     if(isFlipped) flippedKeys.add(card.dataset.key); else flippedKeys.delete(card.dataset.key);
   });
@@ -633,7 +758,14 @@ function makeCard(r){
     ev.stopPropagation();
     // right after closing a peek, this tap should only dismiss it — never toggle favorite
     if(swallowTap || Date.now() < suppressUntil) return;
-    toggleFav(card.dataset.key);
+    const k = card.dataset.key;
+    if(favs.has(k)){
+      askConfirm('Remove favorite?', 'The card "' + k + '" will no longer be marked as a favorite.')
+        .then(ok => { if(ok) toggleFav(k); });
+    }else{
+      askConfirm('Add favorite?', 'The card "' + k + '" will be marked as a favorite.')
+        .then(ok => { if(ok) toggleFav(k); });
+    }
   });
   const bb = card.querySelector('.bm-toggle');
   bb.addEventListener('pointerdown', ev=> ev.stopPropagation());
@@ -644,14 +776,15 @@ function makeCard(r){
     const k = card.dataset.key;
     if(bookmark === k){
       const info = bmInfo();
-      askConfirm('Hapus bookmark?', 'Kartu "' + (info ? info.word : k) + '" akan berhenti ditandai sebagai bookmark kamu.')
+      askConfirm('Remove bookmark?', 'The card "' + (info ? info.word : k) + '" will no longer be marked as your bookmark.')
         .then(ok => { if(ok) setBookmark(k); });
     }else if(bookmark){
       const info = bmInfo();
-      askConfirm('Ganti bookmark?', (info ? 'Bookmark kamu di "' + info.word + '"' : 'Bookmark kamu saat ini') + ' akan diganti dengan kartu ini. Lanjutkan?')
+      askConfirm('Change bookmark?', (info ? 'Your current bookmark on "' + info.word + '"' : 'Your current bookmark') + ' will be replaced with this card. Continue?')
         .then(ok => { if(ok) setBookmark(k); });
     }else{
-      setBookmark(k);
+      askConfirm('Set bookmark?', 'This card will be marked as your bookmark so you can jump back to it later.')
+        .then(ok => { if(ok) setBookmark(k); });
     }
   });
   const pb = card.querySelector('.play');
@@ -664,10 +797,22 @@ function makeCard(r){
       else speak(fullWord(w), pb);
     });
   }
-  if(revealAll || flippedKeys.has(card.dataset.key) || (pendingFlips && pendingFlips.has(card.dataset.key))) card.classList.add('flipped');
+  if(flippedKeys.has(card.dataset.key) || (pendingFlips && pendingFlips.has(card.dataset.key))) card.classList.add('flipped');
   return card;
 }
 
+function updateCountSub(){
+  const el = document.getElementById('countSub');
+  if(list.length === 0){ el.textContent = '0 cards · kebanyakan mikir keburu diangkat saber'; return; }
+  const base = `${list.length} ${list.length === 1 ? 'card' : 'cards'}`;
+  if(quizMode){
+    let quizRight = 0, quizWrong = 0;
+    quizResults.forEach(ok => { if(ok) quizRight++; else quizWrong++; });
+    el.innerHTML = `${base} · <b style="color:#1e9e5a">O</b> <span style="color:var(--text)">${quizRight}</span> · <b style="color:#d64545">X</b> <span style="color:var(--text)">${quizWrong}</span>`;
+  } else {
+    el.textContent = `${base} · quiz mode off`;
+  }
+}
 function refresh(keepReveal){
   stopSpeech();
   const q = query.trim().toLowerCase();
@@ -679,10 +824,7 @@ function refresh(keepReveal){
   });
   page = 1;
   if(!keepReveal) revealAll = false;
-  document.getElementById('countSub').textContent =
-    list.length === 0
-      ? '0 cards, kebanyakan mikir keburu diangkat saber'
-      : `${list.length} ${list.length === 1 ? 'card' : 'cards'}`;
+  updateCountSub();
   renderPage();
 }
 function pageList(cur, total){
