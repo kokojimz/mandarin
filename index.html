@@ -27,6 +27,9 @@
     font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei","Segoe UI",system-ui,sans-serif;
     padding:24px 14px 60px;
   }
+  button{ -webkit-tap-highlight-color:transparent; touch-action:manipulation; user-select:none; -webkit-user-select:none; }
+  button:focus:not(:focus-visible){ outline:none; }
+  button:active{ filter:none; }
   h1{ text-align:center; font-size:1.35rem; margin:0 0 4px; }
   p.sub{ text-align:center; color:var(--sub); margin:0 0 14px; font-size:.85rem; }
   .legend{ display:flex; justify-content:center; gap:14px; flex-wrap:wrap; margin-bottom:14px; font-size:.75rem; color:var(--sub); }
@@ -227,10 +230,10 @@
 
 <div class="tools">
   <input id="q" type="search" placeholder="Search…" autocomplete="off">
-  <button id="sortBtn" title="Sort (restore original order)">↕️</button>
+  <button id="sortBtn" title="Reset order" aria-label="Reset order">↩️</button>
   <button id="shuffleBtn" title="Shuffle">🔀</button>
-  <button id="revealBtn" title="Reveal / hide all">🔄</button>
-  <button id="quizBtn" title="Quiz mode">🔐</button>
+  <button id="revealBtn" title="Reveal / hide all" aria-label="Reveal / hide all">🔄</button>
+  <button id="quizBtn" title="Start quiz" aria-label="Start quiz">📖</button>
 </div>
 
 <p class="sub" id="countSub"></p>
@@ -397,7 +400,8 @@ const qzOptions = document.getElementById('qzOptions');
 quizBtn.addEventListener('click', function(){
   quizMode = !quizMode;
   quizResults.clear();                   // score starts fresh each time quiz mode is switched
-  quizBtn.textContent = quizMode ? '🔒' : '🔐';
+  quizBtn.textContent = quizMode ? '🧠' : '📖';
+  quizBtn.title = quizBtn.ariaLabel = quizMode ? 'Back to study mode' : 'Start quiz';
   updateCountSub();
 });
 let pendingQuizCard = null, pendingQuizKey = null;
@@ -928,6 +932,7 @@ document.getElementById('revealBtn').addEventListener('click', function(){
     c.classList.toggle('flipped', flippedKeys.has(c.dataset.key));
   });
 });
+
 // Clearing the search puts the list back the way it was before typing:
 // reveal-all, which cards were flipped, how many cards were loaded, and the scroll position.
 function captureState(){
