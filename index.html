@@ -31,8 +31,8 @@
   button:focus:not(:focus-visible){ outline:none; }
   button:active{ filter:none; }
   h1{ text-align:center; font-size:1.35rem; margin:0 0 4px; }
-  p.sub{ text-align:center; color:var(--sub); margin:0 0 14px; font-size:.85rem; }
-  .legend{ display:flex; justify-content:center; gap:14px; flex-wrap:wrap; margin-bottom:14px; font-size:.75rem; color:var(--sub); }
+  p.sub{ text-align:center; color:var(--sub); margin:16px 0 0; font-size:.72rem; }
+  .legend{ display:flex; justify-content:center; gap:14px; flex-wrap:wrap; margin:16px 0 0; font-size:.72rem; color:var(--sub); }
   .legend span{ display:flex; align-items:center; gap:4px; }
   .dot{ width:10px; height:10px; border-radius:50%; display:inline-block; }
   .controls{ display:flex; justify-content:center; gap:8px; margin:10px 0; flex-wrap:wrap; }
@@ -44,7 +44,7 @@
   }
   .controls button.active{ background:var(--accent); color:#fff; border-color:var(--accent); }
   .controls button small{ opacity:.75; margin-left:3px; font-size:.7rem; }
-  .tools{ display:flex; justify-content:center; gap:8px; flex-wrap:wrap; margin:14px auto 14px; max-width:640px; }
+  .tools{ display:flex; justify-content:center; gap:8px; flex-wrap:wrap; margin:14px auto 0; max-width:640px; }
   .tools input{
     flex:1 1 200px; min-width:0; padding:8px 16px; border-radius:999px; border:1px solid var(--border);
     background:var(--card-bg); color:var(--text); font-size:16px; font-family:inherit;
@@ -63,11 +63,12 @@
     color:var(--text); font-size:1rem; font-family:inherit; cursor:pointer; text-align:center;
   }
   .qz-options.done .qz-opt{ cursor:default; }
+  .qz-opt .qz-hz{ margin-left:10px; font-weight:600; opacity:.85; }
   .qz-opt.correct{ background:#1e9e5a; color:#fff; border-color:#1e9e5a; }
   .qz-opt.wrong{ background:#d64545; color:#fff; border-color:#d64545; }
   .grid{
     display:grid; grid-template-columns:repeat(auto-fill,minmax(130px,1fr));
-    gap:12px; max-width:960px; margin:0 auto;
+    gap:12px; max-width:960px; margin:16px auto 0;
     align-content:start;
   }
   .card{
@@ -170,13 +171,13 @@
   }
   .bm-toggle svg{ display:block; }
   .bm-toggle svg path{ fill:none; stroke:currentColor; stroke-width:1.5; stroke-linejoin:round; }
-  .card.isbm{ border-color:var(--accent); box-shadow:inset 0 0 0 1px var(--accent); }
   .card.isbm .bm-toggle{ color:var(--accent); }
+  .card.quiz-pending{ border-color:var(--accent); box-shadow:inset 0 0 0 1px var(--accent); }
   .card.isbm .bm-toggle svg path{ fill:var(--accent); }
   .card.flash{ animation:bmflash 1.4s ease; }
   @keyframes bmflash{ 0%{transform:scale(1)} 20%{transform:scale(1.07)} 40%{transform:scale(1)} 60%{transform:scale(1.05)} 100%{transform:scale(1)} }
   .resume{
-    display:flex; align-items:center; gap:12px; max-width:960px; margin:0 auto 12px;
+    display:flex; align-items:center; gap:12px; max-width:960px; margin:16px auto 0;
     padding:10px 12px; background:var(--card-bg); border:1px solid var(--border);
     border-radius:12px; cursor:pointer; text-align:left;
   }
@@ -218,14 +219,6 @@
 </head>
 <body>
 
-<div class="legend">
-  <span><span class="dot" style="background:var(--t1)"></span>1st tone</span>
-  <span><span class="dot" style="background:var(--t2)"></span>2nd tone</span>
-  <span><span class="dot" style="background:var(--t3)"></span>3rd tone</span>
-  <span><span class="dot" style="background:var(--t4)"></span>4th tone</span>
-  <span><span class="dot" style="background:var(--t0)"></span>neutral</span>
-</div>
-
 <div class="controls" id="levelBar"></div>
 
 <div class="tools">
@@ -237,6 +230,14 @@
 </div>
 
 <p class="sub" id="countSub"></p>
+
+<div class="legend">
+  <span><span class="dot" style="background:var(--t1)"></span>1st tone</span>
+  <span><span class="dot" style="background:var(--t2)"></span>2nd tone</span>
+  <span><span class="dot" style="background:var(--t3)"></span>3rd tone</span>
+  <span><span class="dot" style="background:var(--t4)"></span>4th tone</span>
+  <span><span class="dot" style="background:var(--t0)"></span>neutral</span>
+</div>
 
 <div class="resume" id="resume" role="button" tabindex="0" hidden>
   <span class="rb"></span>
@@ -311,7 +312,9 @@ let searchSnap = null;     // state saved right before the first character is ty
 let favOn = true;      // starts on, matching the initial "All" state
 const favs = new Set();
 let bookmark = null, bmTouched = false;   // one manual bookmark (a card key)
+let levelsTouched = false;   // set once the user taps a level/All/favorites-filter button, so a load in flight can't undo it
 const flippedKeys = new Set();   // keys of cards currently flipped open; persists across sort/shuffle/jump/paging
+const openedOnce = new Set();    // keys of cards that have ever been opened — closing a card again doesn't forget this
 let order = D.map((_,i)=>i);
 const idx = D.map(r => plain(r[1]) + ' ' + r[2].toLowerCase() + ' ' + r[0] + ' ' + r[3]);
 
@@ -334,6 +337,7 @@ function buildBar(){
       if(active.has(code)){ active.delete(code); b.classList.remove('active'); }
       else { active.add(code); b.classList.add('active'); }
       syncAll(); refresh(true);
+      levelsTouched = true; scheduleSave();
     });
     bar.appendChild(b);
   });
@@ -347,6 +351,7 @@ function buildBar(){
     bar.querySelectorAll('button[data-l]').forEach(b=>b.classList.toggle('active', on));
     document.getElementById('favBtn').classList.toggle('active', on);
     syncAll(); refresh(true);
+    levelsTouched = true; scheduleSave();
   });
   bar.appendChild(all);
   const fav = document.createElement('button');
@@ -357,6 +362,7 @@ function buildBar(){
     fav.classList.toggle('active', favOn);
     syncAll();
     refresh(true);
+    levelsTouched = true; scheduleSave();
   });
   bar.insertBefore(fav, all);
 }
@@ -400,8 +406,13 @@ const qzOptions = document.getElementById('qzOptions');
 quizBtn.addEventListener('click', function(){
   quizMode = !quizMode;
   quizResults.clear();                   // score starts fresh each time quiz mode is switched
+  openedOnce.clear();                    // "already opened" also starts fresh each time quiz mode is switched
+  if(quizMode) flippedKeys.forEach(k => openedOnce.add(k));   // cards already open before quiz started: no dialog, just show as opened
   quizBtn.textContent = quizMode ? '🧠' : '📖';
   quizBtn.title = quizBtn.ariaLabel = quizMode ? 'Back to study mode' : 'Start quiz';
+  grid.querySelectorAll('.card').forEach(c=>{
+    c.classList.toggle('quiz-pending', quizMode && !openedOnce.has(c.dataset.key));
+  });
   updateCountSub();
 });
 let pendingQuizCard = null, pendingQuizKey = null;
@@ -414,9 +425,16 @@ function openQuiz(r, card){
   quizAnswered = false; quizNext = null;
   qzSub.textContent = 'Which pinyin matches this word?';
   const targetLen = [...fullWord(w)].length;
-  let wrongPool = D.filter(x => x[1] !== correct && [...fullWord(x[0])].length === targetLen);
+  const isRedup = s => { const c = [...fullWord(s)]; for(let i=0;i<c.length-1;i++) if(c[i]===c[i+1]) return true; return false; };
+  const wordIsRedup = isRedup(w);
+  // Reduplicated words (妈妈, 谢谢, ...) have a giveaway pinyin shape (repeated syllable / "·"),
+  // so when the correct word is reduplicated, pick wrong options that are reduplicated too.
+  let wrongPool = D.filter(x => x[1] !== correct && [...fullWord(x[0])].length === targetLen && (!wordIsRedup || isRedup(x[0])));
+  if(wrongPool.length < 2 && wordIsRedup){
+    wrongPool = D.filter(x => x[1] !== correct && isRedup(x[0]));   // relax length match but keep reduplication
+  }
   if(wrongPool.length < 2){
-    wrongPool = D.filter(x => x[1] !== correct);   // fallback if not enough same-length words
+    wrongPool = D.filter(x => x[1] !== correct);   // fallback if not enough matching words
   }
   const usedIdx = new Set();
   const wrongs = [];
@@ -424,9 +442,9 @@ function openQuiz(r, card){
     const idx = Math.floor(Math.random() * wrongPool.length);
     if(usedIdx.has(idx)) continue;
     usedIdx.add(idx);
-    wrongs.push(wrongPool[idx][1]);
+    wrongs.push(wrongPool[idx]);
   }
-  const options = [correct, ...wrongs];
+  const options = [{py:correct, hz:w, ok:true}, ...wrongs.map(x => ({py:x[1], hz:x[0], ok:false}))];
   for(let i = options.length - 1; i > 0; i--){
     const j = Math.floor(Math.random() * (i + 1));
     const tmp = options[i]; options[i] = options[j]; options[j] = tmp;
@@ -437,20 +455,32 @@ function openQuiz(r, card){
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.className = 'qz-opt';
-    btn.textContent = opt;
+    btn.textContent = opt.py;
+    btn.dataset.ok = opt.ok ? '1' : '';
     btn.addEventListener('click', ev => {
       if(quizAnswered) return;            // already answered: let the tap bubble up to the overlay
       ev.stopPropagation();
       quizAnswered = true; quizAnsweredAt = Date.now();
-      if(!quizResults.has(keyOf(r))) quizResults.set(keyOf(r), btn.textContent === correct);   // only the first answer per card counts
+      if(!quizResults.has(keyOf(r))) quizResults.set(keyOf(r), btn.dataset.ok === '1');   // only the first answer per card counts
       updateCountSub();
-      quizNext = () => showQuizBack(r, card);
+      quizNext = () => { closeQuiz(); pendingQuizCard = card; pendingQuizKey = keyOf(r); finishQuiz(); };   // no back-of-card preview: just flip it in the grid
       Array.from(qzOptions.children).forEach(c => {
-        if(c.textContent === correct) c.classList.add('correct');
-        else if(c === btn) c.classList.add('wrong');
+        if(c.dataset.ok === '1') c.classList.add('correct');
+        else{
+          if(c === btn) c.classList.add('wrong');
+          const i = Array.from(qzOptions.children).indexOf(c);
+          const hz = document.createElement('span');
+          hz.className = 'qz-hz';
+          const dash = document.createElement('span');
+          dash.style.fontWeight = 'normal';
+          dash.textContent = '- ';
+          hz.appendChild(dash);
+          hz.appendChild(document.createTextNode(options[i].hz));      // show which word each wrong pinyin belongs to, separated from it
+          c.appendChild(hz);
+        }
       });
       qzOptions.classList.add('done');
-      qzSub.textContent = 'Tap anywhere to see the card';
+      qzSub.textContent = 'Tap anywhere to continue';
     });
     qzOptions.appendChild(btn);
   });
@@ -474,7 +504,9 @@ function closeQuiz(){
 function finishQuiz(){              // called when the preview closes: flip the card in the grid
   if(pendingQuizCard){
     pendingQuizCard.classList.add('flipped');
+    pendingQuizCard.classList.remove('quiz-pending');
     flippedKeys.add(pendingQuizKey);
+    openedOnce.add(pendingQuizKey);
     pendingQuizCard = null;
     pendingQuizKey = null;
   }
@@ -539,6 +571,7 @@ document.addEventListener('touchmove', e=>{ if(peekOn && !peekBox.contains(e.tar
 const keyOf = r => fullWord(r[0]);
 const LS_KEY = 'tocfl-favs-v1';
 const LS_BM = 'tocfl-bm-v1';
+const LS_LV = 'tocfl-levels-v1';
 let backend = 'local', favDoc = null, ready = false, saving = false, again = false, saveTimer = null;
 const pending = new Map();
 
@@ -563,17 +596,22 @@ function scheduleSave(){
 async function writeFavs(){
   const keys = [...favs];
   const bm = bookmark || '';
+  const levels = [...active];
   if(backend === 'db' && favDoc){
-    try{ await favDoc.set({keys, bookmark: bm}); return; }
+    try{ await favDoc.set({keys, bookmark: bm, levels, favOn}); return; }
     catch(e){
       if(e && e.code === 'unavailable'){
         await new Promise(r=>setTimeout(r, 700 + Math.random()*500));
-        try{ await favDoc.set({keys, bookmark: bm}); return; }catch(e2){}
+        try{ await favDoc.set({keys, bookmark: bm, levels, favOn}); return; }catch(e2){}
       }
       console.warn('favorites: could not save to Claude', e);
     }
   }
-  try{ localStorage.setItem(LS_KEY, JSON.stringify(keys)); localStorage.setItem(LS_BM, bm); }catch(e){}
+  try{
+    localStorage.setItem(LS_KEY, JSON.stringify(keys));
+    localStorage.setItem(LS_BM, bm);
+    localStorage.setItem(LS_LV, JSON.stringify({levels, favOn}));
+  }catch(e){}
 }
 async function flushSave(){
   if(saving){ again = true; return; }
@@ -581,7 +619,18 @@ async function flushSave(){
   try{ do{ again = false; await writeFavs(); }while(again); }
   finally{ saving = false; }
 }
-function applyLoaded(keys, bm){
+function applyLoadedLevels(levels, favOnLoaded){
+  if(levelsTouched || !Array.isArray(levels)) return;   // null/undefined = nothing saved yet; [] = saved as "none selected"
+  active.clear();
+  levels.forEach(l => { if(LEVELS.some(x => x[0] === l)) active.add(l); });
+  favOn = !!favOnLoaded;
+  document.querySelectorAll('#levelBar button[data-l]').forEach(b => b.classList.toggle('active', active.has(b.dataset.l)));
+  const favBtn = document.getElementById('favBtn');
+  if(favBtn) favBtn.classList.toggle('active', favOn);
+  syncAll();
+  refresh(true);
+}
+function applyLoaded(keys, bm, levels, favOnLoaded){
   favs.clear();
   keys.forEach(k=>favs.add(k));
   pending.forEach((on,k)=>{ if(on) favs.add(k); else favs.delete(k); });   // taps made before loading finished
@@ -590,15 +639,23 @@ function applyLoaded(keys, bm){
   if(!bmTouched) bookmark = bm || null;     // a bookmark set before loading finished wins
   const hadBm = bmTouched;
   bmTouched = false;
+  applyLoadedLevels(levels, favOnLoaded);   // a level/favorites-filter tap before loading finished wins
+  const hadLevels = levelsTouched;
+  levelsTouched = false;
   ready = true;
-  if(hadPending || hadBm) scheduleSave();
+  if(hadPending || hadBm || hadLevels) scheduleSave();
   updateFavUI();
   updateBookmarkUI();
 }
 function loadLocal(){
-  let keys = [], bm = null;
-  try{ const raw = localStorage.getItem(LS_KEY); if(raw) keys = JSON.parse(raw); bm = localStorage.getItem(LS_BM) || null; }catch(e){}
-  applyLoaded(Array.isArray(keys) ? keys : [], bm);
+  let keys = [], bm = null, levels = null, favOnLoaded = true;
+  try{
+    const raw = localStorage.getItem(LS_KEY); if(raw) keys = JSON.parse(raw);
+    bm = localStorage.getItem(LS_BM) || null;
+    const lv = localStorage.getItem(LS_LV);
+    if(lv){ const p = JSON.parse(lv); levels = Array.isArray(p.levels) ? p.levels : null; favOnLoaded = p.favOn !== false; }
+  }catch(e){}
+  applyLoaded(Array.isArray(keys) ? keys : [], bm, levels, favOnLoaded);
 }
 async function initStorage(){
   let db = null, uid = null;
@@ -618,8 +675,14 @@ async function initStorage(){
         const data = snap.exists ? snap.data() : null;
         const keys = (data && Array.isArray(data.keys)) ? data.keys : [];
         const bm = (data && typeof data.bookmark === 'string' && data.bookmark) ? data.bookmark : null;
-        if(!ready){ applyLoaded(keys, bm); }
-        else if(!isDirty()){ favs.clear(); keys.forEach(k=>favs.add(k)); bookmark = bm; updateFavUI(); updateBookmarkUI(); }
+        const levels = (data && Array.isArray(data.levels)) ? data.levels : null;
+        const favOnLoaded = data ? data.favOn !== false : true;
+        if(!ready){ applyLoaded(keys, bm, levels, favOnLoaded); }
+        else if(!isDirty()){
+          favs.clear(); keys.forEach(k=>favs.add(k)); bookmark = bm;
+          applyLoadedLevels(levels, favOnLoaded);
+          updateFavUI(); updateBookmarkUI();
+        }
       }, err=>{
         console.warn('favorites: Claude sync stopped', err);
         backend = 'local'; favDoc = null;
@@ -728,6 +791,7 @@ function makeCard(r){
   card.dataset.key = keyOf(r);
   if(favs.has(card.dataset.key)) card.classList.add('isfav');
   if(bookmark && card.dataset.key === bookmark) card.classList.add('isbm');
+  if(quizMode && !openedOnce.has(card.dataset.key)) card.classList.add('quiz-pending');
   card.innerHTML = `
     <div class="card-inner">
       <div class="face front"><span class="lv">${l}</span><div class="hanzi ${sc}">${esc(w)}</div><button class="bm-toggle" type="button" aria-label="Bookmark"><svg viewBox="0 0 14 20" width="12" height="17" aria-hidden="true"><path d="M1.2 1.2h11.6v17.4L7 14.2 1.2 18.6z"/></svg></button><button class="fav-toggle" type="button" aria-label="Favorite"></button></div>
@@ -740,9 +804,10 @@ function makeCard(r){
     </div>`;
   card.addEventListener('click', ()=>{
     if(swallowTap || Date.now() < suppressUntil) return;
-    if(quizMode && !card.classList.contains('flipped')){ openQuiz(r, card); return; }   // already open: no quiz, just toggle
+    if(quizMode && !openedOnce.has(card.dataset.key)){ openQuiz(r, card); return; }   // never opened before: quiz first
     const isFlipped = card.classList.toggle('flipped');
-    if(isFlipped) flippedKeys.add(card.dataset.key); else flippedKeys.delete(card.dataset.key);
+    if(isFlipped){ flippedKeys.add(card.dataset.key); openedOnce.add(card.dataset.key); card.classList.remove('quiz-pending'); }
+    else flippedKeys.delete(card.dataset.key);
   });
   card.addEventListener('pointerdown', ev=>{
     if(ev.pointerType === 'mouse' && ev.button !== 0) return;
@@ -812,9 +877,9 @@ function updateCountSub(){
   if(quizMode){
     let quizRight = 0, quizWrong = 0;
     quizResults.forEach(ok => { if(ok) quizRight++; else quizWrong++; });
-    el.innerHTML = `${base} · <b style="color:#1e9e5a">O</b> <span style="color:var(--text)">${quizRight}</span> · <b style="color:#d64545">X</b> <span style="color:var(--text)">${quizWrong}</span>`;
+    el.innerHTML = `${base} · quiz mode · <b style="color:#1e9e5a">O</b> <span style="color:var(--text)">${quizRight}</span> · <b style="color:#d64545">X</b> <span style="color:var(--text)">${quizWrong}</span>`;
   } else {
-    el.textContent = `${base} · quiz mode off`;
+    el.textContent = `${base} · study mode · 加油！`;
   }
 }
 function refresh(keepReveal){
@@ -925,11 +990,13 @@ document.getElementById('revealBtn').addEventListener('click', function(){
     list.forEach(i => flippedKeys.delete(keyOf(D[i])));
     revealAll = false;
   }else{
-    list.forEach(i => flippedKeys.add(keyOf(D[i])));
+    list.forEach(i => { const k = keyOf(D[i]); flippedKeys.add(k); openedOnce.add(k); });
     revealAll = true;
   }
   grid.querySelectorAll('.card').forEach(c=>{
-    c.classList.toggle('flipped', flippedKeys.has(c.dataset.key));
+    const isOpen = flippedKeys.has(c.dataset.key);
+    c.classList.toggle('flipped', isOpen);
+    if(isOpen){ openedOnce.add(c.dataset.key); c.classList.remove('quiz-pending'); }
   });
 });
 
