@@ -71,7 +71,7 @@
   .card.add-tile .lbl{ font-size:.72rem; }
   .card.add-tile:hover, .card.add-tile:active{ color:var(--accent); border-color:var(--accent); }
   #formOverlay{ z-index:75; }   /* above the card preview (70), below confirm dialogs (80) */
-  .confirm-card.form-card{ width:min(92vw,420px); max-height:calc(var(--vvh, 100vh) * .88); overflow:auto; text-align:left; overscroll-behavior:contain; }
+  .confirm-card.form-card{ width:min(92vw,420px); max-height:88vh; overflow:auto; text-align:left; overscroll-behavior:contain; }
   .fm-title{ font-weight:700; font-size:1.05rem; text-align:center; margin-bottom:8px; }   /* same as the confirm dialogs */
   .fm-sub{ font-size:.85rem; color:var(--sub); line-height:1.55; text-align:center; margin-bottom:20px; }
   .fm-field{ margin-bottom:12px; }
@@ -268,7 +268,7 @@
   #peek.on{ opacity:1; }
   #peek.stay{ pointer-events:auto; cursor:pointer; }
   .peek-card{
-    width:min(88vw,440px); max-height:calc(var(--vvh, 100vh) * .82); overflow:auto; text-align:center;
+    width:min(88vw,440px); max-height:82vh; overflow:auto; text-align:center;
     overscroll-behavior:contain; -webkit-overflow-scrolling:touch; touch-action:pan-y;
     background:var(--card-bg); color:var(--text); border:1px solid var(--border); border-radius:20px;
     position:relative; padding:26px 22px; box-shadow:0 20px 60px rgba(0,0,0,.35);
@@ -281,8 +281,6 @@
     background:rgba(0,0,0,.45); opacity:0; pointer-events:none; transition:opacity .15s;
   }
   .confirm-overlay.on{ opacity:1; pointer-events:auto; }
-  .confirm-overlay{ overflow-y:auto; }
-  .confirm-overlay > .confirm-card{ margin:auto; }   /* centred, but scrolls from the top if it is taller than the space left */
   .confirm-card{
     width:min(88vw,380px); text-align:center;
     background:var(--card-bg); color:var(--text); border:1px solid var(--border); border-radius:20px;
@@ -790,23 +788,6 @@ cfYes.addEventListener('click', ()=> closeConfirm(true));
 cfNo.addEventListener('click', ()=> closeConfirm(false));
 cfOverlay.addEventListener('click', ev=>{ if(ev.target === cfOverlay) closeConfirm(false); });
 document.addEventListener('keydown', ev=>{ if(ev.key === 'Escape' && cfOverlay.classList.contains('on')){ ev.stopImmediatePropagation(); closeConfirm(false); } }, true);   // Esc = No, and only the top dialog closes
-
-// ---------- dialogs stay above the on-screen keyboard ----------
-// On iPhone the keyboard covers the bottom of the screen without resizing the page, so fixed dialogs
-// would sit behind it. The dialogs are fitted to the visible part of the screen (visualViewport) instead,
-// so they move up into the space above the keyboard as soon as it opens.
-(function(){
-  const vv = window.visualViewport;
-  if(!vv) return;
-  const fit = () => {
-    document.documentElement.style.setProperty('--vvh', vv.height + 'px');
-    document.querySelectorAll('.confirm-overlay, #peek').forEach(o => {
-      o.style.top = vv.offsetTop + 'px'; o.style.height = vv.height + 'px'; o.style.bottom = 'auto';
-    });
-  };
-  vv.addEventListener('resize', fit); vv.addEventListener('scroll', fit);
-  fit();
-})();
 
 // ---------- quiz mode ----------
 let quizMode = false;
