@@ -176,14 +176,12 @@
     padding:12px 14px; border-radius:12px; border:1px solid var(--border); background:transparent;
     color:var(--text); font-size:1rem; font-family:inherit; cursor:pointer; text-align:center; position:relative;
   }
-  .qz-options.done .qz-opt{ cursor:default; padding-left:38px; padding-right:38px; }   /* room for the › on the right, keeps the text centered */
+  .qz-options.done .qz-opt{ cursor:pointer; padding-left:38px; padding-right:38px; }   /* room for the › on the right, keeps the text centered */
   .qz-info{
     position:absolute; right:12px; top:calc(50% - 8px);   /* the › glyph sits high in its box: 2px lower looks centered */
     width:20px; height:20px; display:flex; align-items:center; justify-content:center;
-    font-size:1.3rem; line-height:1; color:inherit; opacity:.75; cursor:pointer; -webkit-tap-highlight-color:transparent;
+    font-size:1.3rem; line-height:1; color:inherit; opacity:.75; pointer-events:none;
   }
-  .qz-info::after{ content:''; position:absolute; inset:-15px -12px -15px -18px; }   /* invisible, much bigger tap area around the small icon */
-  .qz-info:active{ opacity:.6; }
   .qz-opt.correct{ background:#1e9e5a; color:#fff; border-color:#1e9e5a; }
   .qz-opt.wrong{ background:#d64545; color:#fff; border-color:#d64545; }
   /* time left for this card: a thin bar along the top that empties */
@@ -1053,9 +1051,16 @@ function openQuiz(r, card){
       btn.type = 'button'; btn.className = 'qz-opt'; btn.textContent = labelOf(opt.row);
       btn.dataset.ok = opt.ok ? '1' : '';
       btn._row = opt.row;
+      btn.addEventListener('pointerdown', ev => { if(quizAnswered) ev.stopPropagation(); });
       btn.addEventListener('click', ev => {
-        if(quizAnswered) return;            // already answered: let the tap bubble up to the overlay
         ev.stopPropagation();
+        if(quizAnswered){                   // already answered: tapping the answer opens its card
+          showPeek(btn._row);
+          suppressUntil = Date.now() + 150;
+          peekHeld = false;                 // already "released": tap anywhere to dismiss
+          peekEl.classList.add('stay');
+          return;
+        }
         if(!opt.ok) btn.classList.add('wrong');
         settle(opt.ok);
       });
@@ -1084,18 +1089,10 @@ function openQuiz(r, card){
       [...qzOptions.children].forEach(c => {
         if(c.dataset.ok === '1') c.classList.add('correct');
         else if(timedOut) c.classList.add('wrong');   // time is up: every wrong option turns red
-        // "›" on the right of every answer: opens that option's card (same preview as long-press)
+        // "›" on the right of every answer: just a sign that tapping the answer opens its card
         const info = document.createElement('span');
-        info.className = 'qz-info'; info.setAttribute('role', 'button'); info.setAttribute('aria-label', tx('See this card'));
+        info.className = 'qz-info'; info.setAttribute('aria-hidden', 'true');
         info.textContent = '›';
-        info.addEventListener('pointerdown', e => e.stopPropagation());
-        info.addEventListener('click', e => {
-          e.stopPropagation();                       // don't count as "tap anywhere to continue"
-          showPeek(c._row);
-          suppressUntil = Date.now() + 150;
-          peekHeld = false;                          // already "released": tap anywhere to dismiss
-          peekEl.classList.add('stay');
-        });
         c.appendChild(info);
       });
       qzOptions.classList.add('done');
