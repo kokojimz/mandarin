@@ -125,6 +125,10 @@
   .sh-spin{ width:14px; height:14px; box-sizing:border-box; border-radius:50%; border:2px solid var(--border); border-top-color:var(--accent); animation:shspin .8s linear infinite; flex:none; }
   @keyframes shspin{ to{ transform:rotate(360deg); } }
   .sh-list{ margin-top:8px; }
+  details.fm-ex.sh-help{ margin:16px 0 0; }   /* same gap above the summary as "Example sentence" in the card form */
+  .sh-help p, .sh-help ol{ font-size:.75rem; color:var(--sub); line-height:1.5; margin:0 0 6px; }
+  .sh-help ol{ padding-left:20px; }
+  .sh-help b{ color:var(--accent); font-weight:600; }
   .sh-list[hidden]{ display:none; }
   .sh-name{ display:block; overflow:hidden; text-overflow:ellipsis; }
   .sh-count{ display:block; font-size:.72rem; color:var(--sub); margin-top:2px; }
@@ -492,6 +496,7 @@ const isIME = e => e.isComposing || e.keyCode === 229;   // Enter pressed to pic
 const noEnd = s => { s = String(s).trim(); return !s || /[.?!。？！…]["”」)]?$/.test(s) ? s : s + '.'; };
 const plain = s => s.normalize('NFD').replace(/[\u0300-\u036f·]/g,'').toLowerCase();
 const fullWord = w => w.replace(/[()]/g,'');
+const HAS_ZH = /[\u3400-\u9fff\uf900-\ufaff]/;   // contains a Chinese character
 
 // Example sentences shown in the flipped preview card. Keyed by fullWord(hanzi).
 // Covers N1–B2 and C1.
@@ -500,7 +505,7 @@ const LS_LANG = 'tocfl-lang-v1';
 let LANG = 'en';
 try{ if(localStorage.getItem(LS_LANG) === 'id') LANG = 'id'; }catch(e){}
 MEAN_ID.forEach((m, i) => { D[i].mi = m; });
-const ID_TEXT = {"Settings": "Pengaturan", "Reset order": "Kembalikan urutan", "Shuffle": "Acak", "Reveal / hide all": "Buka / tutup semua", "Start quiz": "Mulai kuis", "Back to study mode": "Kembali ke mode belajar", "漢字 / pīnyīn / meaning…": "漢字 / pīnyīn / arti…", "Search by hanzi, pinyin or meaning": "Cari berdasarkan hanzi, pinyin, atau arti", "Vocabulary: TOCFL · Meanings: CC-CEDICT": "Kosakata: TOCFL · Arti: CC-CEDICT", "Cancel": "Batal", "Check": "Periksa", "OK": "OK", "{0} — hold to rename or delete": "{0} — tahan untuk ganti nama atau hapus", "All": "Semua", "New group": "Grup baru", "Pīnyīn of the word": "Pīnyīn kata", "Fill the blank": "Isi bagian kosong", "Multiple choice": "Pilihan ganda", "Type it": "Ketik", "Quiz": "Kuis", "Choose how you want to be quizzed.": "Atur cara kuis yang kamu inginkan.", "Question": "Soal", "Cards in the grid": "Kartu di daftar", "Show the word": "Tampilkan kata", "Hide the word": "Sembunyikan kata", "Answer": "Jawaban", "Choices": "Jumlah pilihan", "Tones in typed pīnyīn": "Nada pada pīnyīn yang diketik", "Must match": "Harus tepat", "Ignore": "Abaikan", "Time per card": "Waktu per kartu", "Off": "Mati", "On": "Aktif", "{0}s": "{0} dtk", "Save": "Simpan", "Restart quiz?": "Mulai ulang kuis?", "The new quiz settings will restart the quiz and reset your quiz score.": "Pengaturan kuis yang baru akan memulai ulang kuis dan mengatur ulang skormu.", "Restart": "Mulai ulang", "Exit quiz mode?": "Keluar dari mode kuis?", "Exiting quiz mode will reset your quiz score.": "Keluar dari mode kuis akan mengatur ulang skormu.", "Exit": "Keluar", "Type the missing word (漢字 or pīnyīn).": "Ketik kata yang hilang (漢字 atau pīnyīn).", "Which word fills the blank?": "Kata mana yang mengisi bagian kosong?", "Type the pīnyīn of this word.": "Ketik pīnyīn kata ini.", "Which pinyin matches this word?": "Pinyin mana yang sesuai dengan kata ini?", "Answer:": "Jawaban:", "See this card": "Lihat kartu ini", "Delete": "Hapus", "Edit": "Ubah", "Bookmark": "Penanda", "Add to group": "Tambahkan ke grup", "Play pronunciation": "Putar pelafalan", "Stop": "Berhenti", "Delete card?": "Hapus kartu?", "The card \"{0}\" will be deleted from \"{1}\". This cannot be undone.": "Kartu \"{0}\" akan dihapus dari \"{1}\". Tindakan ini tidak bisa dibatalkan.", "Continue from {0}": "Lanjutkan dari {0}", "Remove bookmark?": "Hapus penanda?", "The card \"{0}\" will no longer be marked as your bookmark.": "Kartu \"{0}\" tidak akan ditandai lagi sebagai penandamu.", "Remove": "Hapus", "Change bookmark?": "Ganti penanda?", "Your current bookmark on \"{0}\" will be replaced with this card.": "Penandamu saat ini di \"{0}\" akan diganti dengan kartu ini.", "Your current bookmark will be replaced with this card.": "Penandamu saat ini akan diganti dengan kartu ini.", "Change": "Ganti", "Set bookmark?": "Pasang penanda?", "This card will be marked as your bookmark so you can jump back to it later.": "Kartu ini akan ditandai sebagai penanda supaya kamu bisa kembali ke sini nanti.", "Set": "Pasang", "Taiwan": "Taiwan", "China": "Tiongkok", "Hong Kong": "Hong Kong", "Cantonese": "Kanton", "Singapore": "Singapura", "Automatic": "Otomatis", "Voice": "Suara", "Tap a voice to hear it.": "Ketuk suara untuk mendengarnya.", "No Chinese voices were found on this device.": "Tidak ada suara bahasa Mandarin di perangkat ini.", "Cards": "Kartu", "Tap and hold a card to peek": "Tahan kartu untuk melihat sekilas", "Prev": "Kembali", "Next": "Lanjut", "Jump to page {0}-{1}": "Lompat ke halaman {0}-{1}", "Jump to a page between {0} and {1}": "Lompat ke halaman antara {0} dan {1}", "Page number {0} to {1}": "Nomor halaman {0} sampai {1}", "Add a card to {0}": "Tambahkan kartu ke {0}", "Add card": "Tambah kartu", "Give your new group a name.": "Beri nama untuk grup barumu.", "Group name": "Nama grup", "Create": "Buat", "Saved to \"{0}\"": "Disimpan ke \"{0}\"", "Please type a name.": "Silakan ketik nama.", "That name is reserved.": "Nama itu tidak bisa dipakai.", "A group with this name already exists.": "Grup dengan nama ini sudah ada.", "Create new group": "Buat grup baru", "Done": "Selesai", "Cards you made stay in their own group": "Kartu buatanmu tetap berada di grupnya sendiri", "Edit group": "Ubah grup", "This group has 1 card.": "Grup ini berisi 1 kartu.", "This group has {0} cards.": "Grup ini berisi {0} kartu.", "Delete group?": "Hapus grup?", "The group \"{0}\" will be deleted": "Grup \"{0}\" akan dihapus", ", together with the 1 card you made in it": ", beserta 1 kartu yang kamu buat di dalamnya", ", together with the {0} cards you made in it": ", beserta {0} kartu yang kamu buat di dalamnya", ". Saved TOCFL cards stay in TOCFL. This cannot be undone": ". Kartu TOCFL yang disimpan tetap ada di TOCFL. Tindakan ini tidak bisa dibatalkan", "Edit card": "Ubah kartu", "New card": "Kartu baru", "Card in \"{0}\".": "Kartu di \"{0}\".", "Add a card to \"{0}\".": "Tambahkan kartu ke \"{0}\".", "zhōng guó  or  zhong1 guo2": "zhōng guó  atau  zhong1 guo2", "Example sentence (optional)": "Contoh kalimat (opsional)", "Sentence": "Kalimat", "Add": "Tambah", "\"{0}\" is already in your group \"{1}\".": "\"{0}\" sudah ada di grupmu \"{1}\".", "\"{0}\" is already a TOCFL card ({1}). TOCFL cards can't be added or edited.": "\"{0}\" sudah menjadi kartu TOCFL ({1}). Kartu TOCFL tidak bisa ditambahkan atau diubah.", "Pinyin suggested per character, please check the tones.": "Pinyin disarankan per karakter, mohon periksa nadanya.", "Please type the hanzi.": "Silakan ketik hanzinya.", "Hanzi must contain Chinese characters.": "Hanzi harus berisi karakter Mandarin.", "\"{0}\" is already a TOCFL card ({1}) and can't be added or edited.": "\"{0}\" sudah menjadi kartu TOCFL ({1}) dan tidak bisa ditambahkan atau diubah.", "Please type the pinyin.": "Silakan ketik pinyinnya.", "Please type the meaning.": "Silakan ketik artinya.", "The card \"{0}\" will be deleted. This cannot be undone.": "Kartu \"{0}\" akan dihapus. Tindakan ini tidak bisa dibatalkan.", "Export backup": "Ekspor cadangan", "Your groups, saved cards and bookmark will be saved in this file.": "Grup, kartu tersimpan, dan penandamu akan disimpan di file ini.", "File name": "Nama file", "Export": "Ekspor", "Import": "Impor", "Backup exported": "Cadangan berhasil diekspor", "Backup exported: {0}": "Cadangan diekspor: {0}", "Export failed on this device": "Ekspor gagal di perangkat ini", "This is not a TOCFL flashcards backup": "Ini bukan file cadangan TOCFL flashcards", "Import backup?": "Impor cadangan?", "Your groups, saved cards and bookmark will be replaced with the ones in this file ({0}, {1})": "Grup, kartu tersimpan, dan penandamu akan diganti dengan isi file ini ({0}, {1})", "Imported {0}, {1}": "Berhasil mengimpor {0}, {1}", " ({0} skipped)": " ({0} dilewati)", "Could not read this file": "File ini tidak bisa dibaca", "1 group": "1 grup", "{0} groups": "{0} grup", "1 card": "1 kartu", "{0} cards": "{0} kartu", "1 TOCFL word": "1 kata TOCFL", "{0} TOCFL words": "{0} kata TOCFL", "Change how the app looks, sounds and quizzes you.": "Atur tampilan, suara, bahasa, dan kuis aplikasi.", "Theme": "Tema", "Dark": "Gelap", "Light": "Terang", "Backup": "Cadangan", "Language": "Bahasa", "Meaning (English)": "Arti (Inggris)", "Meaning (Indonesian)": "Arti (Indonesia)", "Translation (English)": "Terjemahan (Inggris)", "Translation (Indonesian)": "Terjemahan (Indonesia)", "Please type the English meaning.": "Silakan ketik arti dalam bahasa Inggris.", "Type a name, or add sheets from a Google Sheets link.": "Ketik nama, atau tambahkan sheet dari link Google Sheets.", "Google Sheets link (optional)": "Link Google Sheets (opsional)", "Reading the sheet…": "Membaca sheet…", "Choose the sheets to add.": "Pilih sheet yang mau ditambahkan.", "This sheet will be added.": "Sheet ini akan ditambahkan.", "No cards found": "Tidak ada kartu", "Choose at least one sheet.": "Pilih minimal satu sheet.", "This is not a Google Sheets link.": "Ini bukan link Google Sheets.", "Couldn't read this sheet. Make sure it's shared with \"Anyone with the link\" and you're online.": "Sheet ini tidak bisa dibaca. Pastikan aksesnya \"Siapa saja yang memiliki link\" dan kamu sedang online.", "Sheet": "Sheet", "Sync": "Sinkron", "Syncing…": "Menyinkronkan…", "Synced: {0}": "Tersinkron: {0}", "Last synced {0}": "Terakhir disinkron {0}", "1 row skipped": "1 baris dilewati", "{0} rows skipped": "{0} baris dilewati", "This sheet was not found in the spreadsheet.": "Sheet ini tidak ditemukan di spreadsheet.", "Added {0}": "Ditambahkan {0}", "This viewer doesn't let the app go online. Open the file in a browser (Safari, Chrome) to use sheet links.": "Penampil ini tidak mengizinkan aplikasi terhubung ke internet. Buka file ini di browser (Safari, Chrome) untuk memakai link sheet.", "Favorite": "Favorit", "Cards of this group come from its Google Sheet": "Kartu grup ini berasal dari Google Sheet-nya"};
+const ID_TEXT = {"Settings": "Pengaturan", "Reset order": "Kembalikan urutan", "Shuffle": "Acak", "Reveal / hide all": "Buka / tutup semua", "Start quiz": "Mulai kuis", "Back to study mode": "Kembali ke mode belajar", "漢字 / pīnyīn / meaning…": "漢字 / pīnyīn / arti…", "Search by hanzi, pinyin or meaning": "Cari berdasarkan hanzi, pinyin, atau arti", "Vocabulary: TOCFL · Meanings: CC-CEDICT": "Kosakata: TOCFL · Arti: CC-CEDICT", "Cancel": "Batal", "Check": "Periksa", "OK": "OK", "{0} — hold to rename or delete": "{0} — tahan untuk ganti nama atau hapus", "All": "Semua", "New group": "Grup baru", "Pīnyīn of the word": "Pīnyīn kata", "Fill the blank": "Isi bagian kosong", "Multiple choice": "Pilihan ganda", "Type it": "Ketik", "Quiz": "Kuis", "Choose how you want to be quizzed.": "Atur cara kuis yang kamu inginkan.", "Question": "Soal", "Cards in the grid": "Kartu di daftar", "Show the word": "Tampilkan kata", "Hide the word": "Sembunyikan kata", "Answer": "Jawaban", "Choices": "Jumlah pilihan", "Tones in typed pīnyīn": "Nada pada pīnyīn yang diketik", "Must match": "Harus tepat", "Ignore": "Abaikan", "Time per card": "Waktu per kartu", "Off": "Mati", "On": "Aktif", "{0}s": "{0} dtk", "Save": "Simpan", "Restart quiz?": "Mulai ulang kuis?", "The new quiz settings will restart the quiz and reset your quiz score.": "Pengaturan kuis yang baru akan memulai ulang kuis dan mengatur ulang skormu.", "Restart": "Mulai ulang", "Exit quiz mode?": "Keluar dari mode kuis?", "Exiting quiz mode will reset your quiz score.": "Keluar dari mode kuis akan mengatur ulang skormu.", "Exit": "Keluar", "Type the missing word (漢字 or pīnyīn).": "Ketik kata yang hilang (漢字 atau pīnyīn).", "Which word fills the blank?": "Kata mana yang mengisi bagian kosong?", "Type the pīnyīn of this word.": "Ketik pīnyīn kata ini.", "Which pinyin matches this word?": "Pinyin mana yang sesuai dengan kata ini?", "Answer:": "Jawaban:", "See this card": "Lihat kartu ini", "Delete": "Hapus", "Edit": "Ubah", "Bookmark": "Penanda", "Add to group": "Tambahkan ke grup", "Play pronunciation": "Putar pelafalan", "Stop": "Berhenti", "Delete card?": "Hapus kartu?", "The card \"{0}\" will be deleted from \"{1}\". This cannot be undone.": "Kartu \"{0}\" akan dihapus dari \"{1}\". Tindakan ini tidak bisa dibatalkan.", "Continue from {0}": "Lanjutkan dari {0}", "Remove bookmark?": "Hapus penanda?", "The card \"{0}\" will no longer be marked as your bookmark.": "Kartu \"{0}\" tidak akan ditandai lagi sebagai penandamu.", "Remove": "Hapus", "Change bookmark?": "Ganti penanda?", "Your current bookmark on \"{0}\" will be replaced with this card.": "Penandamu saat ini di \"{0}\" akan diganti dengan kartu ini.", "Your current bookmark will be replaced with this card.": "Penandamu saat ini akan diganti dengan kartu ini.", "Change": "Ganti", "Set bookmark?": "Pasang penanda?", "This card will be marked as your bookmark so you can jump back to it later.": "Kartu ini akan ditandai sebagai penanda supaya kamu bisa kembali ke sini nanti.", "Set": "Pasang", "Taiwan": "Taiwan", "China": "Tiongkok", "Hong Kong": "Hong Kong", "Cantonese": "Kanton", "Singapore": "Singapura", "Automatic": "Otomatis", "Voice": "Suara", "Tap a voice to hear it.": "Ketuk suara untuk mendengarnya.", "No Chinese voices were found on this device.": "Tidak ada suara bahasa Mandarin di perangkat ini.", "Cards": "Kartu", "Tap and hold a card to peek": "Tahan kartu untuk melihat sekilas", "Prev": "Kembali", "Next": "Lanjut", "Jump to page {0}-{1}": "Lompat ke halaman {0}-{1}", "Jump to a page between {0} and {1}": "Lompat ke halaman antara {0} dan {1}", "Page number {0} to {1}": "Nomor halaman {0} sampai {1}", "Add a card to {0}": "Tambahkan kartu ke {0}", "Add card": "Tambah kartu", "Give your new group a name.": "Beri nama untuk grup barumu.", "Group name": "Nama grup", "Create": "Buat", "Saved to \"{0}\"": "Disimpan ke \"{0}\"", "Please type a name.": "Silakan ketik nama.", "That name is reserved.": "Nama itu tidak bisa dipakai.", "A group with this name already exists.": "Grup dengan nama ini sudah ada.", "Create new group": "Buat grup baru", "Done": "Selesai", "Cards you made stay in their own group": "Kartu buatanmu tetap berada di grupnya sendiri", "Edit group": "Ubah grup", "This group has 1 card.": "Grup ini berisi 1 kartu.", "This group has {0} cards.": "Grup ini berisi {0} kartu.", "Delete group?": "Hapus grup?", "The group \"{0}\" will be deleted": "Grup \"{0}\" akan dihapus", ", together with the 1 card you made in it": ", beserta 1 kartu yang kamu buat di dalamnya", ", together with the {0} cards you made in it": ", beserta {0} kartu yang kamu buat di dalamnya", ". Saved TOCFL cards stay in TOCFL. This cannot be undone": ". Kartu TOCFL yang disimpan tetap ada di TOCFL. Tindakan ini tidak bisa dibatalkan", "Edit card": "Ubah kartu", "New card": "Kartu baru", "Card in \"{0}\".": "Kartu di \"{0}\".", "Add a card to \"{0}\".": "Tambahkan kartu ke \"{0}\".", "zhōng guó  or  zhong1 guo2": "zhōng guó  atau  zhong1 guo2", "Example sentence (optional)": "Contoh kalimat (opsional)", "Sentence": "Kalimat", "Add": "Tambah", "\"{0}\" is already in your group \"{1}\".": "\"{0}\" sudah ada di grupmu \"{1}\".", "\"{0}\" is already a TOCFL card ({1}). TOCFL cards can't be added or edited.": "\"{0}\" sudah menjadi kartu TOCFL ({1}). Kartu TOCFL tidak bisa ditambahkan atau diubah.", "Pinyin suggested per character, please check the tones.": "Pinyin disarankan per karakter, mohon periksa nadanya.", "Please type the hanzi.": "Silakan ketik hanzinya.", "Hanzi must contain Chinese characters.": "Hanzi harus berisi karakter Mandarin.", "\"{0}\" is already a TOCFL card ({1}) and can't be added or edited.": "\"{0}\" sudah menjadi kartu TOCFL ({1}) dan tidak bisa ditambahkan atau diubah.", "Please type the pinyin.": "Silakan ketik pinyinnya.", "The card \"{0}\" will be deleted. This cannot be undone.": "Kartu \"{0}\" akan dihapus. Tindakan ini tidak bisa dibatalkan.", "Export backup": "Ekspor cadangan", "Your groups, saved cards and bookmark will be saved in this file.": "Grup, kartu tersimpan, dan penandamu akan disimpan di file ini.", "File name": "Nama file", "Export": "Ekspor", "Import": "Impor", "Backup exported": "Cadangan berhasil diekspor", "Backup exported: {0}": "Cadangan diekspor: {0}", "Export failed on this device": "Ekspor gagal di perangkat ini", "This is not a TOCFL flashcards backup": "Ini bukan file cadangan TOCFL flashcards", "Import backup?": "Impor cadangan?", "Your groups, saved cards and bookmark will be replaced with the ones in this file ({0}, {1})": "Grup, kartu tersimpan, dan penandamu akan diganti dengan isi file ini ({0}, {1})", "Imported {0}, {1}": "Berhasil mengimpor {0}, {1}", " ({0} skipped)": " ({0} dilewati)", "Could not read this file": "File ini tidak bisa dibaca", "1 group": "1 grup", "{0} groups": "{0} grup", "1 card": "1 kartu", "{0} cards": "{0} kartu", "1 TOCFL word": "1 kata TOCFL", "{0} TOCFL words": "{0} kata TOCFL", "Change how the app looks, sounds and quizzes you.": "Atur tampilan, suara, bahasa, dan kuis aplikasi.", "Theme": "Tema", "Dark": "Gelap", "Light": "Terang", "Backup": "Cadangan", "Language": "Bahasa", "Meaning (English)": "Arti (Inggris)", "Meaning (Indonesian)": "Arti (Indonesia)", "Translation (English)": "Terjemahan (Inggris)", "Translation (Indonesian)": "Terjemahan (Indonesia)", "Please type the English meaning.": "Silakan ketik arti dalam bahasa Inggris.", "Google Sheets link (optional)": "Link Google Sheets (opsional)", "Reading the sheet…": "Membaca sheet…", "Choose the sheets to add.": "Pilih sheet yang mau ditambahkan.", "This sheet will be added.": "Sheet ini akan ditambahkan.", "No cards found": "Tidak ada kartu", "Choose at least one sheet.": "Pilih minimal satu sheet.", "This is not a Google Sheets link.": "Ini bukan link Google Sheets.", "Couldn't read this sheet. Make sure it's shared with \"Anyone with the link\" and you're online.": "Sheet ini tidak bisa dibaca. Pastikan aksesnya \"Siapa saja yang memiliki link\" dan kamu sedang online.", "Sheet": "Sheet", "Sync": "Sinkron", "Syncing…": "Menyinkronkan…", "Synced: {0}": "Tersinkron: {0}", "Last synced {0}": "Terakhir disinkron {0}", "1 row skipped": "1 baris dilewati", "{0} rows skipped": "{0} baris dilewati", "This sheet was not found in the spreadsheet.": "Sheet ini tidak ditemukan di spreadsheet.", "Added {0}": "Ditambahkan {0}", "This viewer doesn't let the app go online. Open the file in a browser (Safari, Chrome) to use sheet links.": "Penampil ini tidak mengizinkan aplikasi terhubung ke internet. Buka file ini di browser (Safari, Chrome) untuk memakai link sheet.", "Favorite": "Favorit", "Cards of this group come from its Google Sheet": "Kartu grup ini berasal dari Google Sheet-nya", "The group \"{0}\" and its cards will be deleted. Your Google Sheet stays as it is.": "Grup \"{0}\" beserta kartunya akan dihapus. Google Sheet-mu tetap seperti semula.", "Type a name or add sheets from a link.": "Ketik nama atau tambahkan sheet dari link.", "Sheet format": "Format sheet", "Hanzi": "Hanzi", "Pinyin": "Pinyin", "Pinyin (sentence)": "Pinyin (kalimat)", "Each tab becomes a group named after the tab. The columns must be in this order:": "Tiap tab jadi satu grup dengan nama tab itu. Urutan kolomnya harus seperti ini:", "* Required: rows without them are skipped. Pinyin can be zhōng guó or zhong1 guo2.": "* Wajib: baris tanpa isian ini dilewati. Pinyin boleh zhōng guó atau zhong1 guo2.", "Saber has entered the chat.": "Kebanyakan mikir keburu diangkat Saber."};
 // tx('Saved to "{0}"', name): the text in the chosen language, with {0}, {1}… filled in
 function tx(s, ...a){
   let r = (LANG === 'id' && ID_TEXT[s] != null) ? ID_TEXT[s] : s;
@@ -523,7 +528,7 @@ for(let i = 0; i < BASE_N; i++) Object.freeze(D[i]);
 LEVELS.forEach(l => Object.freeze(l));
 Object.values(EXAMPLES).forEach(list => { list.forEach(e => Object.freeze(e)); Object.freeze(list); });
 const CUSTOM_GROUP_ID = /^g\d+$/;   // your groups are always g1, g2, ... — never N1–C1
-let CUSTOM = {seq:1, groups:[{id:'g1', name:'Favorite', refs:[]}], cards:[]};   // first start: one "Favorite" group (a normal group: rename, delete…)
+let CUSTOM = {seq:0, groups:[], cards:[]};   // first start: no groups of your own yet
 function sanitizeCustom(c){
   const out = {seq:0, groups:[], cards:[]};
   if(!c || typeof c !== 'object') return out;
@@ -533,7 +538,7 @@ function sanitizeCustom(c){
     if(g && CUSTOM_GROUP_ID.test(str(g.id)) && okId(+g.id.slice(1)) && str(g.name).trim() && !out.groups.some(x => x.id === g.id))
       out.groups.push({id:g.id, name:g.name.trim().slice(0, 24), refs:[...new Set((Array.isArray(g.refs) ? g.refs : []).filter(k => typeof k === 'string' && k))]});
     const sr = g && g.src;                                 // linked to a Google Sheets tab
-    if(sr && typeof sr === 'object' && /^[A-Za-z0-9_-]{20,100}$/.test(str(sr.id)) && out.groups.some(x => x.id === g.id) && out.groups[out.groups.length - 1].id === g.id){
+    if(sr && typeof sr === 'object' && /^[A-Za-z0-9_-]{20,100}$/.test(str(sr.id)) && out.groups.length && out.groups[out.groups.length - 1].id === g.id){
       const o = {id: sr.id, n: str(sr.n).slice(0, 200), i: Number.isSafeInteger(sr.i) && sr.i >= 0 && sr.i < 1000 ? sr.i : -1};
       if(/^\d{1,15}$/.test(str(sr.gid))) o.gid = sr.gid;
       if(Number.isSafeInteger(sr.t) && sr.t > 0) o.t = sr.t;
@@ -584,13 +589,7 @@ const GROUPS_OF = new Map();                       // card key -> Set of your gr
 const isSaved = k => !!(GROUPS_OF.get(k) && GROUPS_OF.get(k).size);
 const isCustomLv = code => CUSTOM_GROUP_ID.test(code) && LEVELS.some(l => l[0] === code && l[2]);
 const lvLabel = code => { const l = LEVELS.find(x => x[0] === code); return l && l[2] ? l[1] : code; };
-try{ const raw = localStorage.getItem(LS_CUSTOM); if(raw) CUSTOM = sanitizeCustom(JSON.parse(raw));
-     else saveCustomLocal();
-     // once per browser: make sure there is a "Favorite" group to start with (if you delete it later, it stays deleted)
-     if(!localStorage.getItem('tocfl-fav-group-v1')){
-       if(!CUSTOM.groups.some(g => g.name.toLowerCase() === 'favorite')){ CUSTOM.groups.unshift({id:'g' + (++CUSTOM.seq), name:'Favorite', refs:[]}); saveCustomLocal(); }
-       localStorage.setItem('tocfl-fav-group-v1', '1');
-     } }catch(e){}
+try{ const raw = localStorage.getItem(LS_CUSTOM); if(raw) CUSTOM = sanitizeCustom(JSON.parse(raw)); }catch(e){}
 installCustom();
 
 // "ni3 hao3" / "ni3hao3" / "lv4" -> "nǐ hǎo" / "lǜ"; text that already has tone marks is kept.
@@ -626,7 +625,7 @@ function colorHanzi(w, py){
 }
 const sizeClass = w => { const n=[...fullWord(w)].length; return n>4?'l':(n>2?'m':''); };
 
-const active = new Set(LEVELS.map(l=>l[0]));
+const active = new Set(['N1', 'N2', 'A1', 'A2']);   // first start: the beginner levels; after that the saved selection
 let query = '';
 let list = [];
 let page = 1;
@@ -1337,7 +1336,6 @@ function applyLoaded(bm, levels){
 function loadLocal(){
   let bm = null, levels = null;
   try{
-    localStorage.removeItem('tocfl-favs-v1');                // old ★ favorites (no longer used)
     bm = localStorage.getItem(LS_BM) || null;
     const lv = localStorage.getItem(LS_LV);
     if(lv){ const p = JSON.parse(lv); levels = Array.isArray(p.levels) ? p.levels : null; }
@@ -1453,6 +1451,7 @@ function goToBookmark(){
   }
   if(bmSelection(info.lvl) !== active){
     active.add(info.lvl);
+    levelsTouched = true; scheduleSave();
     const b = document.querySelector('#levelBar button[data-l="' + info.lvl + '"]');
     if(b) b.classList.add('active');
     syncAll();
@@ -1743,7 +1742,7 @@ function pagerSlots(total){
     return w;
   };
   const gap = parseFloat(getComputedStyle(pager).columnGap) || 6;
-  const prevW = probe('Prev'), nextW = probe('Next'), itemW = Math.max(probe(String(total)), 28);
+  const prevW = probe(tx('Prev')), nextW = probe(tx('Next')), itemW = Math.max(probe(String(total)), 28);
   const avail = W - prevW - nextW - 2 * gap;              // keep a gap between Prev / pages / Next
   let n = Math.floor((avail + gap) / (itemW + gap));
   if(n % 2 === 0){
@@ -1897,7 +1896,7 @@ function renderPage(){
   grid.innerHTML = '';
   const V = viewList();
   if(!V.length){
-    const msg = 'Kebanyakan mikir keburu diangkat saber.';
+    const msg = tx('Saber has entered the chat.');
     grid.innerHTML = `<div class="empty" style="grid-column:1/-1">${msg}</div>`;
     renderPager();
     saveSession();
@@ -2010,13 +2009,14 @@ function restoreSession(){
     s.levels.forEach(l => { if(LEVELS.some(x => x[0] === l)) active.add(l); });
     sessionLevels = true;
   }
-  quizResults.clear(); (s.results || []).forEach(a => { if(Array.isArray(a)) quizResults.set(a[0], !!a[1]); });
-  quizWrongs.clear(); (s.opts || []).forEach(a => { if(Array.isArray(a) && typeof a[0] === 'string' && Array.isArray(a[1]) && a[1].every(i => Number.isInteger(i) && i >= 0 && i < D.length)) quizWrongs.set(a[0], a[1]); });
-  openedOnce.clear(); (s.opened || []).forEach(k => openedOnce.add(k));
-  flippedKeys.clear(); (s.flipped || []).forEach(k => flippedKeys.add(k));
+  const arr = v => Array.isArray(v) ? v : [];
+  quizResults.clear(); arr(s.results).forEach(a => { if(Array.isArray(a)) quizResults.set(a[0], !!a[1]); });
+  quizWrongs.clear(); arr(s.opts).forEach(a => { if(Array.isArray(a) && typeof a[0] === 'string' && Array.isArray(a[1]) && a[1].every(i => Number.isInteger(i) && i >= 0 && i < D.length)) quizWrongs.set(a[0], a[1]); });
+  openedOnce.clear(); arr(s.opened).forEach(k => openedOnce.add(k));
+  flippedKeys.clear(); arr(s.flipped).forEach(k => flippedKeys.add(k));
   quizMode = !!s.quizMode;
   query = typeof s.query === 'string' ? s.query : '';
-  searchSnap = s.snap ? {flipped:new Set(s.snap.flipped || []), page:s.snap.page || 1, scrollY:s.snap.scrollY || 0} : null;
+  searchSnap = s.snap ? {flipped:new Set(arr(s.snap.flipped)), page:s.snap.page || 1, scrollY:s.snap.scrollY || 0} : null;
   pageWish = s.page || 1;
   scrollWish = s.scrollY || 0;
   return true;
@@ -2125,7 +2125,6 @@ function showOnly(code){                    // select just this group (used righ
 // Reading: the whole workbook as .xlsx (gives every tab with its name); if the browser can't download it,
 // one tab through Google's chart data feed (JSONP), which works without any API key.
 const isSheetGroup = code => { const g = CUSTOM.groups.find(x => x.id === code); return !!(g && g.src); };
-const HAS_ZH = /[㐀-鿿豈-﫿]/;
 function sheetIdOf(text){
   const t = String(text || '').trim();
   const m = t.match(/\/spreadsheets\/d\/([A-Za-z0-9_-]{20,})/) || t.match(/^([A-Za-z0-9_-]{30,})$/);
@@ -2221,8 +2220,6 @@ function fetchTab(id, by){   // by = {gid} or {name}
       if(done) return; end();
       if(!d || d.status === 'error' || !d.table) return rej(new Error('sheet'));
       const rows = (d.table.rows || []).map(r => (r.c || []).map(c => c == null ? '' : String(c.v == null ? (c.f == null ? '' : c.f) : (typeof c.v === 'string' ? c.v : (c.f == null ? c.v : c.f)))));
-      const labels = (d.table.cols || []).map(c => c.label || '');
-      if(labels.some(Boolean)) rows.unshift(labels);
       res(rows);
     };
     s.onerror = () => { if(!done){ end(); rej(new Error('net')); } };
@@ -2233,37 +2230,24 @@ function fetchTab(id, by){   // by = {gid} or {name}
   });
 }
 
-// --- rows -> cards. The header row is the one with "Hanzi" in it; a second header row under it
-// (Sentence / Pinyin / Translation …) is read too. Without headers: Hanzi, Pinyin, Meaning (English),
-// Meaning (Indonesian), Sentence, Pinyin, Translation (English), Translation (Indonesian). ---
+// --- rows -> cards. Column titles are not read: the Hanzi column is the leftmost one full of Chinese words,
+// and the columns after it are, in this order: Pinyin, Meaning (English), Meaning (Indonesian),
+// Sentence, Pinyin (sentence), Translation (English), Translation (Indonesian).
+// Rows whose Hanzi cell has no Chinese (titles, notes, empty rows) are left out. ---
 function cardsFromRows(rows){
   rows = rows.map(r => (r || []).map(v => String(v == null ? '' : v).trim()));
-  const cell = (r, c) => c >= 0 && rows[r] ? rows[r][c] || '' : '';
-  let h = -1, hz = -1;
-  for(let r = 0; r < Math.min(rows.length, 15) && h < 0; r++)
-    (rows[r] || []).forEach((v, c) => { if(h < 0 && /hanzi|漢字|汉字/i.test(v)) { h = r; hz = c; } });
-  const col = {py:-1, m:-1, mi:-1, s:-1, spy:-1, ten:-1, tid:-1};
-  if(h >= 0){
-    const sub = rows[h + 1] && !HAS_ZH.test(cell(h + 1, hz)) ? h + 1 : -1;
-    const width = Math.max((rows[h] || []).length, sub >= 0 ? rows[sub].length : 0);
-    const label = c => (cell(h, c) + ' ' + (sub >= 0 ? cell(sub, c) : '')).toLowerCase();
-    for(let c = 0; c < width; c++){
-      if(c === hz) continue;
-      const L = label(c), id = /indones/.test(L);
-      if(/translat|terjemah|翻譯|翻译/.test(L)){ if(id){ if(col.tid < 0) col.tid = c; } else if(col.ten < 0) col.ten = c; }
-      else if(/meaning|arti|意思|定義|definition/.test(L)){ if(id){ if(col.mi < 0) col.mi = c; } else if(col.m < 0) col.m = c; }
-      else if(/pinyin|拼音/.test(L)){ if(col.s >= 0 && c > col.s){ if(col.spy < 0) col.spy = c; } else if(col.py < 0) col.py = c; else if(col.spy < 0) col.spy = c; }
-      else if(/sentence|kalimat|例句|contoh|example/.test(L)){ if(col.s < 0) col.s = c; }
-    }
-  } else {
-    for(let r = 0; r < rows.length && hz < 0; r++) (rows[r] || []).forEach((v, c) => { if(hz < 0 && HAS_ZH.test(v) && v.length <= 12) hz = c; });
-    if(hz < 0) return {cards: [], skipped: 0};
-    Object.keys(col).forEach((k, n) => { col[k] = hz + 1 + n; });
-  }
+  const cell = (r, c) => rows[r] ? rows[r][c] || '' : '';
+  const n = [];                                     // per column: how many cells hold a short Chinese word
+  rows.forEach(r => r.forEach((v, c) => { if(HAS_ZH.test(v) && v.length <= 12) n[c] = (n[c] || 0) + 1; }));
+  const most = Math.max(0, ...n.filter(Boolean));
+  if(!most) return {cards: [], skipped: 0};
+  const hz = n.findIndex(x => x >= most / 2);      // the leftmost column full of words (a Chinese title like 編號 alone doesn't count)
+  const col = {};
+  ['py', 'm', 'mi', 's', 'spy', 'ten', 'tid'].forEach((k, n) => { col[k] = hz + 1 + n; });
   const cards = [], seen = new Set(); let skipped = 0;
-  for(let r = h + 1; r < rows.length && cards.length < 3000; r++){
+  for(let r = 0; r < rows.length && cards.length < 3000; r++){
     const H = cell(r, hz).replace(/\s+/g, '');
-    if(!H || !HAS_ZH.test(H)){ if(H || cell(r, col.py) || cell(r, col.m)) skipped++; continue; }
+    if(!HAS_ZH.test(H) || /^(漢字|汉字)$/.test(H)) continue;    // not a word (a title row, a note, an empty row)
     const P = normPinyin(cell(r, col.py)), M = cell(r, col.m).replace(/\s*\n\s*/g, '; '), MI = cell(r, col.mi).replace(/\s*\n\s*/g, '; ');
     if(!P || !M || seen.has(fullWord(H))){ skipped++; continue; }   // same rules as a card you add: hanzi, pinyin and English meaning
     seen.add(fullWord(H));
@@ -2304,40 +2288,35 @@ async function fetchTabCsv(id, by){
     return parseCsv(txt);
   } finally { clearTimeout(t); }
 }
-// Every way of reading one tab; when all fail, say why (and whether this page may go online at all).
-const why = e => (e && (e.name === 'AbortError' ? 'timeout' : e.message)) || 'error';
+// Every way of reading one tab; when all fail, tell whether this page may go online at all.
 async function canGoOnline(){
   try{ await fetch('https://docs.google.com/favicon.ico?' + Date.now(), {mode: 'no-cors', cache: 'no-store', credentials: 'omit'}); return true; }
   catch(e){ return false; }
 }
 let cspBlocked = false, sheetReached = false;   // sheetReached: Google answered (so the page can go online)
 document.addEventListener('securitypolicyviolation', e => { if(/google/.test(e.blockedURI || '')) cspBlocked = true; });
-async function sheetFail(notes){
-  const online = sheetReached || (!cspBlocked && await canGoOnline());
+async function fetchTabAny(id, by){
+  try{ return await fetchTab(id, by); } catch(e){}
+  try{ return await fetchTabCsv(id, by); } catch(e){}
   const err = new Error('sheet');
-  err.offline = !online; err.detail = notes.join(' · ') + (online ? '' : ' · offline');
-  return err;
-}
-async function fetchTabAny(id, by, notes){
-  try{ return await fetchTab(id, by); } catch(e){ notes.push('tab: ' + why(e)); }
-  try{ return await fetchTabCsv(id, by); } catch(e){ notes.push('csv: ' + why(e)); }
-  throw await sheetFail(notes);
+  err.offline = !(sheetReached || (!cspBlocked && await canGoOnline()));
+  throw err;
 }
 // every readable tab of the link: [{name, i, gid, cards, skipped}]
 async function readSheetLink(src){
-  const notes = [];
   cspBlocked = false; sheetReached = false;
   try{
     const tabs = await fetchWorkbook(src.id);
     return tabs.map(t => ({name: t.name, i: t.i, gid: '', ...cardsFromRows(t.rows)}));
-  } catch(e){ notes.push('xlsx: ' + why(e)); }
-  const rows = await fetchTabAny(src.id, {gid: src.gid || '0'}, notes);   // the tab in the link (or the first one), without its name
+  } catch(e){}
+  const rows = await fetchTabAny(src.id, {gid: src.gid || '0'});   // the tab in the link (or the first one), without its name
   return [{name: '', i: -1, gid: src.gid || '0', ...cardsFromRows(rows)}];
 }
 function uniqueGroupName(base, selfId){
   base = String(base || '').trim().replace(/\s+/g, ' ').slice(0, 24) || tx('Sheet');
-  if(!groupNameError(base, selfId)) return base;
-  for(let n = 2; n < 100; n++){ const s = `${base.slice(0, 24 - String(n).length - 3)} (${n})`; if(!groupNameError(s, selfId)) return s; }
+  const taken = n => groupNameError(n, selfId) || CUSTOM.groups.some(g => g.id !== selfId && g.name.toLowerCase() === n.toLowerCase());   // also groups made a moment ago
+  if(!taken(base)) return base;
+  for(let n = 2; n < 100; n++){ const s = `${base.slice(0, 24 - String(n).length - 3)} (${n})`; if(!taken(s)) return s; }
   return base;
 }
 // put the cards read from the sheet into the group: same word keeps its id (bookmark, flipped cards stay)
@@ -2361,21 +2340,22 @@ function fillSheetGroup(g, tab){
 async function syncSheetGroup(code){
   const g = CUSTOM.groups.find(x => x.id === code);
   if(!g || !g.src) throw new Error('group');
-  let tab; const notes = [];
+  let tab;
   cspBlocked = false; sheetReached = false;
+  const src = g.src;
   try{
-    const tabs = await fetchWorkbook(g.src.id);
-    tab = tabs.find(t => g.src.n && t.name === g.src.n) || (g.src.i >= 0 && tabs.find(t => t.i === g.src.i));   // renamed tab: same position
+    if(!src.n && src.i < 0) throw new Error('by gid');   // made from a single tab (its name unknown): read that tab again
+    const tabs = await fetchWorkbook(src.id);
+    tab = tabs.find(t => src.n && t.name === src.n) || (src.i >= 0 && tabs.find(t => t.i === src.i));   // renamed tab: same position
     if(!tab) throw Object.assign(new Error('missing'), {missing: true});
     tab = {name: tab.name, i: tab.i, ...cardsFromRows(tab.rows)};
   } catch(e){
     if(e.missing) throw e;
-    notes.push('xlsx: ' + why(e));
-    const rows = await fetchTabAny(g.src.id, g.src.gid ? {gid: g.src.gid} : g.src.n ? {name: g.src.n} : {gid: '0'}, notes);
-    tab = {name: g.src.n, i: g.src.i, ...cardsFromRows(rows)};
+    const rows = await fetchTabAny(src.id, src.gid ? {gid: src.gid} : src.n ? {name: src.n} : {gid: '0'});
+    tab = {name: src.n, i: src.i, ...cardsFromRows(rows)};
   }
-  const live = CUSTOM.groups.find(x => x.id === code);   // deleted while loading
-  if(!live) throw new Error('group');
+  const live = CUSTOM.groups.find(x => x.id === code);   // deleted or replaced (import, another device) while loading
+  if(!live || !live.src || live.src.id !== src.id) throw new Error('group');
   fillSheetGroup(live, tab);
   if(tab.name){ live.src.n = tab.name; live.name = uniqueGroupName(tab.name, code); }   // the group is named after its tab
   if(tab.i >= 0) live.src.i = tab.i;
@@ -2394,12 +2374,18 @@ function openNewGroupDialog(name, forKey){
   const withSheet = !forKey;                              // "Create new group" inside "Add to group" makes a plain group
   openForm(`
     <div class="fm-title">${tx('New group')}</div>
-    <div class="fm-sub">${tx(withSheet ? 'Type a name, or add sheets from a Google Sheets link.' : 'Give your new group a name.')}</div>
+    <div class="fm-sub">${tx(withSheet ? 'Type a name or add sheets from a link.' : 'Give your new group a name.')}</div>
     <div class="fm-field"><label for="fmGName">${tx('Group name')}</label>
       <input id="fmGName" maxlength="24" autocomplete="off" placeholder="${tx('Favorite')}" value="${escAttr(name || '')}"></div>
     ${withSheet ? `<div class="fm-field"><label for="fmLink">${tx('Google Sheets link (optional)')}</label>
       <div class="sh-row"><input id="fmLink" type="url" inputmode="url" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="https://docs.google.com/spreadsheets/d/…">
       <button type="button" class="cf-btn sh-btn" id="fmCheck">${tx('Check')}</button></div>
+      <details class="fm-ex sh-help"><summary>${tx('Sheet format')}</summary>
+        <p>${tx('Each tab becomes a group named after the tab. The columns must be in this order:')}</p>
+        <ol>${[['Hanzi', 1], ['Pinyin', 1], ['Meaning (English)', 1], ['Meaning (Indonesian)'], ['Sentence'], ['Pinyin (sentence)'], ['Translation (English)'], ['Translation (Indonesian)']]
+          .map(([t, req]) => `<li>${esc(tx(t))}${req ? ' <b>*</b>' : ''}</li>`).join('')}</ol>
+        <p>${tx('* Required: rows without them are skipped. Pinyin can be zhōng guó or zhong1 guo2.')}</p>
+      </details>
       <div class="sh-status" id="fmShStatus"></div>
       <div class="gp-list sh-list" id="fmShList" hidden></div></div>` : ''}
     <div class="fm-err" id="fmErr"></div>
@@ -2480,7 +2466,9 @@ function openNewGroupDialog(name, forKey){
     applyCustomChange();
     if(forKey){ openGroupPicker(forKey); toast(tx('Saved to "{0}"', n)); }
   };
-  document.getElementById('fmCancel').onclick = () => { run++; closeForm(); if(forKey) openGroupPicker(forKey); };
+  const cancel = () => { run++; closeForm(); if(forKey) openGroupPicker(forKey); };
+  document.getElementById('fmCancel').onclick = cancel;
+  if(forKey) fmBack = cancel;                          // Esc / tapping outside also goes back to the picker
   document.getElementById('fmOk').onclick = go;
   inp.addEventListener('keydown', e => { if(e.key === 'Enter' && !isIME(e)){ e.preventDefault(); go(); } });
   inp.addEventListener('input', () => {
@@ -2497,7 +2485,7 @@ function openNewGroupDialog(name, forKey){
 function groupNameError(n, selfId){
   if(!n) return tx('Please type a name.');
   const low = n.toLowerCase();
-  if(['all', '★'].includes(low)) return tx('That name is reserved.');
+  if(low === 'all') return tx('That name is reserved.');
   if(LEVELS.some(l => l[0] !== selfId && (l[0].toLowerCase() === low || (l[2] && l[1].toLowerCase() === low)))) return tx('A group with this name already exists.');
   return '';
 }
@@ -2522,8 +2510,8 @@ function openGroupPicker(key){
     <div class="fm-actions"><button type="button" class="cf-btn cf-yes" id="fmOk">${tx('Done')}</button></div>`);
   fmBox.querySelector('.gp-new').onclick = () => { closeForm(); openNewGroupDialog('', key); };
   fmBox.querySelectorAll('.gp-row[data-g]').forEach(b => b.onclick = () => {
-    if(b.classList.contains('home')){ toast(tx('Cards you made stay in their own group')); return; }
-    if(b.classList.contains('sheet')){ toast(tx('Cards of this group come from its Google Sheet')); return; }
+    if(b.classList.contains('home') && !isSheetGroup(b.dataset.g)){ toast(tx('Cards you made stay in their own group')); return; }
+    if(b.classList.contains('sheet') || b.classList.contains('home')){ toast(tx('Cards of this group come from its Google Sheet')); return; }
     const g = CUSTOM.groups.find(x => x.id === b.dataset.g);
     if(!g) return;
     const i = g.refs.indexOf(key);
@@ -2538,7 +2526,7 @@ const $fmOk = () => document.getElementById('fmOk');
 // -- rename / delete a group (hold its pill) --
 function openGroupDialog(code){
   const g = isCustomLv(code) && CUSTOM.groups.find(x => x.id === code);
-  if(!g) return;                                       // N1–C1, ★ and All can never be renamed or deleted
+  if(!g) return;                                       // N1–C1 and All can never be renamed or deleted
   const n = C[code] || 0;
   openForm(`
     <div class="fm-title">${tx('Edit group')}</div>
@@ -2562,7 +2550,9 @@ function openGroupDialog(code){
     const nn = inp.value.trim().replace(/\s+/g, ' ');
     const err = groupNameError(nn, code);
     if(err){ document.getElementById('fmErr').textContent = noEnd(err); inp.focus(); return; }
-    g.name = nn; closeForm(); applyCustomChange();
+    const cur = CUSTOM.groups.find(x => x.id === code);   // the group as it is now
+    if(cur) cur.name = nn;
+    closeForm(); applyCustomChange();
   };
   if(document.getElementById('fmCancel')) document.getElementById('fmCancel').onclick = closeForm;
   document.getElementById('fmOk').onclick = save;
@@ -2588,7 +2578,7 @@ function openGroupDialog(code){
   };
   document.getElementById('fmDel').onclick = () => {
     const own = CUSTOM.cards.filter(c => c.g === code).length;
-    askConfirm(tx('Delete group?'), tx('The group "{0}" will be deleted', g.name) + (own ? (own === 1 ? tx(', together with the 1 card you made in it') : tx(', together with the {0} cards you made in it', own)) : '') + tx('. Saved TOCFL cards stay in TOCFL. This cannot be undone'), tx('Delete'), true)
+    askConfirm(tx('Delete group?'), g.src ? tx('The group "{0}" and its cards will be deleted. Your Google Sheet stays as it is.', g.name) : tx('The group "{0}" will be deleted', g.name) + (own ? (own === 1 ? tx(', together with the 1 card you made in it') : tx(', together with the {0} cards you made in it', own)) : '') + tx('. Saved TOCFL cards stay in TOCFL. This cannot be undone'), tx('Delete'), true)
       .then(ok => {
         if(!ok) return;
         const ids = CUSTOM.cards.filter(c => c.g === code).map(c => c.id);
@@ -2684,7 +2674,7 @@ function openCardDialog(code, editId){
     const note = $('fmFound');
     let hit = -1;
     if(w) for(let i = 0; i < BASE_N; i++) if(fullWord(D[i][0]) === w){ hit = i; break; }
-    const mine = w ? CUSTOM.cards.find(x => x.id !== editId && fullWord(x.hz) === w) : null;
+    const mine = w ? CUSTOM.cards.find(x => x.id !== editId && !isSheetGroup(x.g) && fullWord(x.hz) === w) : null;
     if(mine && hit < 0){
       // already one of your own cards: no second copy
       Object.keys(auto).forEach(clearAuto);
@@ -2734,7 +2724,7 @@ function openCardDialog(code, editId){
   const save = () => {
     const H = hz.value.trim().replace(/\s+/g, ''), P = normPinyin(py.value), M = m.value.trim().replace(/\s*\n\s*/g, '; '), MI = mi.value.trim().replace(/\s*\n\s*/g, '; ');
     if(!H){ err(tx('Please type the hanzi.')); hz.focus(); return; }
-    if(!/[㐀-鿿豈-﫿]/.test(H)){ err(tx('Hanzi must contain Chinese characters.')); hz.focus(); return; }
+    if(!HAS_ZH.test(H)){ err(tx('Hanzi must contain Chinese characters.')); hz.focus(); return; }
     for(let i = 0; i < BASE_N; i++) if(fullWord(D[i][0]) === fullWord(H)){ err(tx('"{0}" is already a TOCFL card ({1}) and can\'t be added or edited.', H, D[i][4])); hz.focus(); return; }
     if(!P){ err(tx('Please type the pinyin.')); py.focus(); return; }
     if(!M){ err(tx('Please type the English meaning.')); m.focus(); return; }   // English is required; Indonesian is optional (falls back to English)
@@ -2742,11 +2732,15 @@ function openCardDialog(code, editId){
       if(dup){ err(tx('"{0}" is already in your group "{1}".', H, lvLabel(dup.g))); hz.focus(); return; } }
     const E = exHz.value.trim() ? {hz:exHz.value.trim(), py:normPinyin(exPy.value, false), en:exEn.value.trim()} : null;
     if(E && exId.value.trim()) E.id = exId.value.trim();
-    if(c){ Object.assign(c, {hz:H, py:P, m:M, ex:E}); if(MI) c.mi = MI; else delete c.mi; }
+    const cur = c && CUSTOM.cards.find(x => x.id === c.id);   // the card as it is now (data may have been reloaded)
+    if(c && !cur){ closeForm(); return; }
+    if(cur){ Object.assign(cur, {hz:H, py:P, m:M, ex:E}); if(MI) cur.mi = MI; else delete cur.mi; }
     else{
       const id = ++CUSTOM.seq;
-      CUSTOM.cards.push(MI ? {id, g: code, hz:H, py:P, m:M, mi:MI, ex:E} : {id, g: code, hz:H, py:P, m:M, ex:E});
-      CUSTOM.groups.find(x => x.id === code).refs.push('cu:' + id);
+      const home = CUSTOM.groups.find(x => x.id === code);
+      if(!home){ closeForm(); return; }                   // the group was removed meanwhile (another device)
+      CUSTOM.cards.push(MI ? {id, g: code, hz:H, py:P, m:M, ex:E, mi:MI} : {id, g: code, hz:H, py:P, m:M, ex:E});   // same key order as a reload
+      home.refs.push('cu:' + id);
     }
     applyCustomChange();
     closeForm();
@@ -2850,7 +2844,8 @@ function importBackup(data){
   const custom = sanitizeCustom(data.custom);
   const tocfl = new Set(); for(let i = 0; i < BASE_N; i++) tocfl.add(fullWord(D[i][0]));
   const before = custom.cards.length;
-  custom.cards = custom.cards.filter(c => !tocfl.has(fullWord(c.hz)));   // N1–C1 words stay read-only
+  const linked = new Set(custom.groups.filter(g => g.src).map(g => g.id));
+  custom.cards = custom.cards.filter(c => linked.has(c.g) || !tocfl.has(fullWord(c.hz)));   // N1–C1 words stay read-only (a linked sheet may repeat them)
   const skipped = before - custom.cards.length;
   const tocflKeys = new Set(); for(let i = 0; i < BASE_N; i++) tocflKeys.add(keyOf(D[i]));
   const ownKeys = new Set(custom.cards.map(c => 'cu:' + c.id));
@@ -2878,7 +2873,7 @@ function importBackup(data){
         quizCfg = readQuizCfg(data.quiz);
         try{ localStorage.setItem(LS_QUIZ, JSON.stringify(quizCfg)); }catch(e){}
       }
-      if(data.lang === 'en' || data.lang === 'id'){ LANG = data.lang; try{ localStorage.setItem(LS_LANG, LANG); }catch(e){} applyLangStatic(); syncQuizBtn(); }
+      if(data.lang === 'en' || data.lang === 'id'){ LANG = data.lang; try{ localStorage.setItem(LS_LANG, LANG); }catch(e){} applyLangStatic(); }
       if(typeof data.voice === 'string' || data.voice === null){
         chosenVoice = data.voice || '';
         try{ if(chosenVoice) localStorage.setItem(LS_VOICE, chosenVoice); else localStorage.removeItem(LS_VOICE); }catch(e){}
@@ -2941,12 +2936,12 @@ function applyLangStatic(){
   document.querySelectorAll('[data-tx-title]').forEach(el => { el.title = tx(el.dataset.txTitle); el.setAttribute('aria-label', tx(el.dataset.txTitle)); });
   const q = document.getElementById('q');
   q.placeholder = tx('漢字 / pīnyīn / meaning…'); q.setAttribute('aria-label', tx('Search by hanzi, pinyin or meaning'));
+  syncQuizBtn();
 }
 function setLang(l){
   LANG = l === 'id' ? 'id' : 'en';
   try{ localStorage.setItem(LS_LANG, LANG); }catch(e){}
   applyLangStatic();
-  syncQuizBtn();
   buildBar();
   refresh(true);
   updateBookmarkUI();
