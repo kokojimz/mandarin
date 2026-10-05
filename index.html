@@ -551,7 +551,7 @@ function sanitizeCustom(c){
     ids.add(x.id); words.add(w);
     const ex = (x.ex && str(x.ex.hz).trim()) ? {hz:str(x.ex.hz), py:str(x.ex.py), en:str(x.ex.en)} : null;
     if(ex && str(x.ex.id).trim()) ex.id = str(x.ex.id).trim();          // Indonesian translation, only when typed
-    const card = {id:x.id, g:x.g, hz:x.hz.replace(/\s+/g, ''), py:str(x.py).trim(), m:str(x.m).trim(), ex};
+    const card = {id:x.id, g:x.g, hz:x.hz.replace(/\s+/g, ''), py:splitPinyin(str(x.py), [...x.hz.replace(/[()\s]/g, '')].length), m:str(x.m).trim(), ex};
     if(str(x.mi).trim()) card.mi = str(x.mi).trim();      // Indonesian meaning, only when typed
     out.cards.push(card);
   });
@@ -590,12 +590,103 @@ const lvLabel = code => { const l = LEVELS.find(x => x[0] === code); return l &&
 try{ const raw = localStorage.getItem(LS_CUSTOM); if(raw) CUSTOM = sanitizeCustom(JSON.parse(raw)); }catch(e){}
 installCustom();
 
-// "ni3 hao3" / "ni3hao3" / "lv4" -> "nǐ hǎo" / "lǜ"; text that already has tone marks is kept.
-function normPinyin(str, split = true){   // split=false keeps words joined (for example sentences)
+
+// Joined pinyin with tone marks ("Zhōngguó", "rénkǒu") -> one syllable per token ("Zhōng guó").
+// n = number of hanzi: when known, the split that gives exactly that many syllables wins.
+var PY_SYL = null;
+function pySylSet(){
+  if(PY_SYL) return PY_SYL;
+  const I = ['','b','p','m','f','d','t','n','l','g','k','h','j','q','x','zh','ch','sh','r','z','c','s','y','w'];
+  const F = 'a o e ai ei ao ou an en ang eng ong er i ia ie iao iu ian in iang ing iong u ua uo uai ui uan un uang ueng v ve van vn ue uan un'.split(' ');
+  const all = new Set();
+  I.forEach(i => F.forEach(f => all.add(i + f)));
+  const OK = 'a o e ai ei ao ou an en ang eng er yi ya ye yao you yan yin yang ying yong wu wa wo wai wei wan wen wang weng yu yue yuan yun ' +
+    'ba bo bai bei bao ban ben bang beng bi bie biao bian bin bing bu pa po pai pei pao pou pan pen pang peng pi pie piao pian pin ping pu ' +
+    'ma mo me mai mei mao mou man men mang meng mi mie miao miu mian min ming mu fa fo fei fou fan fen fang feng fu ' +
+    'da de dai dei dao dou dan den dang deng dong di dia die diao diu dian ding du duo dui duan dun ' +
+    'ta te tai tei tao tou tan tang teng tong ti tie tiao tian ting tu tuo tui tuan tun ' +
+    'na ne nai nei nao nou nan nen nang neng nong ni nie niao niu nian nin niang ning nu nuo nuan nv nve ' +
+    'la le lai lei lao lou lan lang leng long li lia lie liao liu lian lin liang ling lu luo luan lun lv lve ' +
+    'ga ge gai gei gao gou gan gen gang geng gong gu gua guo guai gui guan gun guang ' +
+    'ka ke kai kei kao kou kan ken kang keng kong ku kua kuo kuai kui kuan kun kuang ' +
+    'ha he hai hei hao hou han hen hang heng hong hu hua huo huai hui huan hun huang ' +
+    'ji jia jie jiao jiu jian jin jiang jing jiong ju jue juan jun qi qia qie qiao qiu qian qin qiang qing qiong qu que quan qun ' +
+    'xi xia xie xiao xiu xian xin xiang xing xiong xu xue xuan xun ' +
+    'zha zhe zhi zhai zhei zhao zhou zhan zhen zhang zheng zhong zhu zhua zhuo zhuai zhui zhuan zhun zhuang ' +
+    'cha che chi chai chao chou chan chen chang cheng chong chu chua chuo chuai chui chuan chun chuang ' +
+    'sha she shi shai shei shao shou shan shen shang sheng shu shua shuo shuai shui shuan shun shuang ' +
+    're ri rao rou ran ren rang reng rong ru rua ruo rui ruan run ' +
+    'za ze zi zai zei zao zou zan zen zang zeng zong zu zuo zui zuan zun ca ce ci cai cao cou can cen cang ceng cong cu cuo cui cuan cun ' +
+    'sa se si sai sao sou san sen sang seng song su suo sui suan sun m n ng hm hng';
+  PY_SYL = new Set(OK.split(' ').filter(x => all.has(x) || /^(m|n|ng|hm|hng)$/.test(x)));
+  return PY_SYL;
+}
+// one token ("Zhōngguó") -> list of possible splits: {parts, cost}; null when it isn't pinyin
+function pySplits(tok){
+  const chars = [...tok], base = [], toned = [];
+  for(const ch of chars){
+    const d = ch.normalize('NFD');
+    if(!/^[a-zA-ZüÜ]/.test(d)) return null;
+    base.push(/̈/.test(d) || /[üÜ]/.test(ch) ? 'v' : d[0].toLowerCase());
+    toned.push(/[̄́̌̀]/.test(d));
+  }
+  const SYL = pySylSet(), L = chars.length;
+  const memo = new Map();
+  const go = i => {   // all splits of chars[i..]: Map(count -> best {parts, cost})
+    if(i === L) return new Map([[0, {parts: [], cost: 0}]]);
+    if(memo.has(i)) return memo.get(i);
+    const res = new Map();
+    for(let j = i + 1; j <= Math.min(L, i + 7); j++){
+      let b = base.slice(i, j).join(''), er = false;
+      if(!SYL.has(b) && j === L && b.length > 1 && b.endsWith('r') && b !== 'er' && SYL.has(b.slice(0, -1)) && !/^(m|n|ng|hm|hng)$/.test(b.slice(0, -1))) er = true;   // erhua: diǎnr
+      if(!SYL.has(b) && !er) continue;
+      if(er && i > 0 && /^[aoe]/.test(b)) continue;
+      if(toned.slice(i, j).filter(Boolean).length > 1) continue;   // one tone mark per syllable
+      const rest = go(j);
+      let c = (i > 0 && /^[aoe]/.test(b) ? 1 : 0) + (er ? 1 : 0);   // a/o/e inside a word normally comes after an apostrophe
+      rest.forEach((v, k) => {
+        const cand = {parts: [chars.slice(i, j).join(''), ...v.parts], cost: v.cost + c};
+        const old = res.get(k + 1);
+        if(!old || cand.cost < old.cost) res.set(k + 1, cand);
+      });
+    }
+    memo.set(i, res); return res;
+  };
+  const r = go(0);
+  return r.size ? r : null;
+}
+function splitPinyin(py, n){
+  py = String(py || '').trim().replace(/\s+/g, ' ');
+  if(py.includes('/')) return py.split(/\s*\/\s*/).map(x => splitPinyin(x, n)).join(' / ');   // several readings: each one on its own
+  if(!py) return py;
+  const toks = py.replace(/['’]/g, ' ').split(' ').filter(Boolean);
+  if(n && toks.length === n) return toks.join(' ');
+  const opts = toks.map(t => {
+    const dot = t.startsWith('·') ? '·' : '', r = pySplits(t.slice(dot.length));
+    if(!r) return new Map([[1, {parts: [t], cost: 0}]]);
+    if(dot) r.forEach(v => { v.parts = [dot + v.parts[0], ...v.parts.slice(1)]; });
+    return r;
+  });
+  // combine the tokens: exactly n syllables when possible, otherwise the most natural split
+  let all = new Map([[0, {parts: [], cost: 0}]]);
+  opts.forEach(o => {
+    const next = new Map();
+    all.forEach((a, ka) => o.forEach((b, kb) => {
+      const c = {parts: [...a.parts, ...b.parts], cost: a.cost + b.cost}, old = next.get(ka + kb);
+      if(!old || c.cost < old.cost) next.set(ka + kb, c);
+    }));
+    all = next;
+  });
+  let best = n && all.get(n);
+  if(!best) all.forEach((v, k) => { if(!best || v.cost < best.cost || (v.cost === best.cost && k < best.parts.length)) best = v; });
+  return best.parts.join(' ');
+}
+// "ni3 hao3" / "ni3hao3" / "lv4" -> "nǐ hǎo" / "lǜ"; with split, joined syllables are separated too ("Zhōngguó" -> "Zhōng guó").
+function normPinyin(str, split = true, n = 0){   // split=false keeps words joined (for example sentences)
   const MK = {a:'āáǎà', e:'ēéěè', i:'īíǐì', o:'ōóǒò', u:'ūúǔù', 'ü':'ǖǘǚǜ'};
   str = String(str || '').trim().replace(/\s+/g, ' ');
   if(split) str = str.replace(/([a-zü:]+[0-5])(?=[a-zü])/gi, '$1 ');
-  return str.replace(/([a-zA-ZüÜv:]+?)([0-5])(?![0-9])/g, (all, syl, tn) => {
+  str = str.replace(/([a-zA-ZüÜv:]+?)([0-5])(?![0-9])/g, (all, syl, tn) => {
     const cap = /^[A-Z]/.test(syl);
     let base = syl.toLowerCase().replace(/u:|v/g, 'ü');
     const t = +tn;
@@ -608,6 +699,7 @@ function normPinyin(str, split = true){   // split=false keeps words joined (for
     if(cap) base = base.charAt(0).toUpperCase() + base.slice(1);
     return base;
   });
+  return split ? splitPinyin(str, n) : str;
 }
 
 function colorPinyin(py){
@@ -2245,7 +2337,7 @@ function cardsFromRows(rows){
   for(let r = 0; r < rows.length && cards.length < 3000; r++){
     const H = cell(r, hz).replace(/\s+/g, '');
     if(!HAS_ZH.test(H) || /^(漢字|汉字)$/.test(H)) continue;    // not a word (a title row, a note, an empty row)
-    const P = normPinyin(cell(r, col.py)), M = cell(r, col.m).replace(/\s*\n\s*/g, '; '), MI = cell(r, col.mi).replace(/\s*\n\s*/g, '; ');
+    const P = normPinyin(cell(r, col.py), true, [...fullWord(H)].length), M = cell(r, col.m).replace(/\s*\n\s*/g, '; '), MI = cell(r, col.mi).replace(/\s*\n\s*/g, '; ');
     if(!P || !M || seen.has(fullWord(H))){ skipped++; continue; }   // same rules as a card you add: hanzi, pinyin and English meaning
     seen.add(fullWord(H));
     const c = {hz: H.slice(0, 40), py: P.slice(0, 200), m: M.slice(0, 500), ex: null};
@@ -2714,12 +2806,12 @@ function openCardDialog(code, editId){
   // (which pushes the buttons down) can't make the tap miss the button
   hz.addEventListener('blur', () => { clearTimeout(lt); if(pressDown) lt = setTimeout(() => { if(hz.isConnected) lookup(); }, 350); else lookup(); });
   py.addEventListener('input', () => { err(); preview(); });
-  py.addEventListener('blur', () => { py.value = normPinyin(py.value); preview(); });
+  py.addEventListener('blur', () => { py.value = normPinyin(py.value, true, [...fullWord(hz.value.replace(/\s+/g, ''))].length); preview(); });
   exPy.addEventListener('blur', () => { exPy.value = normPinyin(exPy.value, false); });
   m.addEventListener('input', () => err());
   mi.addEventListener('input', () => err());
   const save = () => {
-    const H = hz.value.trim().replace(/\s+/g, ''), P = normPinyin(py.value), M = m.value.trim().replace(/\s*\n\s*/g, '; '), MI = mi.value.trim().replace(/\s*\n\s*/g, '; ');
+    const H = hz.value.trim().replace(/\s+/g, ''), P = normPinyin(py.value, true, [...fullWord(hz.value.replace(/\s+/g, ''))].length), M = m.value.trim().replace(/\s*\n\s*/g, '; '), MI = mi.value.trim().replace(/\s*\n\s*/g, '; ');
     if(!H){ err(tx('Please type the hanzi.')); hz.focus(); return; }
     if(!HAS_ZH.test(H)){ err(tx('Hanzi must contain Chinese characters.')); hz.focus(); return; }
     for(let i = 0; i < BASE_N; i++) if(fullWord(D[i][0]) === fullWord(H)){ err(tx('"{0}" is already a TOCFL card ({1}) and can\'t be added or edited.', H, D[i][4])); hz.focus(); return; }
