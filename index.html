@@ -31,7 +31,6 @@
   }
   button{ -webkit-tap-highlight-color:transparent; touch-action:manipulation; user-select:none; -webkit-user-select:none; }
   button:focus:not(:focus-visible){ outline:none; }
-  h1{ text-align:center; font-size:1.35rem; margin:0 0 4px; }
   p.sub{ text-align:center; color:var(--sub); margin:16px 0 0; font-size:.72rem; white-space:nowrap; }
   #countSub{ font-size:min(.72rem, calc((100vw - 24px) / 26.5)); }   /* shrinks a little on very narrow screens so the whole line always stays on one line */
   .controls{ display:flex; justify-content:center; gap:8px; margin:10px 0; flex-wrap:wrap; }
@@ -51,7 +50,7 @@
   }
   #levelBar button .cnt{ margin:0; font-size:.62rem; font-weight:500; opacity:.7; font-variant-numeric:tabular-nums; }
   #levelBar button .gname{ max-width:10em; overflow:hidden; text-overflow:ellipsis; }
-  #levelBar button.add-pill{ width:30px; padding:0; border:none; background:transparent; box-shadow:none; color:var(--sub); }
+  #levelBar button.add-pill{ width:30px; padding:0; border:none; background:transparent; box-shadow:none; color:var(--text); }
   /* round "+" icon (new group) */
   .ic-plus{ width:20px; height:20px; display:inline-block; flex:none; line-height:0; }
   .ic-plus svg{ display:block; width:20px; height:20px; }
@@ -91,7 +90,7 @@
   .fm-note{ font-size:.72rem; color:var(--accent); margin-top:5px; }
   .fm-note:empty{ display:none; }
   .fm-note.fm-block{ color:#d64545; }
-  details.fm-ex{ margin:16px 0 20px; }   /* with the 12px field gap this gives 20px above and 20px below */   /* 20px above the summary and 20px below the section, open or closed */
+  details.fm-ex{ margin:16px 0 20px; }   /* 20px above the summary and 20px below the section, open or closed */
   details.fm-ex summary{ cursor:pointer; font-size:.8rem; line-height:1.2; color:var(--sub); margin-bottom:0; list-style:none; text-align:left; position:relative; top:-2px; }   /* nudged up: lowercase text looks optically centered between the fields and the buttons */
   details.fm-ex[open] summary{ margin-bottom:10px; }
   details.fm-ex .fm-field:last-child{ margin-bottom:0; }
@@ -152,6 +151,25 @@
   }
   .tools input:focus{ outline:none; border-color:var(--accent); box-shadow:0 0 0 1px var(--accent); caret-color:var(--accent); }
   .tools input::selection{ background:var(--accent); color:#fff; }
+  /* quiz mode: the score takes the search box's place, same size */
+  .quiz-score{
+    flex:1 1 200px; min-width:0; height:38px; padding:0; border:0; background:none;
+    color:var(--text); font-size:1.75rem; line-height:1; font-family:inherit;
+    display:flex; align-items:baseline; justify-content:center; font-weight:600; white-space:nowrap; position:relative;   /* small side texts share the score's baseline */
+  }
+  .quiz-score .qs-main{ display:flex; align-items:baseline; gap:14px; flex:none; }
+  .quiz-score .qs-side{ flex:1 1 0; min-width:0; font-size:.8rem; font-weight:500; color:var(--sub); overflow:hidden; text-overflow:ellipsis; padding:0 6px; }
+  .quiz-score .qs-side b{ color:var(--text); font-weight:600; }
+  .quiz-score .qs-l{ text-align:left; }
+  .quiz-score .qs-r{ text-align:right; }
+  /* thin progress line along the bottom, inside the same height so nothing moves */
+  .quiz-score .qs-bar{ position:absolute; left:0; right:0; bottom:0; height:3px; border-radius:2px; background:var(--border); overflow:hidden; }
+  .quiz-score .qs-bar i{ display:block; height:100%; background:var(--accent); border-radius:2px; transition:width .3s; }
+  .quiz-score[hidden], .tools input[hidden]{ display:none; }
+  .quiz-score .qs-item{ display:inline-flex; align-items:baseline; gap:8px; }
+  .quiz-score .qs-dot{ color:var(--text); }
+  .quiz-score .qs-o{ color:#1e9e5a; font-weight:800; }
+  .quiz-score .qs-x{ color:#d64545; font-weight:800; }
   /* tool row: centred, the same gap between all buttons and around the dividers */
   .tools.action-row{ margin-top:16px; align-items:center; max-width:960px; flex-wrap:nowrap; justify-content:center; gap:10px; }
   .tools.action-row button{
@@ -218,8 +236,7 @@
   .st-txt{ display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   .st-chev{ position:absolute; right:14px; top:50%; transform:translateY(-50%); font-size:1.15rem; line-height:1; font-weight:400; color:var(--sub); }
   .seg button.on{ background:var(--accent); color:#fff; }
-  /* fill-in-the-blank quiz: cards not answered yet hide their word */
-  /* fill-the-blank quiz, card not answered yet: a plain card with just its level / group name */
+  /* quiz, card not answered yet with its word hidden: a plain card with just its level / group name */
   .card.q-mask .hanzi.q-hidden{ color:var(--sub); font-size:1.6rem; font-weight:700; line-height:1.2; padding:0 6px; word-break:break-word; }   /* shows the level / group name instead of the word */
   .card.q-mask .lv, .card.q-mask .bm-toggle, .card.q-mask .fav-toggle{ visibility:hidden; }
   .grid{
@@ -261,12 +278,11 @@
   .pager button{
     min-width:34px; height:34px; padding:0 8px; border-radius:8px;
     background:var(--card-bg); color:var(--text); border:1px solid var(--border);
-    font-size:.85rem; cursor:pointer; font-family:inherit;
+    font-size:.85rem; cursor:pointer; font-family:inherit; flex:none;
   }
   .pager button.cur{ background:var(--accent); color:#fff; border-color:var(--accent); }
   .pager button:disabled{ opacity:.4; cursor:default; }
   .pg-mid{ display:flex; flex:none; min-width:0; justify-content:center; align-items:center; gap:inherit; }   /* Prev and Next sit right against the page numbers */
-  .pager button{ flex:none; }
   .pager button.dots{ min-width:24px; padding:0; background:transparent; border-color:transparent; color:var(--sub); }   /* compact, tap to jump */
   .pg-jump-wrap{ position:relative; display:block; flex:none; }
   .pg-jump{
@@ -388,6 +404,7 @@
     #levelBar button.add-pill{ width:28px; padding:0; }
     .tools{ flex-wrap:nowrap; gap:6px; }
     .tools input{ flex:1 1 0; padding:8px 12px; }
+    .quiz-score{ flex:1 1 0; }
     .grid{ grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; }
     .card{ height:138px; border-radius:12px; }
     .face{ padding:6px 5px; }
@@ -425,6 +442,7 @@
 
 <div class="tools search-row">
   <input id="q" type="search" placeholder="漢字 / pīnyīn / meaning…" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Search by hanzi, pinyin or meaning">
+  <div class="quiz-score" id="quizScore" role="status" aria-live="polite" hidden></div>
   <div class="resume" id="resume" role="button" tabindex="0" hidden>
     <span class="rb"></span>
     <div class="rt"><div class="rn"></div></div>
@@ -496,14 +514,12 @@ const plain = s => s.normalize('NFD').replace(/[\u0300-\u036f·]/g,'').toLowerCa
 const fullWord = w => w.replace(/[()]/g,'');
 const HAS_ZH = /[\u3400-\u9fff\uf900-\ufaff]/;   // contains a Chinese character
 
-// Example sentences shown in the flipped preview card. Keyed by fullWord(hanzi).
-// Covers N1–B2 and C1.
 // ---------- language: English / Bahasa Indonesia (saved in this browser) ----------
 const LS_LANG = 'tocfl-lang-v1';
 let LANG = 'en';
 try{ if(localStorage.getItem(LS_LANG) === 'id') LANG = 'id'; }catch(e){}
 MEAN_ID.forEach((m, i) => { D[i].mi = m; });
-const ID_TEXT = {"Settings": "Pengaturan", "Reset order": "Kembalikan urutan", "Shuffle": "Acak", "Reveal / hide all": "Buka / tutup semua", "Start quiz": "Mulai kuis", "Back to study mode": "Kembali ke mode belajar", "漢字 / pīnyīn / meaning…": "漢字 / pīnyīn / arti…", "Search by hanzi, pinyin or meaning": "Cari berdasarkan hanzi, pinyin, atau arti", "Vocabulary: TOCFL · Meanings: CC-CEDICT": "Kosakata: TOCFL · Arti: CC-CEDICT", "Cancel": "Batal", "Check": "Periksa", "OK": "OK", "{0} — hold to rename or delete": "{0} — tahan untuk ganti nama atau hapus", "All": "Semua", "New group": "Grup baru", "Pīnyīn of the word": "Pīnyīn kata", "Fill the blank": "Isi bagian kosong", "Multiple choice": "Pilihan ganda", "Type it": "Ketik", "Quiz": "Kuis", "Choose how you want to be quizzed.": "Atur cara kuis yang kamu inginkan.", "Question": "Soal", "Cards in the grid": "Kartu di daftar", "Show the word": "Tampilkan kata", "Hide the word": "Sembunyikan kata", "Answer": "Jawaban", "Choices": "Jumlah pilihan", "Tones in typed pīnyīn": "Nada pada pīnyīn yang diketik", "Must match": "Harus tepat", "Ignore": "Abaikan", "Time per card": "Waktu per kartu", "Off": "Mati", "On": "Aktif", "{0}s": "{0} dtk", "Save": "Simpan", "Restart quiz?": "Mulai ulang kuis?", "The new quiz settings will restart the quiz and reset your quiz score.": "Pengaturan kuis yang baru akan memulai ulang kuis dan mengatur ulang skormu.", "Restart": "Mulai ulang", "Exit quiz mode?": "Keluar dari mode kuis?", "Exiting quiz mode will reset your quiz score.": "Keluar dari mode kuis akan mengatur ulang skormu.", "Exit": "Keluar", "Type the missing word (漢字 or pīnyīn).": "Ketik kata yang hilang (漢字 atau pīnyīn).", "Which word fills the blank?": "Kata mana yang mengisi bagian kosong?", "Type the pīnyīn of this word.": "Ketik pīnyīn kata ini.", "Which pinyin matches this word?": "Pinyin mana yang sesuai dengan kata ini?", "Answer:": "Jawaban:", "See this card": "Lihat kartu ini", "Delete": "Hapus", "Edit": "Ubah", "Bookmark": "Penanda", "Add to group": "Tambahkan ke grup", "Play pronunciation": "Putar pelafalan", "Stop": "Berhenti", "Delete card?": "Hapus kartu?", "The card \"{0}\" will be deleted from \"{1}\". This cannot be undone.": "Kartu \"{0}\" akan dihapus dari \"{1}\". Tindakan ini tidak bisa dibatalkan.", "Continue from {0}": "Lanjutkan dari {0}", "Remove bookmark?": "Hapus penanda?", "The card \"{0}\" will no longer be marked as your bookmark.": "Kartu \"{0}\" tidak akan ditandai lagi sebagai penandamu.", "Remove": "Hapus", "Change bookmark?": "Ganti penanda?", "Your current bookmark on \"{0}\" will be replaced with this card.": "Penandamu saat ini di \"{0}\" akan diganti dengan kartu ini.", "Your current bookmark will be replaced with this card.": "Penandamu saat ini akan diganti dengan kartu ini.", "Change": "Ganti", "Set bookmark?": "Pasang penanda?", "This card will be marked as your bookmark so you can jump back to it later.": "Kartu ini akan ditandai sebagai penanda supaya kamu bisa kembali ke sini nanti.", "Set": "Pasang", "Taiwan": "Taiwan", "China": "Tiongkok", "Hong Kong": "Hong Kong", "Cantonese": "Kanton", "Singapore": "Singapura", "Automatic": "Otomatis", "Voice": "Suara", "Tap a voice to hear it.": "Ketuk suara untuk mendengarnya.", "No Chinese voices were found on this device.": "Tidak ada suara bahasa Mandarin di perangkat ini.", "Cards": "Kartu", "Tap and hold a card to peek": "Tahan kartu untuk melihat sekilas", "Prev": "Kembali", "Next": "Lanjut", "Jump to page {0}-{1}": "Lompat ke halaman {0}-{1}", "Jump to a page between {0} and {1}": "Lompat ke halaman antara {0} dan {1}", "Page number {0} to {1}": "Nomor halaman {0} sampai {1}", "Add a card to {0}": "Tambahkan kartu ke {0}", "Add card": "Tambah kartu", "Give your new group a name.": "Beri nama untuk grup barumu.", "Group name": "Nama grup", "Create": "Buat", "Saved to \"{0}\"": "Disimpan ke \"{0}\"", "Please type a name.": "Silakan ketik nama.", "That name is reserved.": "Nama itu tidak bisa dipakai.", "A group with this name already exists.": "Grup dengan nama ini sudah ada.", "Create new group": "Buat grup baru", "Done": "Selesai", "Cards you made stay in their own group": "Kartu buatanmu tetap berada di grupnya sendiri", "Edit group": "Ubah grup", "This group has 1 card.": "Grup ini berisi 1 kartu.", "This group has {0} cards.": "Grup ini berisi {0} kartu.", "Delete group?": "Hapus grup?", "The group \"{0}\" will be deleted": "Grup \"{0}\" akan dihapus", ", together with the 1 card you made in it": ", beserta 1 kartu yang kamu buat di dalamnya", ", together with the {0} cards you made in it": ", beserta {0} kartu yang kamu buat di dalamnya", ". Saved TOCFL cards stay in TOCFL. This cannot be undone": ". Kartu TOCFL yang disimpan tetap ada di TOCFL. Tindakan ini tidak bisa dibatalkan", "Edit card": "Ubah kartu", "New card": "Kartu baru", "Card in \"{0}\".": "Kartu di \"{0}\".", "Add a card to \"{0}\".": "Tambahkan kartu ke \"{0}\".", "zhōng guó  or  zhong1 guo2": "zhōng guó  atau  zhong1 guo2", "Example sentence (optional)": "Contoh kalimat (opsional)", "Sentence": "Kalimat", "Add": "Tambah", "\"{0}\" is already in your group \"{1}\".": "\"{0}\" sudah ada di grupmu \"{1}\".", "\"{0}\" is already a TOCFL card ({1}). TOCFL cards can't be added or edited.": "\"{0}\" sudah menjadi kartu TOCFL ({1}). Kartu TOCFL tidak bisa ditambahkan atau diubah.", "Pinyin suggested per character, please check the tones.": "Pinyin disarankan per karakter, mohon periksa nadanya.", "Please type the hanzi.": "Silakan ketik hanzinya.", "Hanzi must contain Chinese characters.": "Hanzi harus berisi karakter Mandarin.", "\"{0}\" is already a TOCFL card ({1}) and can't be added or edited.": "\"{0}\" sudah menjadi kartu TOCFL ({1}) dan tidak bisa ditambahkan atau diubah.", "Please type the pinyin.": "Silakan ketik pinyinnya.", "The card \"{0}\" will be deleted. This cannot be undone.": "Kartu \"{0}\" akan dihapus. Tindakan ini tidak bisa dibatalkan.", "Export backup": "Ekspor cadangan", "Your groups, saved cards and bookmark will be saved in this file.": "Grup, kartu tersimpan, dan penandamu akan disimpan di file ini.", "File name": "Nama file", "Export": "Ekspor", "Import": "Impor", "Backup exported": "Cadangan berhasil diekspor", "Backup exported: {0}": "Cadangan diekspor: {0}", "Export failed on this device": "Ekspor gagal di perangkat ini", "This is not a TOCFL flashcards backup": "Ini bukan file cadangan TOCFL flashcards", "Import backup?": "Impor cadangan?", "Your groups, saved cards and bookmark will be replaced with the ones in this file ({0}, {1})": "Grup, kartu tersimpan, dan penandamu akan diganti dengan isi file ini ({0}, {1})", "Imported {0}, {1}": "Berhasil mengimpor {0}, {1}", " ({0} skipped)": " ({0} dilewati)", "Could not read this file": "File ini tidak bisa dibaca", "1 group": "1 grup", "{0} groups": "{0} grup", "1 card": "1 kartu", "{0} cards": "{0} kartu", "1 TOCFL word": "1 kata TOCFL", "{0} TOCFL words": "{0} kata TOCFL", "Change how the app looks, sounds and quizzes you.": "Atur tampilan, suara, bahasa, dan kuis aplikasi.", "Theme": "Tema", "Dark": "Gelap", "Light": "Terang", "Backup": "Cadangan", "Language": "Bahasa", "Meaning (English)": "Arti (Inggris)", "Meaning (Indonesian)": "Arti (Indonesia)", "Translation (English)": "Terjemahan (Inggris)", "Translation (Indonesian)": "Terjemahan (Indonesia)", "Please type the English meaning.": "Silakan ketik arti dalam bahasa Inggris.", "Google Sheets link (optional)": "Link Google Sheets (opsional)", "Reading the sheet…": "Membaca sheet…", "Choose the sheets to add.": "Pilih sheet yang mau ditambahkan.", "This sheet will be added.": "Sheet ini akan ditambahkan.", "No cards found": "Tidak ada kartu", "Choose at least one sheet.": "Pilih minimal satu sheet.", "This is not a Google Sheets link.": "Ini bukan link Google Sheets.", "Couldn't read this sheet. Make sure it's shared with \"Anyone with the link\" and you're online.": "Sheet ini tidak bisa dibaca. Pastikan aksesnya \"Siapa saja yang memiliki link\" dan kamu sedang online.", "Sheet": "Sheet", "Sync": "Sinkron", "Syncing…": "Menyinkronkan…", "Synced: {0}": "Tersinkron: {0}", "Last synced {0}": "Terakhir disinkron {0}", "1 row skipped": "1 baris dilewati", "{0} rows skipped": "{0} baris dilewati", "This sheet was not found in the spreadsheet.": "Sheet ini tidak ditemukan di spreadsheet.", "Added {0}": "Ditambahkan {0}", "This viewer doesn't let the app go online. Open the file in a browser (Safari, Chrome) to use sheet links.": "Penampil ini tidak mengizinkan aplikasi terhubung ke internet. Buka file ini di browser (Safari, Chrome) untuk memakai link sheet.", "Favorite": "Favorit", "Cards of this group come from its Google Sheet": "Kartu grup ini berasal dari Google Sheet-nya", "The group \"{0}\" and its cards will be deleted. Your Google Sheet stays as it is.": "Grup \"{0}\" beserta kartunya akan dihapus. Google Sheet-mu tetap seperti semula.", "Type a name or add sheets from a link.": "Ketik nama atau tambahkan sheet dari link.", "Sheet format": "Format sheet", "Hanzi": "Hanzi", "Pinyin": "Pinyin", "Pinyin (sentence)": "Pinyin (kalimat)", "Each tab becomes a group named after the tab. The columns must be in this order:": "Tiap tab jadi satu grup dengan nama tab itu. Urutan kolomnya harus seperti ini:", "* Required: rows without them are skipped. Pinyin can be zhōng guó or zhong1 guo2.": "* Wajib: baris tanpa isian ini dilewati. Pinyin boleh zhōng guó atau zhong1 guo2.", "Saber has entered the chat.": "Kebanyakan mikir keburu diangkat Saber."};
+const ID_TEXT = {"Settings": "Pengaturan", "Reset order": "Kembalikan urutan", "Shuffle": "Acak", "Reveal / hide all": "Buka / tutup semua", "Start quiz": "Mulai kuis", "Start": "Mulai", "Back to study mode": "Kembali ke mode belajar", "漢字 / pīnyīn / meaning…": "漢字 / pīnyīn / arti…", "Search by hanzi, pinyin or meaning": "Cari berdasarkan hanzi, pinyin, atau arti", "Vocabulary: TOCFL · Meanings: CC-CEDICT": "Kosakata: TOCFL · Arti: CC-CEDICT", "Cancel": "Batal", "Check": "Periksa", "OK": "OK", "{0} — hold to rename or delete": "{0} — tahan untuk ganti nama atau hapus", "All": "Semua", "New group": "Grup baru", "Pīnyīn of the word": "Pīnyīn kata", "Fill the blank": "Isi bagian kosong", "Multiple choice": "Pilihan ganda", "Type it": "Ketik", "Quiz": "Kuis", "Choose how you want to be quizzed.": "Atur cara kuis yang kamu inginkan.", "Question": "Soal", "Cards in the grid": "Kartu di daftar", "Show the word": "Tampilkan kata", "Hide the word": "Sembunyikan kata", "Answer": "Jawaban", "Choices": "Jumlah pilihan", "Tones in typed pīnyīn": "Nada pada pīnyīn yang diketik", "Must match": "Harus tepat", "Ignore": "Abaikan", "Time per card": "Waktu per kartu", "Off": "Mati", "On": "Aktif", "{0}s": "{0} dtk", "Save": "Simpan", "Exit quiz mode?": "Keluar dari mode kuis?", "Exiting quiz mode will reset your quiz score.": "Keluar dari mode kuis akan mengatur ulang skormu.", "Exit": "Keluar", "Type the missing word (漢字 or pīnyīn).": "Ketik kata yang hilang (漢字 atau pīnyīn).", "Which word fills the blank?": "Kata mana yang mengisi bagian kosong?", "Type the pīnyīn of this word.": "Ketik pīnyīn kata ini.", "Which pinyin matches this word?": "Pinyin mana yang sesuai dengan kata ini?", "Answer:": "Jawaban:", "Delete": "Hapus", "Edit": "Ubah", "Bookmark": "Penanda", "Add to group": "Tambahkan ke grup", "Play pronunciation": "Putar pelafalan", "Stop": "Berhenti", "Delete card?": "Hapus kartu?", "The card \"{0}\" will be deleted from \"{1}\". This cannot be undone.": "Kartu \"{0}\" akan dihapus dari \"{1}\". Tindakan ini tidak bisa dibatalkan.", "Continue from {0}": "Lanjutkan dari {0}", "Remove bookmark?": "Hapus penanda?", "The card \"{0}\" will no longer be marked as your bookmark.": "Kartu \"{0}\" tidak akan ditandai lagi sebagai penandamu.", "Remove": "Hapus", "Change bookmark?": "Ganti penanda?", "Your current bookmark on \"{0}\" will be replaced with this card.": "Penandamu saat ini di \"{0}\" akan diganti dengan kartu ini.", "Your current bookmark will be replaced with this card.": "Penandamu saat ini akan diganti dengan kartu ini.", "Change": "Ganti", "Set bookmark?": "Pasang penanda?", "This card will be marked as your bookmark so you can jump back to it later.": "Kartu ini akan ditandai sebagai penanda supaya kamu bisa kembali ke sini nanti.", "Set": "Pasang", "Taiwan": "Taiwan", "China": "Tiongkok", "Hong Kong": "Hong Kong", "Cantonese": "Kanton", "Singapore": "Singapura", "Automatic": "Otomatis", "Voice": "Suara", "Tap a voice to hear it.": "Ketuk suara untuk mendengarnya.", "No Chinese voices were found on this device.": "Tidak ada suara bahasa Mandarin di perangkat ini.", "Cards": "Kartu", "Tap and hold a card to peek": "Tahan kartu untuk melihat sekilas", "Prev": "Kembali", "Next": "Lanjut", "Jump to page {0}-{1}": "Lompat ke halaman {0}-{1}", "Jump to a page between {0} and {1}": "Lompat ke halaman antara {0} dan {1}", "Page number {0} to {1}": "Nomor halaman {0} sampai {1}", "Add a card to {0}": "Tambahkan kartu ke {0}", "Add card": "Tambah kartu", "Give your new group a name.": "Beri nama untuk grup barumu.", "Group name": "Nama grup", "Create": "Buat", "Saved to \"{0}\"": "Disimpan ke \"{0}\"", "Please type a name.": "Silakan ketik nama.", "That name is reserved.": "Nama itu tidak bisa dipakai.", "A group with this name already exists.": "Grup dengan nama ini sudah ada.", "Create new group": "Buat grup baru", "Done": "Selesai", "Cards you made stay in their own group": "Kartu buatanmu tetap berada di grupnya sendiri", "Edit group": "Ubah grup", "This group has 1 card.": "Grup ini berisi 1 kartu.", "This group has {0} cards.": "Grup ini berisi {0} kartu.", "Delete group?": "Hapus grup?", "The group \"{0}\" will be deleted": "Grup \"{0}\" akan dihapus", ", together with the 1 card you made in it": ", beserta 1 kartu yang kamu buat di dalamnya", ", together with the {0} cards you made in it": ", beserta {0} kartu yang kamu buat di dalamnya", ". Saved TOCFL cards stay in TOCFL. This cannot be undone": ". Kartu TOCFL yang disimpan tetap ada di TOCFL. Tindakan ini tidak bisa dibatalkan", "Edit card": "Ubah kartu", "New card": "Kartu baru", "Card in \"{0}\".": "Kartu di \"{0}\".", "Add a card to \"{0}\".": "Tambahkan kartu ke \"{0}\".", "zhōng guó  or  zhong1 guo2": "zhōng guó  atau  zhong1 guo2", "Example sentence (optional)": "Contoh kalimat (opsional)", "Sentence": "Kalimat", "Add": "Tambah", "\"{0}\" is already in your group \"{1}\".": "\"{0}\" sudah ada di grupmu \"{1}\".", "\"{0}\" is already a TOCFL card ({1}). TOCFL cards can't be added or edited.": "\"{0}\" sudah menjadi kartu TOCFL ({1}). Kartu TOCFL tidak bisa ditambahkan atau diubah.", "Pinyin suggested per character, please check the tones.": "Pinyin disarankan per karakter, mohon periksa nadanya.", "Please type the hanzi.": "Silakan ketik hanzinya.", "Hanzi must contain Chinese characters.": "Hanzi harus berisi karakter Mandarin.", "\"{0}\" is already a TOCFL card ({1}) and can't be added or edited.": "\"{0}\" sudah menjadi kartu TOCFL ({1}) dan tidak bisa ditambahkan atau diubah.", "Please type the pinyin.": "Silakan ketik pinyinnya.", "The card \"{0}\" will be deleted. This cannot be undone.": "Kartu \"{0}\" akan dihapus. Tindakan ini tidak bisa dibatalkan.", "Export backup": "Ekspor cadangan", "Your groups, saved cards and bookmark will be saved in this file.": "Grup, kartu tersimpan, dan penandamu akan disimpan di file ini.", "File name": "Nama file", "Export": "Ekspor", "Import": "Impor", "Backup exported": "Cadangan berhasil diekspor", "Backup exported: {0}": "Cadangan diekspor: {0}", "Export failed on this device": "Ekspor gagal di perangkat ini", "This is not a TOCFL flashcards backup": "Ini bukan file cadangan TOCFL flashcards", "Import backup?": "Impor cadangan?", "Your groups, saved cards and bookmark will be replaced with the ones in this file ({0}, {1})": "Grup, kartu tersimpan, dan penandamu akan diganti dengan isi file ini ({0}, {1})", "Imported {0}, {1}": "Berhasil mengimpor {0}, {1}", " ({0} skipped)": " ({0} dilewati)", "Could not read this file": "File ini tidak bisa dibaca", "1 group": "1 grup", "{0} groups": "{0} grup", "1 card": "1 kartu", "{0} cards": "{0} kartu", "1 TOCFL word": "1 kata TOCFL", "{0} TOCFL words": "{0} kata TOCFL", "Change how the app looks and sounds.": "Atur tampilan, suara, dan bahasa aplikasi.", "Theme": "Tema", "Dark": "Gelap", "Light": "Terang", "Backup": "Cadangan", "Language": "Bahasa", "Meaning (English)": "Arti (Inggris)", "Meaning (Indonesian)": "Arti (Indonesia)", "Translation (English)": "Terjemahan (Inggris)", "Translation (Indonesian)": "Terjemahan (Indonesia)", "Please type the English meaning.": "Silakan ketik arti dalam bahasa Inggris.", "Google Sheets link (optional)": "Link Google Sheets (opsional)", "Reading the sheet…": "Membaca sheet…", "Choose the sheets to add.": "Pilih sheet yang mau ditambahkan.", "This sheet will be added.": "Sheet ini akan ditambahkan.", "No cards found": "Tidak ada kartu", "Choose at least one sheet.": "Pilih minimal satu sheet.", "This is not a Google Sheets link.": "Ini bukan link Google Sheets.", "Couldn't read this sheet. Make sure it's shared with \"Anyone with the link\" and you're online.": "Sheet ini tidak bisa dibaca. Pastikan aksesnya \"Siapa saja yang memiliki link\" dan kamu sedang online.", "Sheet": "Sheet", "Sync": "Sinkron", "Syncing…": "Menyinkronkan…", "Synced: {0}": "Tersinkron: {0}", "Last synced {0}": "Terakhir disinkron {0}", "1 row skipped": "1 baris dilewati", "{0} rows skipped": "{0} baris dilewati", "This sheet was not found in the spreadsheet.": "Sheet ini tidak ditemukan di spreadsheet.", "Added {0}": "Ditambahkan {0}", "This viewer doesn't let the app go online. Open the file in a browser (Safari, Chrome) to use sheet links.": "Penampil ini tidak mengizinkan aplikasi terhubung ke internet. Buka file ini di browser (Safari, Chrome) untuk memakai link sheet.", "Favorite": "Favorit", "Cards of this group come from its Google Sheet": "Kartu grup ini berasal dari Google Sheet-nya", "The group \"{0}\" and its cards will be deleted. Your Google Sheet stays as it is.": "Grup \"{0}\" beserta kartunya akan dihapus. Google Sheet-mu tetap seperti semula.", "Type a name or add sheets from a link.": "Ketik nama atau tambahkan sheet dari link.", "Sheet format": "Format sheet", "Hanzi": "Hanzi", "Pinyin": "Pinyin", "Pinyin (sentence)": "Pinyin (kalimat)", "Each tab becomes a group named after the tab. The columns must be in this order:": "Tiap tab jadi satu grup dengan nama tab itu. Urutan kolomnya harus seperti ini:", "* Required: rows without them are skipped. Pinyin can be zhōng guó or zhong1 guo2.": "* Wajib: baris tanpa isian ini dilewati. Pinyin boleh zhōng guó atau zhong1 guo2.", "Saber has entered the chat.": "Kebanyakan mikir keburu diangkat Saber."};
 // tx('Saved to "{0}"', name): the text in the chosen language, with {0}, {1}… filled in
 function tx(s, ...a){
   let r = (LANG === 'id' && ID_TEXT[s] != null) ? ID_TEXT[s] : s;
@@ -596,10 +612,6 @@ installCustom();
 var PY_SYL = null;
 function pySylSet(){
   if(PY_SYL) return PY_SYL;
-  const I = ['','b','p','m','f','d','t','n','l','g','k','h','j','q','x','zh','ch','sh','r','z','c','s','y','w'];
-  const F = 'a o e ai ei ao ou an en ang eng ong er i ia ie iao iu ian in iang ing iong u ua uo uai ui uan un uang ueng v ve van vn ue uan un'.split(' ');
-  const all = new Set();
-  I.forEach(i => F.forEach(f => all.add(i + f)));
   const OK = 'a o e ai ei ao ou an en ang eng er yi ya ye yao you yan yin yang ying yong wu wa wo wai wei wan wen wang weng yu yue yuan yun ' +
     'ba bo bai bei bao ban ben bang beng bi bie biao bian bin bing bu pa po pai pei pao pou pan pen pang peng pi pie piao pian pin ping pu ' +
     'ma mo me mai mei mao mou man men mang meng mi mie miao miu mian min ming mu fa fo fei fou fan fen fang feng fu ' +
@@ -618,7 +630,7 @@ function pySylSet(){
     're ri rao rou ran ren rang reng rong ru rua ruo rui ruan run ' +
     'za ze zi zai zei zao zou zan zen zang zeng zong zu zuo zui zuan zun ca ce ci cai cao cou can cen cang ceng cong cu cuo cui cuan cun ' +
     'sa se si sai sao sou san sen sang seng song su suo sui suan sun m n ng hm hng';
-  PY_SYL = new Set(OK.split(' ').filter(x => all.has(x) || /^(m|n|ng|hm|hng)$/.test(x)));
+  PY_SYL = new Set(OK.split(' '));
   return PY_SYL;
 }
 // one token ("Zhōngguó") -> list of possible splits: {parts, cost}; null when it isn't pinyin
@@ -873,26 +885,24 @@ function buildBar(){
   });
   bar.appendChild(all);
   const add = document.createElement('button');
-  add.className = 'add-pill'; add.innerHTML = '<span class="ic-plus">' + roundIcon() + '</span>';
+  add.className = 'add-pill'; add.innerHTML = PLUS_ICON;
   add.title = tx('New group'); add.setAttribute('aria-label', tx('New group'));
   add.addEventListener('click', () => openNewGroupDialog());
   bar.appendChild(add);
   syncAll();
 }
-// round "+" icon: a filled circle with the sign cut out (vector, so it stays sharp on every screen)
-let icSeq = 0;
-function roundIcon(){
-  const id = 'icm' + (++icSeq);
-  const sign = '<path d="M10 5.6v8.8M5.6 10h8.8" stroke="#000" stroke-width="2" stroke-linecap="round" fill="none"/>';
-  return `<svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><mask id="${id}" maskUnits="userSpaceOnUse" x="0" y="0" width="20" height="20"><rect width="20" height="20" fill="#fff"/>${sign}</mask><circle cx="10" cy="10" r="10" fill="currentColor" mask="url(#${id})"/></svg>`;
-}
+// shared icons (vector, so they stay sharp on every screen)
+// round "+": one path, a filled circle with the sign cut out (even-odd). No SVG <mask>: some Android browsers drop masks and show only the circle
+const PLUS_ICON = '<span class="ic-plus"><svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path fill="currentColor" fill-rule="evenodd" d="M10 0a10 10 0 1 1 0 20a10 10 0 1 1 0-20zM9 5.6a1 1 0 0 1 2 0V9h3.4a1 1 0 0 1 0 2H11v3.4a1 1 0 0 1-2 0V11H5.6a1 1 0 0 1 0-2H9z"/></svg></span>';
+const CHECK_ICON = '<span class="gp-check" aria-hidden="true"><svg viewBox="0 0 10 10"><path d="M1.6 5.3l2.2 2.2 4.6-4.9" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg></span>';
+const bmIcon = (w, h) => `<svg viewBox="0 0 14 20" width="${w}" height="${h}" aria-hidden="true"><path d="M1.2 1.2h11.6v17.4L7 14.2 1.2 18.6z"/></svg>`;
 function syncAll(){ document.getElementById('allBtn').classList.toggle('active', active.size === LEVELS.length); }
 
 let pressTimer = null, sx = 0, sy = 0, peekOn = false, peekHeld = false, suppressUntil = 0;
 const peekEl = document.getElementById('peek');
 const peekBox = document.getElementById('peekBox');
 
-// ---------- confirm dialog (used before changing/removing the bookmark) ----------
+// ---------- confirm dialog (yes / no before anything that can't be undone) ----------
 const cfOverlay = document.getElementById('confirmOverlay');
 const cfTitle = document.getElementById('cfTitle');
 const cfMsg = document.getElementById('cfMsg');
@@ -941,6 +951,7 @@ function toggleQuiz(){
     flippedKeys.clear();
     pendingFlips = null;
     if(searchSnap) searchSnap.flipped = new Set();   // a search started before quiz must not bring old open cards back
+    clearSearch();                       // no search box in quiz mode: quiz the whole selection
   }
   syncQuizBtn();
   refresh(true);                   // redraws every card (face-down, borders, hidden words, the "+ add card" tile) and the score line
@@ -965,8 +976,8 @@ function readQuizCfg(v){
 let quizCfg = {...QUIZ_DEFAULT};
 try{ quizCfg = readQuizCfg(JSON.parse(localStorage.getItem(LS_QUIZ) || 'null')); }catch(e){}
 const QUIZ_Q = {pinyin:'Pīnyīn of the word', blank:'Fill the blank'}, QUIZ_A = {choice:'Multiple choice', type:'Type it'};
-// opened from Settings; Save keeps the new quiz settings, both buttons return to Settings
-function openQuizSettings(back){
+// opened from the quiz button: Start saves the settings and starts the quiz, Cancel just closes
+function openQuizSettings(){
   const c = {...quizCfg};
   const seg = (name, items) => `<div class="seg" data-k="${name}">` +
     items.map(([v, label]) => `<button type="button" data-v="${v}" class="${String(c[name]) === String(v) ? 'on' : ''}">${tx(label)}</button>`).join('') + `</div>`;
@@ -981,7 +992,7 @@ function openQuizSettings(back){
     <div class="qs-row"><div class="qs-label">${tx('Time per card')}</div>${seg('timer', [[0,'Off'],[5,tx('{0}s', 5)],[10,tx('{0}s', 10)],[20,tx('{0}s', 20)]])}</div>
     <div class="fm-actions">
       <button type="button" class="cf-btn" id="fmCancel">${tx('Cancel')}</button>
-      <button type="button" class="cf-btn cf-yes" id="fmOk">${tx('Save')}</button>
+      <button type="button" class="cf-btn cf-yes" id="fmOk">${tx('Start')}</button>
     </div>`);
   const sync = () => {
     document.getElementById('qsHide').hidden = c.q !== 'pinyin';   // fill the blank always hides the word
@@ -996,21 +1007,12 @@ function openQuizSettings(back){
     sync();
   }));
   sync();
-  const save = () => {
-    const changed = JSON.stringify(c) !== JSON.stringify(quizCfg);
+  document.getElementById('fmCancel').onclick = closeForm;
+  document.getElementById('fmOk').onclick = () => {
     quizCfg = c;
     try{ localStorage.setItem(LS_QUIZ, JSON.stringify(quizCfg)); }catch(e){}
-    if(changed && quizMode){ toggleQuiz(); toggleQuiz(); }      // a running quiz starts over with the new settings
-    back();
-  };
-  document.getElementById('fmCancel').onclick = fmBack = back;
-  document.getElementById('fmOk').onclick = () => {
-    if(quizMode && quizResults.size > 0 && JSON.stringify(c) !== JSON.stringify(quizCfg)){
-      askConfirm(tx('Restart quiz?'), tx('The new quiz settings will restart the quiz and reset your quiz score.'), tx('Restart'))
-        .then(ok => { if(ok) save(); });
-      return;
-    }
-    save();
+    closeForm();
+    if(!quizMode) toggleQuiz();
   };
 }
 quizBtn.addEventListener('click', function(){
@@ -1023,7 +1025,7 @@ quizBtn.addEventListener('click', function(){
     toggleQuiz();
     return;
   }
-  toggleQuiz();          // the switch starts the quiz right away, with the quiz settings from ⚙️
+  openQuizSettings();   // pick the quiz settings first; "Start" begins the quiz
 });
 
 // ---- the quiz itself ----
@@ -1189,9 +1191,9 @@ function openQuiz(r, card){
       });
       qzOptions.classList.add('done');
     }
-    // after answering: fill the blank shows just the full sentence; the pinyin quiz gets a random remark
-    if(blank){ qzSub.textContent = ''; qzSub.style.display = 'none'; qzSent.classList.add('last'); }   // fill the blank: no remark
-    else qzSub.textContent = meaningOf(r);                // guess the pinyin: the answer shows what the word means
+    // after answering: fill the blank shows just the full sentence; the pinyin quiz shows the meaning
+    if(blank){ qzSub.textContent = ''; qzSub.style.display = 'none'; qzSent.classList.add('last'); }
+    else qzSub.textContent = meaningOf(r);
   }
 
   if(typing){
@@ -1263,7 +1265,7 @@ function peekHTML(r){
     <div class="pk-py">${colorPinyin(py)}</div>
     <div class="pk-m">${esc(meaningOf(r))}</div>
     <div class="pk-actions">
-      <button type="button" class="pk-mark pk-bm${bookmark === keyOf(r) ? ' on' : ''}" aria-label="${tx('Bookmark')}"><svg viewBox="0 0 14 20" width="13" height="18" aria-hidden="true"><path d="M1.2 1.2h11.6v17.4L7 14.2 1.2 18.6z"/></svg></button>
+      <button type="button" class="pk-mark pk-bm${bookmark === keyOf(r) ? ' on' : ''}" aria-label="${tx('Bookmark')}">${bmIcon(13, 18)}</button>
       <button type="button" class="pk-mark pk-fav${isSaved(keyOf(r)) ? ' on' : ''}" aria-label="${tx('Add to group')}"></button>
       ${HAS_TTS ? `<button type="button" class="play pk-play" aria-label="${tx('Play pronunciation')}">▶︎</button>` : ''}
     </div>
@@ -1398,7 +1400,8 @@ async function flushSave(){
   finally{ saving = false; }
 }
 function applyLoadedLevels(levels){
-  if(levelsTouched || sessionLevels || !Array.isArray(levels)) return;   // sessionLevels: the saved session already decided the filters   // null/undefined = nothing saved yet; [] = saved as "none selected"
+  // sessionLevels: the saved session already decided the filters; null = nothing saved yet, [] = saved as "none selected"
+  if(levelsTouched || sessionLevels || !Array.isArray(levels)) return;
   active.clear();
   levels.forEach(l => { if(LEVELS.some(x => x[0] === l)) active.add(l); });
   document.querySelectorAll('#levelBar button[data-l]').forEach(b => b.classList.toggle('active', active.has(b.dataset.l)));
@@ -1477,11 +1480,9 @@ async function initStorage(){
 // ---------- bookmark (one manual "stopped here" marker) ----------
 // Jumping to the bookmark keeps the current selection when it already shows the card;
 // otherwise the card's own level (or group) is added.
-function bmSelection(lvl){
-  const k = bookmark, gs = GROUPS_OF.get(k);
-  const shown = active.has(lvl) || [...active].some(g => gs && gs.has(g));
-  if(shown) return active;
-  const sel = new Set(active); sel.add(lvl); return sel;
+function bmShown(lvl){
+  const gs = GROUPS_OF.get(bookmark);
+  return active.has(lvl) || [...active].some(g => gs && gs.has(g));
 }
 function bmInfo(){
   if(!bookmark) return null;
@@ -1533,12 +1534,8 @@ function goToBookmark(){
   const info = bmInfo();
   if(!info) return;
   order = D.map((_,i)=>i);   // always sort back to the original order before jumping to the bookmark
-  if(query.trim() !== ''){
-    clearTimeout(tm);
-    query = ''; searchSnap = null;
-    document.getElementById('q').value = '';
-  }
-  if(bmSelection(info.lvl) !== active){
+  clearSearch();
+  if(!bmShown(info.lvl)){
     active.add(info.lvl);
     levelsTouched = true; scheduleSave();
     const b = document.querySelector('#levelBar button[data-l="' + info.lvl + '"]');
@@ -1633,7 +1630,7 @@ function openVoicePicker(back){   // opened from Settings; Save keeps the voice,
   const sub = v => [region(v), quality(v)].filter(Boolean).join(' · ');
   const row = (id, name, sub, on) => `<button type="button" class="gp-row${on ? ' on' : ''}" data-v="${escAttr(id)}">
       <span class="gp-name">${esc(name)}${sub ? `<small class="vp-sub">${esc(sub)}</small>` : ''}</span>
-      <span class="gp-check" aria-hidden="true"><svg viewBox="0 0 10 10"><path d="M1.6 5.3l2.2 2.2 4.6-4.9" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg></span></button>`;
+      ${CHECK_ICON}</button>`;
   // voices that would look identical in the list get a number: Meijia 1, Meijia 2
   const seen = new Map(), counts = new Map();
   vs.forEach(v => { const k = label(v) + '|' + sub(v); counts.set(k, (counts.get(k) || 0) + 1); });
@@ -1677,14 +1674,15 @@ function makeCard(r){
   const card = document.createElement('div');
   card.className = 'card';
   card.dataset.key = keyOf(r);
-  if(hidesWord(r)) card.classList.add('q-mask');
+  const hidden = hidesWord(r);
+  if(hidden) card.classList.add('q-mask');
   if(isSaved(card.dataset.key)) card.classList.add('isfav');
   if(bookmark && card.dataset.key === bookmark) card.classList.add('isbm');
   if(quizMode && !openedOnce.has(card.dataset.key)) card.classList.add('quiz-pending');
   if(quizMode && quizResults.get(card.dataset.key) === false) card.classList.add('quiz-wrong');
   card.innerHTML = `
     <div class="card-inner">
-      <div class="face front"><span class="lv">${esc(lvLabel(l))}</span>${hidesWord(r) ? `<div class="hanzi q-hidden" data-w="${escAttr(w)}">${esc(lvLabel(l))}</div>` : `<div class="hanzi ${sc}">${esc(w)}</div>`}<button class="bm-toggle" type="button" aria-label="${tx('Bookmark')}"><svg viewBox="0 0 14 20" width="12" height="17" aria-hidden="true"><path d="M1.2 1.2h11.6v17.4L7 14.2 1.2 18.6z"/></svg></button><button class="fav-toggle" type="button" aria-label="${tx('Add to group')}"></button></div>
+      <div class="face front"><span class="lv">${esc(lvLabel(l))}</span>${hidden ? `<div class="hanzi q-hidden" data-w="${escAttr(w)}">${esc(lvLabel(l))}</div>` : `<div class="hanzi ${sc}">${esc(w)}</div>`}<button class="bm-toggle" type="button" aria-label="${tx('Bookmark')}">${bmIcon(12, 17)}</button><button class="fav-toggle" type="button" aria-label="${tx('Add to group')}"></button></div>
       <div class="face back">
         <div class="hz-small ${sc==='l'?'l':''}">${colorHanzi(w,py)}</div>
         <div class="pinyin">${colorPinyin(py)}</div>
@@ -1747,14 +1745,36 @@ function makeCard(r){
   return card;
 }
 
+// the score sits exactly halfway between the count line above and the progress line below
+// (moved with transform only, so nothing else on the page shifts)
+function alignScore(){
+  const qs = document.getElementById('quizScore');
+  if(qs.hidden) return;
+  const parts = qs.querySelectorAll('.qs-main, .qs-side');
+  parts.forEach(e => e.style.transform = '');
+  const main = qs.querySelector('.qs-main'), bar = qs.querySelector('.qs-bar');
+  if(!main || !bar) return;
+  const top = document.getElementById('countSub').getBoundingClientRect().bottom;
+  const m = main.getBoundingClientRect(), b = bar.getBoundingClientRect().top;
+  const t = ((b - m.bottom) - (m.top - top)) / 2;
+  parts.forEach(e => e.style.transform = `translateY(${t}px)`);
+}
 function updateCountSub(){
   const el = document.getElementById('countSub');
   const W = t => `<span style="color:var(--text)">${t}</span>`;
   const base = `${tx('Cards')}: ${W(list.length)}`;
+  const qIn = document.getElementById('q'), qs = document.getElementById('quizScore');
+  if(!qIn.hidden && qIn.offsetHeight) qs.style.height = qIn.offsetHeight + 'px';   // exactly the search box's height, so the cards never move
+  qIn.hidden = quizMode; qs.hidden = !quizMode;      // quiz mode: the score replaces the search box
   if(quizMode){
     let quizRight = 0, quizWrong = 0;
     quizResults.forEach(ok => { if(ok) quizRight++; else quizWrong++; });
-    el.innerHTML = `${base} · ${tx('Quiz')}: ${W(tx('On'))} · <b style="color:#1e9e5a">O</b> <span style="color:var(--text)">${quizRight}</span> · <b style="color:#d64545">X</b> <span style="color:var(--text)">${quizWrong}</span>`;
+    el.innerHTML = `${base} · ${tx('Quiz')}: ${W(tx('On'))} · ${tx(QUIZ_Q[quizCfg.q] || QUIZ_Q.pinyin)}`;
+    const total = list.length, done = list.reduce((n, i) => n + quizResults.has(keyOf(D[i])), 0);
+    const answered = quizRight + quizWrong, pct = answered ? Math.round(quizRight / answered * 100) + '%' : '–';
+    const prog = total ? done / total * 100 : 0;
+    qs.innerHTML = `<span class="qs-side qs-l"><b>${done}</b> / ${total}</span><span class="qs-main"><span class="qs-item"><span class="qs-o">O</span>${quizRight}</span><span class="qs-dot">-</span><span class="qs-item">${quizWrong}<span class="qs-x">X</span></span></span><span class="qs-side qs-r"><b>${pct}</b></span><span class="qs-bar"><i style="width:${prog}%"></i></span>`;
+    alignScore();
   } else {
     el.innerHTML = `${base} · ${tx('Quiz')}: ${W(tx('Off'))} · ${tx('Tap and hold a card to peek')}`;   // hint only in study mode, on the same line
   }
@@ -1953,11 +1973,12 @@ function renderPager(){
 // iOS Safari can keep stale button sizes after a rotation: force the level bar to re-layout
 function relayoutBar(){ const bar = document.getElementById('levelBar'); if(!bar) return; bar.style.display = 'none'; void bar.offsetHeight; bar.style.display = ''; }
 window.addEventListener('orientationchange', () => { setTimeout(relayoutBar, 50); setTimeout(relayoutBar, 350); });
-window.addEventListener('resize', () => { setTimeout(relayoutBar, 50); });
 // Cards per page change with the screen width (12 on phones, 18 wider): after a rotation, stay on the page
 // that holds the first card you were looking at, so no card is skipped when you go to the next page.
 let pagerResizeT = null, lastPageSize = pageSize();
 window.addEventListener('resize', () => {
+  alignScore();
+  setTimeout(relayoutBar, 50);
   clearTimeout(pagerResizeT);
   pagerResizeT = setTimeout(() => {
     const ps = pageSize();
@@ -2036,13 +2057,16 @@ function captureState(){
 function restoreFromSnap(){
   const s = searchSnap; searchSnap = null;
   pendingFlips = s.flipped;
-  refresh();
-  page = Math.max(1, Math.min(s.page, Math.ceil(viewList().length / pageSize())));
-  renderPage();
+  page = s.page;
+  refresh(true);                            // keepPage: back to that page (or the last one if it no longer exists)
   pendingFlips = null;
   requestAnimationFrame(()=> window.scrollTo(0, s.scrollY));
 }
 let tm;
+function clearSearch(){                     // empty search box, no "restore after search" snapshot
+  clearTimeout(tm); query = ''; searchSnap = null;
+  document.getElementById('q').value = '';
+}
 document.getElementById('q').addEventListener('input', e=>{
   clearTimeout(tm);
   tm = setTimeout(()=>{
@@ -2104,8 +2128,8 @@ function restoreSession(){
   openedOnce.clear(); arr(s.opened).forEach(k => openedOnce.add(k));
   flippedKeys.clear(); arr(s.flipped).forEach(k => flippedKeys.add(k));
   quizMode = !!s.quizMode;
-  query = typeof s.query === 'string' ? s.query : '';
-  searchSnap = s.snap ? {flipped:new Set(arr(s.snap.flipped)), page:s.snap.page || 1, scrollY:s.snap.scrollY || 0} : null;
+  query = !quizMode && typeof s.query === 'string' ? s.query : '';   // quiz mode has no search box
+  searchSnap = !quizMode && s.snap ? {flipped:new Set(arr(s.snap.flipped)), page:s.snap.page || 1, scrollY:s.snap.scrollY || 0} : null;
   pageWish = s.page || 1;
   scrollWish = s.scrollY || 0;
   return true;
@@ -2204,7 +2228,7 @@ function deleteCustomCards(ids){
 }
 function showOnly(code){                    // select just this group (used right after creating it)
   active.clear(); active.add(code);
-  if(query.trim()){ clearTimeout(tm); query = ''; searchSnap = null; document.getElementById('q').value = ''; }
+  clearSearch();
   levelsTouched = true;
 }
 
@@ -2513,7 +2537,7 @@ function openNewGroupDialog(name, forKey){
       const ok = t.cards.length > 0;
       return `<button type="button" class="gp-row sh-tab${ok ? ' on' : ' off'}" data-n="${n}" aria-pressed="${ok}"${ok ? '' : ' aria-disabled="true"'}>
         <span class="gp-name"><span class="sh-name">${esc(t.name || inp.value.trim() || tx('Sheet'))}</span><span class="sh-count">${ok ? esc(sheetCountText(t)) : tx('No cards found')}</span></span>
-        <span class="gp-check" aria-hidden="true"><svg viewBox="0 0 10 10"><path d="M1.6 5.3l2.2 2.2 4.6-4.9" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg></span></button>`;
+        ${CHECK_ICON}</button>`;
     }).join('');
     listEl.hidden = false;
     listEl.querySelectorAll('.sh-tab').forEach(b => b.onclick = () => {
@@ -2538,7 +2562,7 @@ function openNewGroupDialog(name, forKey){
         made.push(id);
       });
       active.clear(); made.forEach(id => active.add(id));
-      if(query.trim()){ clearTimeout(tm); query = ''; searchSnap = null; document.getElementById('q').value = ''; }
+      clearSearch();
       levelsTouched = true;
       closeForm();
       applyCustomChange();
@@ -2587,13 +2611,13 @@ function openGroupPicker(key){
   const rows = CUSTOM.groups.map(g => {
     const on = g.refs.includes(key), home = g.id === homeOf, sheet = !!g.src && !home;   // a group linked to a sheet only has the sheet's cards
     return `<button type="button" class="gp-row${on ? ' on' : ''}${home ? ' home' : ''}${sheet ? ' sheet' : ''}" data-g="${g.id}" aria-pressed="${on}"${home || sheet ? ' aria-disabled="true"' : ''}>
-      <span class="gp-name">${esc(g.name)}</span><span class="gp-check" aria-hidden="true"><svg viewBox="0 0 10 10"><path d="M1.6 5.3l2.2 2.2 4.6-4.9" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg></span></button>`;
+      <span class="gp-name">${esc(g.name)}</span>${CHECK_ICON}</button>`;
   }).join('');
   openForm(`
     <div class="fm-title">${tx('Add to group')}</div>
     <div class="fm-sub">${esc(fullWord(r[0]))}</div>
     <div class="gp-list">
-      <button type="button" class="gp-row gp-new"><span class="gp-plus" aria-hidden="true"><span class="ic-plus">${roundIcon()}</span></span><span class="gp-name">${tx('Create new group')}</span></button>
+      <button type="button" class="gp-row gp-new"><span class="gp-plus" aria-hidden="true">${PLUS_ICON}</span><span class="gp-name">${tx('Create new group')}</span></button>
       ${rows}
     </div>
     <div class="fm-actions"><button type="button" class="cf-btn cf-yes" id="fmOk">${tx('Done')}</button></div>`);
@@ -2609,9 +2633,8 @@ function openGroupPicker(key){
     applyCustomChange();
     b.classList.toggle('on', on); b.setAttribute('aria-pressed', on);
   });
-  $fmOk().onclick = closeForm;
+  document.getElementById('fmOk').onclick = closeForm;
 }
-const $fmOk = () => document.getElementById('fmOk');
 // -- rename / delete a group (hold its pill) --
 function openGroupDialog(code){
   const g = isCustomLv(code) && CUSTOM.groups.find(x => x.id === code);
@@ -2861,8 +2884,8 @@ function backupData(){
     selected: { levels: [...active] },
     theme: isDark() ? 'dark' : 'light',
     quiz: quizCfg,
-    voice: chosenVoice || null,
-    lang: LANG,                          // only used if the same voice exists on the other device
+    voice: chosenVoice || null,          // only used if the same voice exists on the other device
+    lang: LANG,
     custom: CUSTOM                                       // your groups: saved cards (refs) and the cards you made
   };
 }
@@ -2971,32 +2994,29 @@ function importBackup(data){
       if(!ready) bmTouched = true;                        // saved data still loading must not bring the old bookmark back
       pageWish = null;
       flippedKeys.clear(); openedOnce.clear(); quizResults.clear();
-      if(query.trim()){ clearTimeout(tm); query = ''; searchSnap = null; document.getElementById('q').value = ''; }
+      clearSearch();
       order = order.filter(i => i < BASE_N);              // your old cards are gone; the new ones are appended
-      applyCustomChange();                                 // rebuilds the bar and the list, saves everything
       if(!active.size) LEVELS.forEach(l => active.add(l[0]));
-      buildBar(); refresh();
-      updateFavUI(); updateBookmarkUI();
+      applyCustomChange();                                 // rebuilds the bar, the list and the bookmark, saves everything
       window.scrollTo(0, 0);
       toast(tx('Imported {0}, {1}', plural(CUSTOM.groups.length, 'group'), plural(new Set(CUSTOM.groups.flatMap(g => g.refs)).size, 'card')) + (skipped ? tx(' ({0} skipped)', plural(skipped, 'TOCFL word')) : ''));
     });
 }
 const importFile = document.getElementById('importFile');
 // ---- ⚙️ settings: theme, voice, export, import in one dialog ----
-// each choice is kept right away; Voice and Quiz open their own page with Cancel / Save
+// each choice is kept right away; Voice and Export open their own page with Cancel
 function openSettings(){
   const v = chosenVoice && VOICES.find(x => voiceKey(x) === chosenVoice);   // a voice from another device isn't here: Automatic
   const voiceName = v ? v.name.replace(/\s*\((premium|enhanced|compact)\)\s*$/i, '') : tx('Automatic');
   const go = (id, text) => `<div class="seg"><button type="button" id="${id}" class="st-go"><span class="st-txt">${esc(text)}</span><span class="st-chev" aria-hidden="true">›</span></button></div>`;
   openForm(`
     <div class="fm-title">${tx('Settings')}</div>
-    <div class="fm-sub">${tx('Change how the app looks, sounds and quizzes you.')}</div>
+    <div class="fm-sub">${tx('Change how the app looks and sounds.')}</div>
     <div class="qs-row"><div class="qs-label">${tx('Language')}</div><div class="seg" id="stLang">
       <button type="button" data-v="en" class="${LANG === 'en' ? 'on' : ''}">English</button><button type="button" data-v="id" class="${LANG === 'id' ? 'on' : ''}">Indonesia</button></div></div>
     <div class="qs-row"><div class="qs-label">${tx('Theme')}</div><div class="seg" id="stTheme">
       <button type="button" data-v="dark" class="${isDark() ? 'on' : ''}">${tx('Dark')}</button><button type="button" data-v="light" class="${isDark() ? '' : 'on'}">${tx('Light')}</button></div></div>
     ${HAS_TTS ? `<div class="qs-row"><div class="qs-label">${tx('Voice')}</div>${go('stVoice', voiceName)}</div>` : ''}
-    <div class="qs-row"><div class="qs-label">${tx('Quiz')}</div>${go('stQuiz', (quizCfg.q === 'blank' ? tx('Fill the blank') : 'Pīnyīn') + ' · ' + tx(QUIZ_A[quizCfg.a]))}</div>
     <div class="qs-row"><div class="qs-label">${tx('Backup')}</div><div class="seg">
       <button type="button" id="stExport">${tx('Export')}</button><button type="button" id="stImport">${tx('Import')}</button></div></div>
     <div class="fm-actions"><button type="button" class="cf-btn cf-yes" id="fmOk">${tx('Done')}</button></div>`);
@@ -3013,7 +3033,6 @@ function openSettings(){
     document.querySelectorAll('#stTheme button').forEach(x => x.classList.toggle('on', x === b));
   });
   if(HAS_TTS) document.getElementById('stVoice').onclick = () => { stopSpeech(); openVoicePicker(openSettings); };
-  document.getElementById('stQuiz').onclick = () => openQuizSettings(openSettings);
   document.getElementById('stExport').onclick = () => openExportDialog(openSettings);
   document.getElementById('stImport').onclick = () => { closeForm(); importFile.value = ''; importFile.click(); };
 }
