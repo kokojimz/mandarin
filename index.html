@@ -35,7 +35,7 @@
   button{ -webkit-tap-highlight-color:transparent; touch-action:manipulation; user-select:none; -webkit-user-select:none; }
   button:focus:not(:focus-visible){ outline:none; }
   p.sub{ text-align:center; color:var(--sub); margin:16px 0 0; font-size:.72rem; white-space:nowrap; }
-  #countSub{ font-size:min(.72rem, calc((100vw - 24px) / 26.5)); }   /* shrinks a little on very narrow screens so the whole line always stays on one line */
+  #countSub{ font-size:.72rem; }   /* made smaller in code when the line would not fit on one line (narrow screens, long quiz info) */
   .controls{ display:flex; justify-content:center; gap:8px; margin:10px 0; flex-wrap:wrap; }
   .controls button{
     background:var(--card-bg); border:1px solid var(--border); color:var(--text);
@@ -104,7 +104,8 @@
   .fm-exh{ display:flex; align-items:center; justify-content:space-between; font-size:.72rem; color:var(--sub); margin-bottom:6px; }
   .fm-exdel{ width:26px; height:26px; border:0; background:transparent; color:var(--sub); font-size:1.2rem; line-height:1; cursor:pointer; border-radius:50%; }
   .fm-exdel:active{ background:rgba(128,128,128,.15); }
-  .fm-ex-add{ display:flex; align-items:center; gap:8px; margin:0 auto; padding:7px 14px 7px 9px; }
+  .pk-tool.fm-ex-add{ display:flex; align-items:center; gap:8px; margin:0 auto; padding:6px 8px; border:0; }   /* icon + text, no outline (like the new-group +) */
+  .fm-ex-add:active{ opacity:.6; }
   .fm-ex-add .ic-plus{ color:var(--text); }
   .fm-ex-add[hidden]{ display:none; }
   .fm-err{ color:#d64545; font-size:.78rem; margin:20px 0 0; text-align:center; }
@@ -575,7 +576,7 @@ const LS_LANG = 'tocfl-lang-v1';
 let LANG = 'en';
 try{ if(localStorage.getItem(LS_LANG) === 'id') LANG = 'id'; }catch(e){}
 MEAN_ID.forEach((m, i) => { D[i].mi = m; });
-const ID_TEXT = {"Settings": "Pengaturan", "Reset order": "Kembalikan urutan", "Shuffle": "Acak", "Reveal / hide all": "Buka / tutup semua", "Start quiz": "Mulai kuis", "Start": "Mulai", "漢字 / pīnyīn / meaning…": "漢字 / pīnyīn / arti…", "Search by hanzi, pinyin or meaning": "Cari berdasarkan hanzi, pinyin, atau arti", "Vocabulary: TOCFL · Meanings: CC-CEDICT": "Kosakata: TOCFL · Arti: CC-CEDICT", "Cancel": "Batal", "Check": "Periksa", "OK": "OK", "{0} — hold to rename or delete": "{0} — tahan untuk ganti nama atau hapus", "All": "Semua", "New group": "Grup baru", "Pīnyīn of the word": "Pīnyīn kata", "Fill the blank": "Isi bagian kosong", "Multiple choice": "Pilihan ganda", "Type it": "Ketik", "Quiz": "Kuis", "Choose how you want to be quizzed.": "Atur cara kuis yang kamu inginkan.", "Question": "Soal", "Cards in the grid": "Kartu di daftar", "Show the word": "Tampilkan kata", "Hide the word": "Sembunyikan kata", "Answer": "Jawaban", "Choices": "Jumlah pilihan", "Tones in typed pīnyīn": "Nada pada pīnyīn yang diketik", "Must match": "Harus tepat", "Ignore": "Abaikan", "Time per card": "Waktu per kartu", "Off": "Mati", "On": "Aktif", "{0}s": "{0} dtk", "Save": "Simpan", "Exit quiz mode?": "Keluar dari mode kuis?", "Exiting quiz mode will reset your quiz score.": "Keluar dari mode kuis akan mengatur ulang skormu.", "Exit": "Keluar", "Type the missing word (漢字 or pīnyīn).": "Ketik kata yang hilang (漢字 atau pīnyīn).", "Which word fills the blank?": "Kata mana yang mengisi bagian kosong?", "Type the pīnyīn of this word.": "Ketik pīnyīn kata ini.", "Which pinyin matches this word?": "Pinyin mana yang sesuai dengan kata ini?", "Answer:": "Jawaban:", "Delete": "Hapus", "Edit": "Ubah", "Bookmark": "Penanda", "Add to group": "Tambahkan ke grup", "Play pronunciation": "Putar pelafalan", "Stop": "Berhenti", "Delete card?": "Hapus kartu?", "The card \"{0}\" will be deleted from \"{1}\". This cannot be undone.": "Kartu \"{0}\" akan dihapus dari \"{1}\". Tindakan ini tidak bisa dibatalkan.", "Continue from {0}": "Lanjutkan dari {0}", "Remove bookmark?": "Hapus penanda?", "The card \"{0}\" will no longer be marked as your bookmark.": "Kartu \"{0}\" tidak akan ditandai lagi sebagai penandamu.", "Remove": "Hapus", "Change bookmark?": "Ganti penanda?", "Your current bookmark on \"{0}\" will be replaced with this card.": "Penandamu saat ini di \"{0}\" akan diganti dengan kartu ini.", "Your current bookmark will be replaced with this card.": "Penandamu saat ini akan diganti dengan kartu ini.", "Change": "Ganti", "Set bookmark?": "Pasang penanda?", "This card will be marked as your bookmark so you can jump back to it later.": "Kartu ini akan ditandai sebagai penanda supaya kamu bisa kembali ke sini nanti.", "Set": "Pasang", "Taiwan": "Taiwan", "China": "Tiongkok", "Hong Kong": "Hong Kong", "Cantonese": "Kanton", "Singapore": "Singapura", "Automatic": "Otomatis", "Voice": "Suara", "Tap a voice to hear it.": "Ketuk suara untuk mendengarnya.", "No Chinese voices were found on this device.": "Tidak ada suara bahasa Mandarin di perangkat ini.", "Cards": "Kartu", "Tap and hold a card to peek": "Tahan kartu untuk melihat sekilas", "Prev": "Kembali", "Next": "Lanjut", "Jump to page {0}-{1}": "Lompat ke halaman {0}-{1}", "Jump to a page between {0} and {1}": "Lompat ke halaman antara {0} dan {1}", "Page number {0} to {1}": "Nomor halaman {0} sampai {1}", "Add a card to {0}": "Tambahkan kartu ke {0}", "Add card": "Tambah kartu", "Give your new group a name.": "Beri nama untuk grup barumu.", "Group name": "Nama grup", "Create": "Buat", "Saved to \"{0}\"": "Disimpan ke \"{0}\"", "Please type a name.": "Silakan ketik nama.", "That name is reserved.": "Nama itu tidak bisa dipakai.", "A group with this name already exists.": "Grup dengan nama ini sudah ada.", "Create new group": "Buat grup baru", "Done": "Selesai", "Cards you made stay in their own group": "Kartu buatanmu tetap berada di grupnya sendiri", "Edit group": "Ubah grup", "This group has 1 card.": "Grup ini berisi 1 kartu.", "This group has {0} cards.": "Grup ini berisi {0} kartu.", "Delete group?": "Hapus grup?", "The group \"{0}\" will be deleted": "Grup \"{0}\" akan dihapus", ", together with the 1 card you made in it": ", beserta 1 kartu yang kamu buat di dalamnya", ", together with the {0} cards you made in it": ", beserta {0} kartu yang kamu buat di dalamnya", ". Saved TOCFL cards stay in TOCFL. This cannot be undone": ". Kartu TOCFL yang disimpan tetap ada di TOCFL. Tindakan ini tidak bisa dibatalkan", "Edit card": "Ubah kartu", "New card": "Kartu baru", "Card in \"{0}\".": "Kartu di \"{0}\".", "Add a card to \"{0}\".": "Tambahkan kartu ke \"{0}\".", "zhōng guó  or  zhong1 guo2": "zhōng guó  atau  zhong1 guo2", "Example sentences (optional)": "Contoh kalimat (opsional)", "Add sentence": "Tambah kalimat", "Sentence {0}: please type the sentence.": "Kalimat {0}: silakan ketik kalimatnya.", "Sentence {0} must contain the word \"{1}\".": "Kalimat {0} harus memuat kata \"{1}\".", "Sentence {0}: please type the pinyin.": "Kalimat {0}: silakan ketik pinyinnya.", "Sentence {0}: the pinyin must contain \"{1}\".": "Kalimat {0}: pinyinnya harus memuat \"{1}\".", "Sentence {0}: please type the English translation.": "Kalimat {0}: silakan ketik terjemahan bahasa Inggrisnya.", "1 sentence left out": "1 kalimat tidak dipakai", "{0} sentences left out": "{0} kalimat tidak dipakai", "A sentence is used only when it contains the word, its pinyin contains the word's pinyin, and it has an English translation. Otherwise it is left out (the card stays).": "Kalimat hanya dipakai kalau memuat katanya, pinyinnya memuat pinyin kata itu, dan ada terjemahan bahasa Inggrisnya. Kalau tidak, kalimatnya tidak dipakai (kartunya tetap ada).", "Sentence {0}": "Kalimat {0}", "More example sentences: copy the row and change only the sentence. If any other cell is different, the row becomes a card of its own.": "Lebih dari satu contoh kalimat: salin barisnya dan ubah kalimatnya saja. Kalau ada sel lain yang berbeda, baris itu jadi kartu sendiri.", "Sentence": "Kalimat", "Add": "Tambah", "\"{0}\" is already in your group \"{1}\".": "\"{0}\" sudah ada di grupmu \"{1}\".", "\"{0}\" is already a TOCFL card ({1}). TOCFL cards can't be added or edited.": "\"{0}\" sudah menjadi kartu TOCFL ({1}). Kartu TOCFL tidak bisa ditambahkan atau diubah.", "Pinyin suggested per character, please check the tones.": "Pinyin disarankan per karakter, mohon periksa nadanya.", "Please type the hanzi.": "Silakan ketik hanzinya.", "Hanzi must contain Chinese characters.": "Hanzi harus berisi karakter Mandarin.", "\"{0}\" is already a TOCFL card ({1}) and can't be added or edited.": "\"{0}\" sudah menjadi kartu TOCFL ({1}) dan tidak bisa ditambahkan atau diubah.", "Please type the pinyin.": "Silakan ketik pinyinnya.", "The card \"{0}\" will be deleted. This cannot be undone.": "Kartu \"{0}\" akan dihapus. Tindakan ini tidak bisa dibatalkan.", "Export backup": "Ekspor cadangan", "Your groups, saved cards and bookmark will be saved in this file.": "Grup, kartu tersimpan, dan penandamu akan disimpan di file ini.", "File name": "Nama file", "Export": "Ekspor", "Import": "Impor", "Backup exported": "Cadangan berhasil diekspor", "Backup exported: {0}": "Cadangan diekspor: {0}", "Export failed on this device": "Ekspor gagal di perangkat ini", "This is not a TOCFL flashcards backup": "Ini bukan file cadangan TOCFL flashcards", "Import backup?": "Impor cadangan?", "Your groups, saved cards and bookmark will be replaced with the ones in this file ({0}, {1})": "Grup, kartu tersimpan, dan penandamu akan diganti dengan isi file ini ({0}, {1})", "Imported {0}, {1}": "Berhasil mengimpor {0}, {1}", " ({0} skipped)": " ({0} dilewati)", "Could not read this file": "File ini tidak bisa dibaca", "1 group": "1 grup", "{0} groups": "{0} grup", "1 card": "1 kartu", "{0} cards": "{0} kartu", "1 TOCFL word": "1 kata TOCFL", "{0} TOCFL words": "{0} kata TOCFL", "Change how the app looks and sounds.": "Atur tampilan, suara, dan bahasa aplikasi.", "Theme": "Tema", "Dark": "Gelap", "Light": "Terang", "Backup": "Cadangan", "Language": "Bahasa", "Meaning (English)": "Arti (Inggris)", "Meaning (Indonesian)": "Arti (Indonesia)", "Translation (English)": "Terjemahan (Inggris)", "Translation (Indonesian)": "Terjemahan (Indonesia)", "Please type the English meaning.": "Silakan ketik arti dalam bahasa Inggris.", "Google Sheets link (optional)": "Link Google Sheets (opsional)", "Reading the sheet…": "Membaca sheet…", "Choose the sheets to add.": "Pilih sheet yang mau ditambahkan.", "This sheet will be added.": "Sheet ini akan ditambahkan.", "No cards found": "Tidak ada kartu", "Choose at least one sheet.": "Pilih minimal satu sheet.", "This is not a Google Sheets link.": "Ini bukan link Google Sheets.", "Couldn't read this sheet. Make sure it's shared with \"Anyone with the link\" and you're online.": "Sheet ini tidak bisa dibaca. Pastikan aksesnya \"Siapa saja yang memiliki link\" dan kamu sedang online.", "Sheet": "Sheet", "Sync": "Sinkron", "Syncing…": "Menyinkronkan…", "Synced: {0}": "Tersinkron: {0}", "Last synced {0}": "Terakhir disinkron {0}", "1 row skipped": "1 baris dilewati", "{0} rows skipped": "{0} baris dilewati", "This sheet was not found in the spreadsheet.": "Sheet ini tidak ditemukan di spreadsheet.", "Added {0}": "Ditambahkan {0}", "This viewer doesn't let the app go online. Open the file in a browser (Safari, Chrome) to use sheet links.": "Penampil ini tidak mengizinkan aplikasi terhubung ke internet. Buka file ini di browser (Safari, Chrome) untuk memakai link sheet.", "Favorite": "Favorit", "Cards of this group come from its Google Sheet": "Kartu grup ini berasal dari Google Sheet-nya", "The group \"{0}\" and its cards will be deleted. Your Google Sheet stays as it is.": "Grup \"{0}\" beserta kartunya akan dihapus. Google Sheet-mu tetap seperti semula.", "Type a name or add sheets from a link.": "Ketik nama atau tambahkan sheet dari link.", "Sheet format": "Format sheet", "Hanzi": "Hanzi", "Pinyin": "Pinyin", "Pinyin (sentence)": "Pinyin (kalimat)", "Every tab (the sheets at the bottom of the spreadsheet) becomes its own group, and the group gets the tab's name. The columns, from left to right:": "Setiap tab (lembar di bagian bawah spreadsheet) jadi satu grup sendiri, dan nama grupnya sama dengan nama tab itu. Urutan kolom dari kiri ke kanan:", "* Required: rows without them are skipped. Pinyin can be zhōng guó or zhong1 guo2.": "* Wajib: baris tanpa isian ini dilewati. Pinyin boleh zhōng guó atau zhong1 guo2.", "Saber has entered the chat.": "Kebanyakan mikir keburu diangkat Saber.", "Report": "Rapor", "Your quiz results, day by day.": "Hasil kuismu dari hari ke hari.", "Cards quizzed": "Kartu dikuis", "Correct": "Benar", "Day streak": "Hari beruntun", "Correct answers per day": "Jawaban benar per hari", "Tap the chart to see the numbers of a day.": "Ketuk grafik untuk melihat angka di hari itu.", "Often wrong": "Sering salah", "Often wrong ({0})": "Sering salah ({0})", "All selected cards": "Semua kartu terpilih", "Wrong {0}× of {1}": "Salah {0}× dari {1}", "No wrong answers yet.": "Belum ada jawaban salah.", "Right {0} of {1} times in a row": "Benar {0} dari {1} kali berturut-turut", "A card leaves this list after {0} right answers in a row.": "Kartu hilang dari daftar ini setelah {0} kali benar berturut-turut.", "End": "Akhiri", "Quiz settings": "Pengaturan kuis", "Restart quiz?": "Mulai ulang kuis?", "The quiz starts again and your quiz score is reset.": "Kuis dimulai lagi dari awal dan skormu diatur ulang.", "Restart": "Mulai ulang", "Clear history": "Hapus riwayat", "Clear quiz history?": "Hapus riwayat kuis?", "All quiz results in the report will be deleted. This cannot be undone.": "Semua hasil kuis di rapor akan dihapus. Tindakan ini tidak bisa dibatalkan.", "Clear": "Hapus", "No quiz results yet. Answer a few cards in quiz mode, then come back here.": "Belum ada hasil kuis. Jawab beberapa kartu di mode kuis, lalu kembali ke sini."};
+const ID_TEXT = {"Settings": "Pengaturan", "Reset order": "Kembalikan urutan", "Shuffle": "Acak", "Reveal / hide all": "Buka / tutup semua", "Start quiz": "Mulai kuis", "Start": "Mulai", "漢字 / pīnyīn / meaning…": "漢字 / pīnyīn / arti…", "Search by hanzi, pinyin or meaning": "Cari berdasarkan hanzi, pinyin, atau arti", "Vocabulary: TOCFL · Meanings: CC-CEDICT": "Kosakata: TOCFL · Arti: CC-CEDICT", "Cancel": "Batal", "Check": "Periksa", "OK": "OK", "{0} — hold to rename or delete": "{0} — tahan untuk ganti nama atau hapus", "All": "Semua", "New group": "Grup baru", "Pīnyīn of the word": "Pīnyīn kata", "Fill the blank": "Isi bagian kosong", "Mix": "Campur", "Multiple choice": "Pilihan ganda", "Type it": "Ketik", "Quiz": "Kuis", "Choose how you want to be quizzed.": "Atur cara kuis yang kamu inginkan.", "Question": "Soal", "Cards in the grid": "Kartu di daftar", "Show the word": "Tampilkan kata", "Hide the word": "Sembunyikan kata", "Answer": "Jawaban", "Choices": "Jumlah pilihan", "Tones in typed pīnyīn": "Nada pada pīnyīn yang diketik", "Must match": "Harus tepat", "Ignore": "Abaikan", "Time per card": "Waktu per kartu", "Off": "Mati", "{0}s": "{0} dtk", "Save": "Simpan", "Exit quiz mode?": "Keluar dari mode kuis?", "Exiting quiz mode will reset your quiz score.": "Keluar dari mode kuis akan mengatur ulang skormu.", "Exit": "Keluar", "Type the missing word (漢字 or pīnyīn).": "Ketik kata yang hilang (漢字 atau pīnyīn).", "Which word fills the blank?": "Kata mana yang mengisi bagian kosong?", "Type the pīnyīn of this word.": "Ketik pīnyīn kata ini.", "Which pinyin matches this word?": "Pinyin mana yang sesuai dengan kata ini?", "Answer:": "Jawaban:", "Delete": "Hapus", "Edit": "Ubah", "Bookmark": "Penanda", "Add to group": "Tambahkan ke grup", "Play pronunciation": "Putar pelafalan", "Stop": "Berhenti", "Delete card?": "Hapus kartu?", "The card \"{0}\" will be deleted from \"{1}\". This cannot be undone.": "Kartu \"{0}\" akan dihapus dari \"{1}\". Tindakan ini tidak bisa dibatalkan.", "Continue from {0}": "Lanjutkan dari {0}", "Remove bookmark?": "Hapus penanda?", "The card \"{0}\" will no longer be marked as your bookmark.": "Kartu \"{0}\" tidak akan ditandai lagi sebagai penandamu.", "Remove": "Hapus", "Change bookmark?": "Ganti penanda?", "Your current bookmark on \"{0}\" will be replaced with this card.": "Penandamu saat ini di \"{0}\" akan diganti dengan kartu ini.", "Your current bookmark will be replaced with this card.": "Penandamu saat ini akan diganti dengan kartu ini.", "Change": "Ganti", "Set bookmark?": "Pasang penanda?", "This card will be marked as your bookmark so you can jump back to it later.": "Kartu ini akan ditandai sebagai penanda supaya kamu bisa kembali ke sini nanti.", "Set": "Pasang", "Taiwan": "Taiwan", "China": "Tiongkok", "Hong Kong": "Hong Kong", "Cantonese": "Kanton", "Singapore": "Singapura", "Automatic": "Otomatis", "Voice": "Suara", "Tap a voice to hear it.": "Ketuk suara untuk mendengarnya.", "No Chinese voices were found on this device.": "Tidak ada suara bahasa Mandarin di perangkat ini.", "Cards": "Kartu", "Tap and hold a card to peek": "Tahan kartu untuk melihat sekilas", "Prev": "Kembali", "Next": "Lanjut", "Jump to page {0}-{1}": "Lompat ke halaman {0}-{1}", "Jump to a page between {0} and {1}": "Lompat ke halaman antara {0} dan {1}", "Page number {0} to {1}": "Nomor halaman {0} sampai {1}", "Add a card to {0}": "Tambahkan kartu ke {0}", "Add card": "Tambah kartu", "Give your new group a name.": "Beri nama untuk grup barumu.", "Group name": "Nama grup", "Create": "Buat", "Saved to \"{0}\"": "Disimpan ke \"{0}\"", "Please type a name.": "Silakan ketik nama.", "That name is reserved.": "Nama itu tidak bisa dipakai.", "A group with this name already exists.": "Grup dengan nama ini sudah ada.", "Create new group": "Buat grup baru", "Done": "Selesai", "Cards you made stay in their own group": "Kartu buatanmu tetap berada di grupnya sendiri", "Edit group": "Ubah grup", "This group has 1 card.": "Grup ini berisi 1 kartu.", "This group has {0} cards.": "Grup ini berisi {0} kartu.", "Delete group?": "Hapus grup?", "The group \"{0}\" will be deleted": "Grup \"{0}\" akan dihapus", ", together with the 1 card you made in it": ", beserta 1 kartu yang kamu buat di dalamnya", ", together with the {0} cards you made in it": ", beserta {0} kartu yang kamu buat di dalamnya", ". Saved TOCFL cards stay in TOCFL. This cannot be undone": ". Kartu TOCFL yang disimpan tetap ada di TOCFL. Tindakan ini tidak bisa dibatalkan", "Edit card": "Ubah kartu", "New card": "Kartu baru", "Card in \"{0}\".": "Kartu di \"{0}\".", "Add a card to \"{0}\".": "Tambahkan kartu ke \"{0}\".", "zhōng guó  or  zhong1 guo2": "zhōng guó  atau  zhong1 guo2", "Example sentences (optional)": "Contoh kalimat (opsional)", "Add sentence": "Tambah kalimat", "Sentence {0}: please type the sentence.": "Kalimat {0}: silakan ketik kalimatnya.", "Sentence {0} must contain the word \"{1}\".": "Kalimat {0} harus memuat kata \"{1}\".", "Sentence {0}: please type the pinyin.": "Kalimat {0}: silakan ketik pinyinnya.", "Sentence {0}: the pinyin must contain \"{1}\".": "Kalimat {0}: pinyinnya harus memuat \"{1}\".", "Sentence {0}: please type the English translation.": "Kalimat {0}: silakan ketik terjemahan bahasa Inggrisnya.", "1 sentence left out": "1 kalimat tidak dipakai", "{0} sentences left out": "{0} kalimat tidak dipakai", "A sentence is used only when it contains the word, its pinyin contains the word's pinyin, and it has an English translation. Otherwise it is left out (the card stays).": "Kalimat hanya dipakai kalau memuat katanya, pinyinnya memuat pinyin kata itu, dan ada terjemahan bahasa Inggrisnya. Kalau tidak, kalimatnya tidak dipakai (kartunya tetap ada).", "Sentence {0}": "Kalimat {0}", "More example sentences: copy the row and change only the sentence. If any other cell is different, the row becomes a card of its own.": "Lebih dari satu contoh kalimat: salin barisnya dan ubah kalimatnya saja. Kalau ada sel lain yang berbeda, baris itu jadi kartu sendiri.", "Sentence": "Kalimat", "Add": "Tambah", "\"{0}\" is already in your group \"{1}\".": "\"{0}\" sudah ada di grupmu \"{1}\".", "\"{0}\" is already a TOCFL card ({1}). TOCFL cards can't be added or edited.": "\"{0}\" sudah menjadi kartu TOCFL ({1}). Kartu TOCFL tidak bisa ditambahkan atau diubah.", "Pinyin suggested per character, please check the tones.": "Pinyin disarankan per karakter, mohon periksa nadanya.", "Please type the hanzi.": "Silakan ketik hanzinya.", "Hanzi must contain Chinese characters.": "Hanzi harus berisi karakter Mandarin.", "\"{0}\" is already a TOCFL card ({1}) and can't be added or edited.": "\"{0}\" sudah menjadi kartu TOCFL ({1}) dan tidak bisa ditambahkan atau diubah.", "Please type the pinyin.": "Silakan ketik pinyinnya.", "The card \"{0}\" will be deleted. This cannot be undone.": "Kartu \"{0}\" akan dihapus. Tindakan ini tidak bisa dibatalkan.", "Export backup": "Ekspor cadangan", "Your groups, saved cards and bookmark will be saved in this file.": "Grup, kartu tersimpan, dan penandamu akan disimpan di file ini.", "File name": "Nama file", "Export": "Ekspor", "Import": "Impor", "Backup exported": "Cadangan berhasil diekspor", "Backup exported: {0}": "Cadangan diekspor: {0}", "Export failed on this device": "Ekspor gagal di perangkat ini", "This is not a TOCFL flashcards backup": "Ini bukan file cadangan TOCFL flashcards", "Import backup?": "Impor cadangan?", "Your groups, saved cards and bookmark will be replaced with the ones in this file ({0}, {1})": "Grup, kartu tersimpan, dan penandamu akan diganti dengan isi file ini ({0}, {1})", "Imported {0}, {1}": "Berhasil mengimpor {0}, {1}", " ({0} skipped)": " ({0} dilewati)", "Could not read this file": "File ini tidak bisa dibaca", "1 group": "1 grup", "{0} groups": "{0} grup", "1 card": "1 kartu", "{0} cards": "{0} kartu", "1 TOCFL word": "1 kata TOCFL", "{0} TOCFL words": "{0} kata TOCFL", "Change how the app looks and sounds.": "Atur tampilan, suara, dan bahasa aplikasi.", "Theme": "Tema", "Dark": "Gelap", "Light": "Terang", "Backup": "Cadangan", "Language": "Bahasa", "Meaning (English)": "Arti (Inggris)", "Meaning (Indonesian)": "Arti (Indonesia)", "Translation (English)": "Terjemahan (Inggris)", "Translation (Indonesian)": "Terjemahan (Indonesia)", "Please type the English meaning.": "Silakan ketik arti dalam bahasa Inggris.", "Google Sheets link (optional)": "Link Google Sheets (opsional)", "Reading the sheet…": "Membaca sheet…", "Choose the sheets to add.": "Pilih sheet yang mau ditambahkan.", "This sheet will be added.": "Sheet ini akan ditambahkan.", "No cards found": "Tidak ada kartu", "Choose at least one sheet.": "Pilih minimal satu sheet.", "This is not a Google Sheets link.": "Ini bukan link Google Sheets.", "Couldn't read this sheet. Make sure it's shared with \"Anyone with the link\" and you're online.": "Sheet ini tidak bisa dibaca. Pastikan aksesnya \"Siapa saja yang memiliki link\" dan kamu sedang online.", "Sheet": "Sheet", "Sync": "Sinkron", "Syncing…": "Menyinkronkan…", "Synced: {0}": "Tersinkron: {0}", "Last synced {0}": "Terakhir disinkron {0}", "1 row skipped": "1 baris dilewati", "{0} rows skipped": "{0} baris dilewati", "This sheet was not found in the spreadsheet.": "Sheet ini tidak ditemukan di spreadsheet.", "Added {0}": "Ditambahkan {0}", "This viewer doesn't let the app go online. Open the file in a browser (Safari, Chrome) to use sheet links.": "Penampil ini tidak mengizinkan aplikasi terhubung ke internet. Buka file ini di browser (Safari, Chrome) untuk memakai link sheet.", "Favorite": "Favorit", "Cards of this group come from its Google Sheet": "Kartu grup ini berasal dari Google Sheet-nya", "The group \"{0}\" and its cards will be deleted. Your Google Sheet stays as it is.": "Grup \"{0}\" beserta kartunya akan dihapus. Google Sheet-mu tetap seperti semula.", "Type a name or add sheets from a link.": "Ketik nama atau tambahkan sheet dari link.", "Sheet format": "Format sheet", "Hanzi": "Hanzi", "Pinyin": "Pinyin", "Pinyin (sentence)": "Pinyin (kalimat)", "Every tab (the sheets at the bottom of the spreadsheet) becomes its own group, and the group gets the tab's name. The columns, from left to right:": "Setiap tab (lembar di bagian bawah spreadsheet) jadi satu grup sendiri, dan nama grupnya sama dengan nama tab itu. Urutan kolom dari kiri ke kanan:", "* Required: rows without them are skipped. Pinyin can be zhōng guó or zhong1 guo2.": "* Wajib: baris tanpa isian ini dilewati. Pinyin boleh zhōng guó atau zhong1 guo2.", "Saber has entered the chat.": "Kebanyakan mikir keburu diangkat Saber.", "Report": "Rapor", "Your quiz results, day by day.": "Hasil kuismu dari hari ke hari.", "Cards quizzed": "Kartu dikuis", "Correct": "Benar", "Day streak": "Hari beruntun", "Correct answers per day": "Jawaban benar per hari", "Tap the chart to see the numbers of a day.": "Ketuk grafik untuk melihat angka di hari itu.", "Often wrong": "Sering salah", "{0} (often wrong)": "{0} (sering salah)", "Often wrong ({0})": "Sering salah ({0})", "All selected cards": "Semua kartu terpilih", "Wrong {0}× of {1}": "Salah {0}× dari {1}", "No wrong answers yet.": "Belum ada jawaban salah.", "Right {0} of {1} times in a row": "Benar {0} dari {1} kali berturut-turut", "A card leaves this list after {0} right answers in a row.": "Kartu hilang dari daftar ini setelah {0} kali benar berturut-turut.", "End": "Akhiri", "Quiz settings": "Pengaturan kuis", "Restart quiz?": "Mulai ulang kuis?", "The quiz starts again and your quiz score is reset.": "Kuis dimulai lagi dari awal dan skormu diatur ulang.", "Restart": "Mulai ulang", "Clear history": "Hapus riwayat", "Clear quiz history?": "Hapus riwayat kuis?", "All quiz results in the report will be deleted. This cannot be undone.": "Semua hasil kuis di rapor akan dihapus. Tindakan ini tidak bisa dibatalkan.", "Clear": "Hapus", "No quiz results yet. Answer a few cards in quiz mode, then come back here.": "Belum ada hasil kuis. Jawab beberapa kartu di mode kuis, lalu kembali ke sini."};
 // tx('Saved to "{0}"', name): the text in the chosen language, with {0}, {1}… filled in
 function tx(s, ...a){
   let r = (LANG === 'id' && ID_TEXT[s] != null) ? ID_TEXT[s] : s;
@@ -959,6 +960,16 @@ function buildBar(){
 const PLUS_ICON = '<span class="ic-plus"><svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path fill="currentColor" fill-rule="evenodd" d="M10 0a10 10 0 1 1 0 20a10 10 0 1 1 0-20zM9 5.6a1 1 0 0 1 2 0V9h3.4a1 1 0 0 1 0 2H11v3.4a1 1 0 0 1-2 0V11H5.6a1 1 0 0 1 0-2H9z"/></svg></span>';
 const CHECK_ICON = '<span class="gp-check" aria-hidden="true"><svg viewBox="0 0 10 10"><path d="M1.6 5.3l2.2 2.2 4.6-4.9" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg></span>';
 const bmIcon = (w, h) => `<svg viewBox="0 0 14 20" width="${w}" height="${h}" aria-hidden="true"><path d="M1.2 1.2h11.6v17.4L7 14.2 1.2 18.6z"/></svg>`;
+// the small numbers on the level / group buttons: all their cards, or in an "often wrong" quiz just those
+function syncBarCounts(){
+  const only = quizMode && quizOnly, n = {};
+  if(only){
+    D.forEach(r => { const k = keyOf(r); if(!quizOnly.has(k)) return;
+      if(!isCustomLv(r[4])) n[r[4]] = (n[r[4]] || 0) + 1;
+      (GROUPS_OF.get(k) || []).forEach(g => { n[g] = (n[g] || 0) + 1; }); });
+  }
+  document.querySelectorAll('#levelBar button[data-l] .cnt').forEach(el => { const c = el.parentNode.dataset.l; el.textContent = only ? (n[c] || 0) : (C[c] || 0); });
+}
 function syncAll(){ document.getElementById('allBtn').classList.toggle('active', active.size === LEVELS.length); }
 
 let pressTimer = null, sx = 0, sy = 0, peekOn = false, peekHeld = false, suppressUntil = 0;
@@ -1008,7 +1019,7 @@ const qzOptions = document.getElementById('qzOptions');
 function setQuiz(on, keys = null){
   quizMode = on;
   quizOnly = on && keys && keys.length ? new Set(keys) : null;
-  quizResults.clear(); quizWrongs.clear(); openedOnce.clear();
+  quizResults.clear(); quizWrongs.clear(); openedOnce.clear(); quizKinds.clear();
   if(on){                                // shuffle once, and close every card so all of them start face-down
     order = shuffle(order.slice());
     flippedKeys.clear();
@@ -1025,29 +1036,30 @@ const ifNoScoreLost = (title, msg, yes, fn) => quizMode && quizResults.size
   ? askConfirm(tx(title), tx(msg), tx(yes)).then(ok => { if(ok) fn(); }) : fn();
 // ---- quiz settings (saved in this browser) ----
 const LS_QUIZ = 'tocfl-quiz-v1';
-const QUIZ_DEFAULT = {q:'pinyin', a:'choice', n:3, tones:true, timer:0, hide:false};
+const QUIZ_DEFAULT = {q:'pinyin', a:'choice', n:3, tones:true, timer:0, hide:false, src:'all'};
 // keeps only valid values (from this browser or from a backup file)
 function readQuizCfg(v){
   const c = {...QUIZ_DEFAULT};
   if(v && typeof v === 'object'){
-    if(['pinyin','blank'].includes(v.q)) c.q = v.q;
+    if(['pinyin','blank','mix'].includes(v.q)) c.q = v.q;
     if(['choice','type'].includes(v.a)) c.a = v.a;
     if([2,3,4].includes(v.n)) c.n = v.n;
     if(typeof v.tones === 'boolean') c.tones = v.tones;
     if(typeof v.hide === 'boolean') c.hide = v.hide;
     if([0,5,10,20].includes(v.timer)) c.timer = v.timer;
+    if(['all','wrong'].includes(v.src)) c.src = v.src;
   }
   return c;
 }
 let quizCfg = {...QUIZ_DEFAULT};
 try{ quizCfg = readQuizCfg(JSON.parse(localStorage.getItem(LS_QUIZ) || 'null')); }catch(e){}
-const QUIZ_Q = {pinyin:'Pīnyīn of the word', blank:'Fill the blank'}, QUIZ_A = {choice:'Multiple choice', type:'Type it'};
+const QUIZ_Q = {pinyin:'Pīnyīn of the word', blank:'Fill the blank', mix:'Mix'}, QUIZ_A = {choice:'Multiple choice', type:'Type it'};
 // the 🧠 button: Start saves the settings and (re)starts the quiz, Cancel changes nothing.
-// src (not saved): 'all' = the selected levels / groups, 'wrong' = the report's "Often wrong" list
-function openQuizSettings(src = quizMode && quizOnly ? 'wrong' : 'all'){
+// src: 'all' = the selected levels / groups, 'wrong' = the report's "Often wrong" list. Every choice is kept for next time.
+function openQuizSettings(){
   const wrongKeys = oftenWrong().map(([k]) => k);
-  if(!wrongKeys.length) src = 'all';
-  const c = {...quizCfg, src};
+  const c = {...quizCfg};
+  if(!wrongKeys.length) c.src = 'all';     // nothing often wrong right now: all cards
   const seg = (name, items) => `<div class="seg" data-k="${name}">` +
     items.map(([v, label]) => `<button type="button" data-v="${v}" class="${String(c[name]) === String(v) ? 'on' : ''}">${tx(label)}</button>`).join('') + `</div>`;
   openForm(`
@@ -1066,8 +1078,8 @@ function openQuizSettings(src = quizMode && quizOnly ? 'wrong' : 'all'){
     </div>`);
   if(!wrongKeys.length) fmBox.querySelector('.seg[data-k="src"] [data-v="wrong"]').disabled = true;   // nothing wrong yet
   const sync = () => {
-    // fill the blank always hides the word: the row stays, locked on "Hide the word"
-    const lock = c.q === 'blank';
+    // fill the blank and mix always hide the word: the row stays, locked on "Hide the word"
+    const lock = c.q !== 'pinyin';
     fmBox.querySelectorAll('#qsHide button').forEach(b => { b.disabled = lock; b.classList.toggle('on', lock ? b.dataset.v === 'true' : String(c.hide) === b.dataset.v); });
     document.getElementById('qsN').hidden = c.a !== 'choice';
     document.getElementById('qsTones').hidden = c.a !== 'type';
@@ -1082,11 +1094,10 @@ function openQuizSettings(src = quizMode && quizOnly ? 'wrong' : 'all'){
   sync();
   document.getElementById('fmCancel').onclick = closeForm;
   const start = () => {
-    const {src: from, ...cfg} = c;
-    quizCfg = cfg;
+    quizCfg = c;
     try{ localStorage.setItem(LS_QUIZ, JSON.stringify(quizCfg)); }catch(e){}
     closeForm();
-    setQuiz(true, from === 'wrong' ? wrongKeys : null);
+    setQuiz(true, c.src === 'wrong' ? wrongKeys : null);
   };
   document.getElementById('fmOk').onclick = () => ifNoScoreLost('Restart quiz?', 'The quiz starts again and your quiz score is reset.', 'Restart', start);
 }
@@ -1285,7 +1296,16 @@ function blankOf(r, pick){
   return {ex: e, n, w, at: e.hz.indexOf(w), py: r[1]};
 }
 // cards not answered yet hide their word: always in fill the blank, and in the pinyin quiz when "Hide the word" is on
-const hidesWord = r => quizMode && !openedOnce.has(keyOf(r)) && (quizCfg.q === 'blank' ? !!blankOf(r) : quizCfg.hide);
+// (mix hides every word: any card may get a fill-the-blank question)
+const hidesWord = r => quizMode && !openedOnce.has(keyOf(r)) && (quizCfg.q === 'blank' ? !!blankOf(r) : quizCfg.q === 'mix' || quizCfg.hide);
+// mix: each card's question type is drawn once per quiz (reopening a card keeps it), half pinyin, half fill the blank
+const quizKinds = new Map();               // card key -> 'b' (fill the blank) / 'p' (pinyin)
+function askBlank(r){
+  if(quizCfg.q !== 'mix') return quizCfg.q === 'blank';
+  const k = keyOf(r);
+  if(!quizKinds.has(k)) quizKinds.set(k, Math.random() < .5 ? 'b' : 'p');
+  return quizKinds.get(k) === 'b';
+}
 // typed pinyin: tone numbers or marks, spaces / apostrophes / "·" ignored, v = ü; with "Ignore" tones are dropped too
 function pyKey(str, tones){
   let t = normPinyin(String(str).replace(/·/g, ' '), false).toLowerCase().replace(/[\s'’·-]/g, '').replace(/u:/g, 'ü').replace(/v/g, 'ü');
@@ -1400,7 +1420,7 @@ function sentenceHTML(b, filled){
 }
 function openQuiz(r, card){
   const w = r[0], correct = r[1], key = keyOf(r);
-  const blank = quizCfg.q === 'blank' ? blankOf(r, true) : null;   // no usable example sentence: ask for the pinyin instead
+  const blank = askBlank(r) ? blankOf(r, true) : null;   // no usable example sentence: ask for the pinyin instead
   const typing = quizCfg.a === 'type';
   quizAnswered = false; quizNext = null;
   qzOptions.innerHTML = ''; qzOptions.classList.remove('done');
@@ -2046,25 +2066,34 @@ function alignScore(){
   const end = qs.querySelector('.qs-end');      // "End" sits level with the middle of the score digits
   if(end){ end.style.transform = ''; const e = end.getBoundingClientRect(); end.style.transform = `translateY(${(m.top + m.bottom) / 2 + t - (e.top + e.bottom) / 2}px)`; }   // m: before the score moved by t
 }
+// the count line always stays on one line: its font shrinks just enough to fit (down to 9px)
+function fitCountSub(){
+  const el = document.getElementById('countSub');
+  el.style.fontSize = '';
+  const max = parseFloat(getComputedStyle(el).fontSize);
+  if(el.scrollWidth > el.clientWidth) el.style.fontSize = Math.max(9, Math.floor(max * el.clientWidth / el.scrollWidth * 10) / 10) + 'px';
+}
 function updateCountSub(){
   const el = document.getElementById('countSub');
   const W = t => `<span style="color:var(--text)">${t}</span>`;
-  const base = `${tx('Cards')}: ${W(list.length)}`;
+  const base = `${tx('Cards')}: ${W(quizMode && quizOnly ? tx('{0} (often wrong)', list.length) : list.length)}`;
+  syncBarCounts();
   const qIn = document.getElementById('q'), qs = document.getElementById('quizScore');
   if(!qIn.hidden && qIn.offsetHeight) qs.style.height = qIn.offsetHeight + 'px';   // exactly the search box's height, so the cards never move
   qIn.hidden = quizMode; qs.hidden = !quizMode;      // quiz mode: the score replaces the search box
   if(quizMode){
     let quizRight = 0, quizWrong = 0;
     quizResults.forEach(ok => { if(ok) quizRight++; else quizWrong++; });
-    el.innerHTML = `${base} · ${tx('Quiz')}: ${W(tx('On'))} · ${tx(quizOnly ? 'Often wrong' : QUIZ_Q[quizCfg.q] || QUIZ_Q.pinyin)}`;
+    el.innerHTML = `${base} · ${tx('Quiz')}: ${W(tx(QUIZ_Q[quizCfg.q] || QUIZ_Q.pinyin))}`;
     const total = list.length, done = list.reduce((n, i) => n + quizResults.has(keyOf(D[i])), 0);
     const prog = total ? done / total * 100 : 0;
     qs.innerHTML = `<span class="qs-side qs-l"><b>${done}</b> / ${total}</span><span class="qs-main"><span class="qs-item"><span class="qs-o">O</span>${quizRight}</span><span class="qs-dot">-</span><span class="qs-item">${quizWrong}<span class="qs-x">X</span></span></span><span class="qs-side qs-r"><button type="button" class="qs-end" id="qsEnd">${tx('End')}</button></span><span class="qs-bar"><i style="width:${prog}%"></i></span>`;
     document.getElementById('qsEnd').onclick = endQuiz;
-    alignScore();
   } else {
     el.innerHTML = `${base} · ${tx('Quiz')}: ${W(tx('Off'))} · ${tx('Tap and hold a card to peek')}`;   // hint only in study mode, on the same line
   }
+  fitCountSub();
+  alignScore();                                  // (does nothing outside quiz mode)
 }
 // The cards a selection of levels/groups shows, in the given order. With the original order and exactly
 // one of your groups selected, that group is shown in the order its cards were saved.
@@ -2087,7 +2116,8 @@ function selectionList(sel, ord, groupOrder){
 function refresh(keepPage){
   stopSpeech();
   const q = query.trim().toLowerCase();
-  list = quizMode && quizOnly ? order.filter(i => quizOnly.has(keyOf(D[i]))) : selectionList(active, order, !q);   // "often wrong" quiz: just those cards
+  list = selectionList(active, order, !q);
+  if(quizMode && quizOnly) list = list.filter(i => quizOnly.has(keyOf(D[i])));   // "often wrong" quiz: only those cards of the selected levels / groups
   if(quizMode && quizCfg.q === 'blank' && !quizOnly) list = list.filter(i => blankOf(D[i]));   // fill-the-blank quiz: only cards with an example sentence
   if(q){
     const Q = prepQuery(q);
@@ -2264,6 +2294,7 @@ window.addEventListener('orientationchange', () => { setTimeout(relayoutBar, 50)
 // that holds the first card you were looking at, so no card is skipped when you go to the next page.
 let pagerResizeT = null, lastPageSize = pageSize();
 window.addEventListener('resize', () => {
+  fitCountSub();
   alignScore();
   setTimeout(relayoutBar, 50);
   clearTimeout(pagerResizeT);
@@ -2451,6 +2482,7 @@ document.addEventListener('click', e => {
 let fmBack = null;
 function openForm(html){
   fmBack = null;
+  fmBox.onkeydown = null;                   // a dialog's own key handler never outlives it
   fmGuard = pressDown; fmGuardReleased = false;
   fmBox.innerHTML = html;
   fmOverlay.classList.add('on');
@@ -3096,13 +3128,11 @@ function openCardDialog(code, editId){
     $('fmPyPrev').innerHTML = v ? colorPinyin(v) : '';
   };
   preview();
-  // Auto-fill from TOCFL. Values we filled in are remembered: as long as you have not edited them,
-  // they are replaced (or cleared) when the hanzi changes, so 中 -> 中國 never leaves 中's data behind.
-  const auto = {py:''};                     // only the pinyin is ever filled in for you
-  const F = {py};
-  const untouched = k => !F[k].value.trim() || F[k].value === auto[k];
-  const put = (k, v) => { F[k].value = v; auto[k] = v; };
-  const clearAuto = k => { if(auto[k] && F[k].value === auto[k]) F[k].value = ''; auto[k] = ''; };
+  // The pinyin is suggested from the hanzi. A suggestion you have not edited is replaced (or cleared)
+  // when the hanzi changes, so 中 -> 中國 never leaves 中's pinyin behind.
+  let autoPy = '';
+  const isAuto = () => !!autoPy && py.value === autoPy;
+  const clearAuto = () => { if(isAuto()) py.value = ''; autoPy = ''; };
   let lastLookup = c ? fullWord(c.hz) : null;
   const lookup = () => {
     const w = fullWord(hz.value.trim().replace(/\s+/g, ''));
@@ -3114,34 +3144,31 @@ function openCardDialog(code, editId){
     const mine = w ? CUSTOM.cards.find(x => x.id !== editId && !isSheetGroup(x.g) && fullWord(x.hz) === w) : null;
     if(mine && hit < 0){
       // already one of your own cards: no second copy
-      Object.keys(auto).forEach(clearAuto);
+      clearAuto();
       note.classList.add('fm-block');
       note.textContent = noEnd(tx('"{0}" is already in your group "{1}".', w, lvLabel(mine.g)));
     }else if(hit >= 0){
       // N1–C1 words are read-only: nothing is copied from them, and they can't be added here
-      Object.keys(auto).forEach(clearAuto);
+      clearAuto();
       note.classList.add('fm-block');
       note.textContent = noEnd(tx('"{0}" is already a TOCFL card ({1}). TOCFL cards can\'t be added or edited.', w, D[hit][4]));
     }else{
       note.classList.remove('fm-block');
-      Object.keys(auto).forEach(clearAuto);                    // drop what an earlier match filled in
+      clearAuto();                                             // drop what an earlier suggestion filled in
       const sug = w ? suggestPinyin(w) : '';
-      if(sug && untouched('py')){ put('py', sug); note.textContent = noEnd(tx('Pinyin suggested per character, please check the tones.')); }
+      if(sug && !py.value.trim()){ py.value = autoPy = sug; note.textContent = noEnd(tx('Pinyin suggested per character, please check the tones.')); }
       else note.textContent = '';
     }
     preview();
   };
-  // tapping a field that still holds an auto-filled value selects it, so typing replaces it instead of appending
-  Object.keys(F).forEach(k => F[k].addEventListener('focus', () => {
-    if(auto[k] && F[k].value === auto[k]) setTimeout(() => { try{ F[k].select(); }catch(e){} }, 0);
-  }));
-  // and if typing starts while the auto-filled text is still untouched, it is replaced (never appended to)
-  Object.keys(F).forEach(k => F[k].addEventListener('beforeinput', e => {
-    if(!auto[k] || F[k].value !== auto[k] || !/^insert/.test(e.inputType || '')) return;
-    const el = F[k];
-    if(el.selectionStart === 0 && el.selectionEnd === el.value.length) return;   // already selected: the browser replaces it
-    el.value = ''; auto[k] = '';
-  }));
+  // tapping the pinyin while it still holds the suggestion selects it, so typing replaces it instead of appending
+  py.addEventListener('focus', () => { if(isAuto()) setTimeout(() => { try{ py.select(); }catch(e){} }, 0); });
+  // and if typing starts while the suggestion is still untouched, it is replaced (never appended to)
+  py.addEventListener('beforeinput', e => {
+    if(!isAuto() || !/^insert/.test(e.inputType || '')) return;
+    if(py.selectionStart === 0 && py.selectionEnd === py.value.length) return;   // already selected: the browser replaces it
+    py.value = ''; autoPy = '';
+  });
   let lt = null, composing = false;
   hz.addEventListener('compositionstart', () => { composing = true; clearTimeout(lt); });
   hz.addEventListener('compositionend', () => { composing = false; clearTimeout(lt); lt = setTimeout(lookup, 300); });
@@ -3202,9 +3229,9 @@ function openCardDialog(code, editId){
     askConfirm(tx('Delete card?'), tx('The card "{0}" will be deleted. This cannot be undone.', c.hz), tx('Delete'), true)
       .then(ok => { if(ok){ closeForm(); deleteCustomCards([c.id]); } });
   };
-  fmBox.addEventListener('keydown', e => {             // Enter in any field saves (sentence boxes added later too)
+  fmBox.onkeydown = e => {                              // Enter in any field saves (sentence boxes added later too)
     if(e.key === 'Enter' && e.target.matches('input') && !isIME(e)){ e.preventDefault(); save(); }
-  });
+  };
   if(!c) focusSoon(hz);
 }
 
