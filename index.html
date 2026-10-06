@@ -441,6 +441,7 @@
     border-radius:999px; cursor:pointer; text-align:left; -webkit-tap-highlight-color:transparent;
   }
   .resume[hidden]{ display:none; }
+  body.quiz-on .resume{ display:none !important; }   /* quiz mode: no bookmark next to the score */
   .resume:active{ opacity:.7; }
   .resume .rb{
     width:10px; height:15px; background:var(--accent); flex:none;
@@ -1027,6 +1028,7 @@ function setQuiz(on, keys = null){
     if(searchSnap) searchSnap.flipped = new Set();   // a search started before quiz must not bring old open cards back
     clearSearch();                       // no search box in quiz mode: quiz the whole selection
   }
+  document.body.classList.toggle('quiz-on', on);
   syncQuizBtn();
   refresh(true);                         // redraws every card (face-down, borders, hidden words, the "+ add card" tile) and the score line
   saveSession();
