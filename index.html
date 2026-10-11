@@ -805,7 +805,10 @@ const exTrans = e => LANG === 'id' ? (e.id || e.en) : (e.en || e.id || '');
 // ---------- custom groups & cards (made by the user; saved in this browser) ----------
 // Groups are appended to LEVELS as [id, name, true]; their cards are appended to D as
 // [hanzi, pinyin, meaning, '', groupId, 'cu:<id>'] (the 6th field is the card's unique key).
-const HOLD_MS = 220;   // how long to hold a card or a group pill before it opens
+const HOLD_MS = 220;   // how long to hold a card or a group pill before it opens (finger)
+// mouse / touchpad: a tap-to-click can reach the page as a press that lasts a few hundred ms, so it must be held longer;
+// a right-click opens it at once
+const holdMs = ev => ev.pointerType === 'mouse' ? 550 : HOLD_MS;
 const LS_CUSTOM = 'tocfl-custom-v1';
 const BASE_N = D.length, BASE_LV = LEVELS.length;
 // The official TOCFL data (N1–C1 cards, levels and example sentences) is read-only:
@@ -1138,7 +1141,7 @@ function buildBar(){
       b.addEventListener('pointerdown', ev => {
         if(ev.pointerType === 'mouse' && ev.button !== 0) return;
         held = false; cancel();
-        t = setTimeout(() => { t = null; held = true; openGroupDialog(code); }, HOLD_MS);
+        t = setTimeout(() => { t = null; held = true; openGroupDialog(code); }, holdMs(ev));
       });
       ['pointerup','pointerleave','pointercancel'].forEach(ev => b.addEventListener(ev, cancel));
       b.addEventListener('contextmenu', ev => { ev.preventDefault(); cancel(); held = true; openGroupDialog(code); });
@@ -2335,14 +2338,20 @@ function makeCard(r){
       pressTimer = null;
       if(quizMode && !openedOnce.has(card.dataset.key)) return;   // quiz on: cards not opened yet cannot be peeked
       showPeek(r);
-    }, HOLD_MS);
+    }, holdMs(ev));
   });
   card.addEventListener('pointermove', ev=>{
     if(pressTimer && (Math.abs(ev.clientX - sx) > 10 || Math.abs(ev.clientY - sy) > 10)){
       clearTimeout(pressTimer); pressTimer = null;
     }
   });
-  card.addEventListener('contextmenu', ev=> ev.preventDefault());
+  card.addEventListener('contextmenu', ev=>{       // right-click (mouse / two-finger tap on a touchpad): the details at once
+    ev.preventDefault();
+    if(ev.pointerType === 'touch' || (ev.sourceCapabilities && ev.sourceCapabilities.firesTouchEvents)) return;   // a finger hold is handled by the timer
+    clearTimeout(pressTimer); pressTimer = null;
+    if(quizMode && !openedOnce.has(card.dataset.key)) return;
+    showPeek(r); peekHeld = false; peekEl.classList.add('stay'); suppressUntil = Date.now() + 150;
+  });
   const fb = card.querySelector('.fav-toggle');
   fb.addEventListener('pointerdown', ev=> ev.stopPropagation());     // no long-press preview from these buttons
   fb.addEventListener('click', ev=>{
