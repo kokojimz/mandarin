@@ -251,7 +251,6 @@
   .quiz-card.typing .qz-sent-en{ margin-top:5px; }
   .quiz-card.typing .qz-sent-py{ margin-top:9px; }
   .quiz-card.typing .qz-answer{ margin-top:-3px; margin-bottom:10px; }
-  .quiz-card.typing .qz-tones{ margin-top:11px; }
   .qz-sent.last{ margin-bottom:18px; }
   /* typing the answer */
   .qz-type{ display:flex; gap:8px; margin-bottom:6px; }
@@ -456,7 +455,7 @@
   .ch-tones{ display:flex; flex-wrap:nowrap; justify-content:center; gap:.8em; font-size:.8rem; color:var(--sub); white-space:nowrap; }   /* always one line: fitTones() shrinks it on narrow screens */
   .x-close + .ch-tones{ padding:0 22px; }   /* a single character: only the tones, clear of the ✕ */
   .ch-list + .ch-tones{ margin-top:16px; padding-top:14px; border-top:1px solid var(--border); }
-  .qz-tones{ margin:10px 0 -8px; }
+  .qz-tones{ margin:16px -20px 0; padding-top:14px; border-top:1px solid var(--border); }   /* the line as wide as in the ⓘ dialog: the ‹ › sit higher up */   /* like the ⓘ dialog: a thin line, then the tone key */
   .ch-tones span{ display:inline-flex; align-items:center; gap:.3em; }
   .ch-tones svg{ width:1.1em; height:.85em; flex:none; fill:none; stroke-width:2; stroke-linecap:round; }   /* the pitch of each tone */
   #peekBox .pk-actions{ display:flex; justify-content:center; align-items:center; gap:2px; margin-top:10px; }
@@ -1545,6 +1544,8 @@ function openReport(){
     listEl.innerHTML = wrong.slice(pg * PER, pg * PER + PER).map(([k, a]) => { const r = rowOf(k); return `<button type="button" class="rp-row" data-k="${escAttr(k)}"><span class="rp-hz">${esc(fullWord(r[0]))}</span><span class="rp-py">${esc(r[1])}</span><span class="rp-bad">${tx('Wrong {0}× of {1}', a[1], a[0] + a[1])}<span class="rp-dots" title="${escAttr(tx('Right {0} of {1} times in a row', a[3] || 0, MASTER_STREAK))}">${[...Array(MASTER_STREAK)].map((_, i) => `<i class="${i < (a[3] || 0) ? 'on' : ''}"></i>`).join('')}</span></span></button>`; }).join('');
     listEl.querySelectorAll('.rp-row').forEach(b => b.onclick = () => {   // the card, above the report
       const r = rowOf(b.dataset.k); if(!r) return;
+      // its ‹ › go through the "Often wrong" list only (all of its pages); the list below turns to the card's page
+      peekScope = {rows: wrong.map(([k]) => rowOf(k)).filter(Boolean), move: x => { const p = Math.floor(wrong.findIndex(([k]) => k === keyOf(x)) / PER); if(p >= 0 && p !== pg){ pg = p; showList(); } }};
       showPeek(r);
       peekEl.classList.add('over-form', 'stay');
       peekHeld = false; suppressUntil = Date.now() + 150;
@@ -1647,21 +1648,36 @@ function drawMeaningWrongs(r){
   saveSession();
   return out;
 }
+// the senses of a card (English and Indonesian), to keep look-alike meanings apart: "pretty; beautiful" -> pretty, beautiful
+const SENSES = new WeakMap();
+function sensesOf(r){
+  let set = SENSES.get(r);
+  if(!set){
+    set = new Set();
+    [r[2], r.mi].forEach(m => String(m || '').toLowerCase().replace(/\([^)]*\)|\[[^\]]*\]/g, ' ').split(/[;,/]/).forEach(x => {
+      x = x.replace(/^\s*(to|a|an|the)\s+/, '').replace(/[^a-z\u00c0-\u024f\s'-]/g, ' ').replace(/\s+/g, ' ').trim();
+      if(x.length > 1) set.add(x);
+    }));
+    SENSES.set(r, set);
+  }
+  return set;
+}
+const sharesSense = (a, b) => { const sb = sensesOf(b); for(const x of sensesOf(a)) if(sb.has(x)) return true; return false; };
 function drawWrongs(r, blank){
   const w = r[0], correct = r[1], need = quizCfg.n - 1;
   const ck = (blank ? 'b' + blank.n + ':' : 'p:') + keyOf(r);   // per sentence: wrong options never appear in it
   const cached = quizWrongs.get(ck);
   if(cached && cached.length === need){
-    const rows = cached.map(i => D[i]).filter(x => x && (blank ? fullWord(x[0]) !== fullWord(w) : !sameSound(x[1], correct)));
+    const rows = cached.map(i => D[i]).filter(x => x && (blank ? fullWord(x[0]) !== fullWord(w) && !sharesSense(x, r) : !sameSound(x[1], correct)));
     if(rows.length === need) return rows;
   }
   const targetLen = [...fullWord(w)].length;
   const isRedup = s => { const c = [...fullWord(s)]; for(let i = 0; i < c.length - 1; i++) if(c[i] === c[i + 1]) return true; return false; };
   let pool;
   if(blank){                              // other words of the same length that don't already appear in the sentence
-    // (not words that sound the same, like 他 / 她, which could fit the sentence just as well)
-    pool = D.filter(x => fullWord(x[0]) !== blank.w && !sameSound(x[1], correct) && [...fullWord(x[0])].length === targetLen && !blank.ex.hz.includes(fullWord(x[0])));
-    if(pool.length < need) pool = D.filter(x => fullWord(x[0]) !== blank.w);
+    // (not words that sound the same, like 他 / 她, nor words with a meaning in common, like 漂亮 / 美麗: they could fit the sentence just as well)
+    pool = D.filter(x => fullWord(x[0]) !== blank.w && !sameSound(x[1], correct) && [...fullWord(x[0])].length === targetLen && !blank.ex.hz.includes(fullWord(x[0])) && !sharesSense(x, r));
+    if(pool.length < need) pool = D.filter(x => fullWord(x[0]) !== blank.w && !sharesSense(x, r));
   }else{
     // reduplicated words (媽媽, 謝謝, ...) have a giveaway pinyin shape, so their wrong options are reduplicated too
     const redup = isRedup(w);
@@ -1998,12 +2014,14 @@ function openCharsDialog(r){
   fmBox.classList.add('narrow');
   fitTones(fmBox.querySelector('.ch-tones'));
 }
-let peekR = null;
+let peekR = null, peekScope = null;   // peekScope: a list of its own for ‹ › (the report's "Often wrong"), else the cards on screen
 // ‹ › in the preview: the card before / after it in the list on screen (in a quiz only cards already opened, so nothing
 // is given away); -1 when there is none, or when the card isn't in that list (opened from the report)
 const peekNavOn = () => !(quizMode && quizOverlay.classList.contains('on'));   // none over a quiz question (its answers open cards too)
 function peekNeighbor(r, dir){
-  const k0 = keyOf(r), at = list.findIndex(i => keyOf(D[i]) === k0);
+  const k0 = keyOf(r);
+  if(peekScope){ const at = peekScope.rows.findIndex(x => keyOf(x) === k0), n = at + dir; return at < 0 || n < 0 || n >= peekScope.rows.length ? -1 : n; }
+  const at = list.findIndex(i => keyOf(D[i]) === k0);
   if(at < 0) return -1;
   for(let n = at + dir; n >= 0 && n < list.length; n += dir){ if(!quizMode || openedOnce.has(keyOf(D[list[n]]))) return n; }
   return -1;
@@ -2013,6 +2031,11 @@ function peekNav(dir){
   const n = peekNeighbor(peekR, dir);
   if(n < 0) return;
   const over = peekEl.classList.contains('over-form');
+  if(peekScope){
+    const r = peekScope.rows[n]; peekScope.move(r); showPeek(r);
+    peekHeld = false; peekEl.classList.add('stay'); if(over) peekEl.classList.add('over-form');
+    return;
+  }
   const k = keyOf(D[list[n]]), want = Math.floor(n / pageSize()) + 1;   // the grid follows, as with the quiz's ‹ ›
   if(want !== page){ page = want; pageWish = null; renderPage(); }
   const el = grid.querySelector('.card[data-key="' + CSS.escape(k) + '"]');
@@ -2108,7 +2131,7 @@ peekBox.addEventListener('click', e=>{
   }
 });
 function closePeek(){
-  stopSpeech();
+  stopSpeech(); peekScope = null;
   peekOn = false; peekHeld = false;
   peekEl.classList.remove('on', 'stay', 'over-form');
   finishQuiz();
