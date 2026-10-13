@@ -457,7 +457,7 @@
   .ch-list + .ch-tones{ margin-top:16px; padding-top:14px; border-top:1px solid var(--border); }
   .qz-tones{ margin:16px -20px 0; padding-top:14px; border-top:1px solid var(--border); }   /* the line as wide as in the ⓘ dialog: the ‹ › sit higher up */   /* like the ⓘ dialog: a thin line, then the tone key */
   .ch-tones span{ display:inline-flex; align-items:center; gap:.3em; }
-  .ch-tones svg{ width:1.1em; height:.85em; flex:none; fill:none; stroke-width:2; stroke-linecap:round; }   /* the pitch of each tone */
+  .ch-tones svg{ width:1em; height:.8em; flex:none; fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }   /* the pitch of each tone */
   #peekBox .pk-actions{ display:flex; justify-content:center; align-items:center; gap:2px; margin-top:10px; }
   #peekBox .pk-play{ position:static; transform:none; display:block; margin:0; min-width:48px; height:38px; font-size:1.3rem; }
   .pk-mark{
@@ -1993,7 +1993,8 @@ function charRows(w, py){
 // and at the bottom what each tone colour means
 const TONE_KEY = [[1, '1st'], [2, '2nd'], [3, '3rd'], [4, '4th'], [0, 'Neutral']];
 // the shape of each tone's pitch: level, rising, dipping, falling; the neutral tone is a short dot
-const TONE_SHAPE = {1: '<path d="M1.5 2.5H12.5"/>', 2: '<path d="M1.5 9.5L12.5 1.5"/>', 3: '<path d="M1.5 4Q5.5 11 8 9.5T12.5 2"/>', 4: '<path d="M1.5 1.5L12.5 9.5"/>', 0: '<circle cx="7" cy="5.5" r="2" stroke="none" fill="currentColor"/>'};
+// all in the same 10×8 box, mirror-symmetric: 2 and 4 mirror each other, 3 is an even V, 1 sits high (a high, level tone)
+const TONE_SHAPE = {1: '<path d="M1 1H9"/>', 2: '<path d="M1 7L9 1"/>', 3: '<path d="M1 1.5L5 6.5L9 1.5"/>', 4: '<path d="M1 1L9 7"/>', 0: '<circle cx="5" cy="4" r="1.6" stroke="none" fill="currentColor"/>'};
 // one line whatever the screen: shrink the text until the whole key fits the dialog
 function fitTones(el){
   el.style.fontSize = '';
@@ -2003,7 +2004,7 @@ function fitTones(el){
   if(need > room && room > 0) el.style.fontSize = (parseFloat(cs.fontSize) * room / need * 0.98).toFixed(2) + 'px';
 }
 const toneKeyHTML = () => `<span>${tx('Tone:')}</span>` + TONE_KEY.map(([t, l]) =>
-  `<span><svg viewBox="0 0 14 11" style="stroke:${tv(t)};color:${tv(t)}" aria-hidden="true">${TONE_SHAPE[t]}</svg>${tx(l)}</span>`).join('');
+  `<span><svg viewBox="0 0 10 8" style="stroke:${tv(t)};color:${tv(t)}" aria-hidden="true">${TONE_SHAPE[t]}</svg>${tx(l)}</span>`).join('');
 function openCharsDialog(r){
   const rows = charRows(r[0], r[1]);
   const tones = `<div class="ch-tones">${toneKeyHTML()}</div>`;
