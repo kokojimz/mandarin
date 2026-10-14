@@ -1937,7 +1937,7 @@ function openQuiz(r, card){
         qzAnswer.innerHTML = colorPinyin(correct);   // just the pinyin: the hanzi is already on screen
       }
     }else{
-      if(tone) qzOptions.querySelectorAll('.qz-tbtn').forEach(c => { if(c.dataset.ok === '1') c.classList.add('correct'); else if(timedOut && !c.classList.contains('wrong')) c.classList.remove('picked'); });
+      if(tone) qzOptions.querySelectorAll('.qz-tbtn').forEach(c => { if(c.dataset.ok === '1') c.classList.add('correct'); else if(timedOut) c.classList.add('wrong'); });   // time is up: every wrong option turns red, as in the other quizzes
       else [...qzOptions.children].forEach(c => {
         if(c.dataset.ok === '1') c.classList.add('correct');
         else if(timedOut) c.classList.add('wrong');   // time is up: every wrong option turns red
