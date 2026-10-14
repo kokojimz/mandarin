@@ -3908,7 +3908,7 @@ function openCardDialog(code, editId){
   };
   exs.forEach(e => exBox(e));
   numberEx();
-  exAdd.onclick = () => { const b = exBox(); numberEx(); b.querySelector('.exHz').focus(); };
+  exAdd.onclick = () => { const b = exBox(); numberEx(); b.scrollIntoView({block: 'nearest', behavior: 'smooth'}); };   // no focus: the keyboard waits until you tap a box
   // opening "Example sentences" with no sentence yet shows one empty box right away
   $('fmExBox').addEventListener('toggle', e => { if(e.target.open && !exList.children.length){ exBox(); numberEx(); } });
   const err = t => { $('fmErr').textContent = t ? noEnd(t) : ''; };
