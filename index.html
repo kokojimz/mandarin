@@ -228,17 +228,17 @@
   .qz-options{ display:flex; flex-direction:column; gap:10px; margin-bottom:6px; }
   /* fill in the blank, once answered: ⓘ on the right just above the answers = every character of the sentence (like the card's ⓘ) */
   /* fill in the blank, once answered: ⓘ (every character of the sentence) on the right of the right answer, or of the typed box;
-     that box gets 40px shorter to make room */
+     that box gets 48px shorter to make room */
   .qz-chars{ position:absolute; top:50%; right:-40px; transform:translateY(-50%); width:30px; height:30px; padding:4px; box-sizing:border-box;
     display:flex; align-items:center; justify-content:center; border:0; background:transparent; color:var(--sub); cursor:pointer; -webkit-tap-highlight-color:transparent; }
   .qz-chars[hidden]{ display:none; }
   .qz-chars:active{ opacity:.5; }
-  .qz-opt.has-i{ margin-right:40px; overflow:visible; }
-  .qz-options.done .qz-opt.has-i{ padding-left:78px; }   /* 40px more on the left: the text stays centred like the other answers */
-  .qz-opt > .qz-chars{ right:-41px; }   /* measured from inside the 1px border: the same 10px gap as the typed box */
+  .qz-opt.has-i{ margin-right:48px; overflow:visible; }
+  .qz-options.done .qz-opt.has-i{ padding-left:86px; }   /* 48px more on the left: the text stays centred like the other answers */
+  .qz-opt > .qz-chars{ right:-40px; }   /* measured from inside the 1px border: centred in the 48px, the same gap left and right */
   .qz-type{ position:relative; }
-  .qz-type > .qz-chars{ top:24px; right:0; }   /* level with the box (48px tall) */
-  .qz-type.has-i input{ margin-right:40px; padding-left:54px; }   /* the text stays centred like the Check button below */
+  .qz-type > .qz-chars{ top:24px; right:9px; }   /* level with the box (48px tall), centred in the 48px beside it */
+  .qz-type.has-i input{ margin-right:48px; padding-left:62px; }   /* the text stays centred like the Check button below */
   .qz-options:empty{ display:none; }   /* typing: the answer box takes the options' place, same gap below the question */
   .qz-opt{
     padding:12px 14px; border-radius:12px; border:1px solid var(--border); background:transparent;
@@ -485,6 +485,15 @@
   svg.ln *, .pk-chars svg *, .qz-chars svg *{ vector-effect:non-scaling-stroke; }   /* the same line width on screen, whatever the icon size */   /* ⓘ: the meaning of each character (opens a dialog); same line width as the bookmark */
   .pk-chars svg .dot, .qz-chars svg .dot{ fill:currentColor; stroke:none; }
   .ch-list{ display:flex; flex-direction:column; gap:14px; margin:0; }
+  #formBox.ch-dlg{ display:flex; flex-direction:column; overflow:hidden; }
+  #formBox.ch-dlg .ch-list{ flex:1 1 auto; min-height:0; overflow-y:auto; overscroll-behavior:contain; -webkit-overflow-scrolling:touch; }
+  #formBox.ch-dlg .ch-head, #formBox.ch-dlg .ch-tones{ flex:none; }
+  #formBox.ch-dlg .x-close{ align-self:flex-end; }   /* ✕ stays top right (float doesn't work in a flex column) */
+  /* ⓘ of a fill in the blank sentence: the sentence and its translation on top, a line, then each character */
+  .ch-head{ text-align:center; padding:0 22px 14px; margin-bottom:16px; border-bottom:1px solid var(--border); }
+  .ch-sent{ font-size:1.3rem; line-height:1.45; }
+  .ch-tr{ font-size:.85rem; line-height:1.4; color:var(--sub); margin-top:6px; }
+  .ch-head + .ch-list .ch-row:first-child{ padding-right:0; }   /* the ✕ is beside the sentence now */
   .ch-row{ display:flex; align-items:center; gap:12px; }
   .ch-row:first-child{ padding-right:22px; }   /* room for the ✕ */
   .ch-hz{ font-size:2rem; line-height:1; flex:none; }
@@ -2196,13 +2205,14 @@ function fitTones(el){
 const toneKeyHTML = () => `<span>${tx('Tone:')}</span>` + TONE_KEY.map(([t, l]) =>
   `<span><svg viewBox="0 0 10 8" style="stroke:${tv(t)};color:${tv(t)}" aria-hidden="true">${TONE_SHAPE[t]}</svg>${tx(l)}</span>`).join('');
 // rows: [{c, syl, mt}] (mt = the meaning in the app's language, or null), or null for just the tone key
-function charsDialog(rows){
+function charsDialog(rows, head){   // head: HTML shown above the list (the sentence and its translation), or nothing
   const tones = `<div class="ch-tones">${toneKeyHTML()}</div>`;
-  openForm(!rows ? tones : `
+  openForm(!rows ? tones : `${head || ''}
     <div class="ch-list">${rows.map(x => `<div class="ch-row"><span class="ch-hz" style="color:${tv(toneOf(x.syl))}">${esc(x.c)}</span>
       <div class="ch-txt"><div class="ch-py" style="color:${tv(toneOf(x.syl))}">${esc(x.syl)}</div>${x.mt ? `<div class="ch-m">${esc(x.mt)}</div>` : `<div class="ch-m none">${tx('No meaning yet')}</div>`}</div></div>`).join('')}</div>${tones}
 `);   // closes with ✕ or a tap outside
   fmBox.classList.add('narrow');
+  if(rows) fmBox.classList.add('ch-dlg');   // sentence on top and tone key at the bottom stay put; only the list scrolls
   fitTones(fmBox.querySelector('.ch-tones'));
 }
 function openCharsDialog(r){
@@ -2235,8 +2245,12 @@ function sentCharMeaning(c, syl){
 }
 // ⓘ in a fill in the blank question: every character of the sentence once, in order
 function openSentChars(ex){
-  const seen = new Set(), rows = (sentSyllables(ex) || []).filter(x => !seen.has(x.c + x.syl) && seen.add(x.c + x.syl));
-  charsDialog(rows.map(x => ({...x, mt: sentCharMeaning(x.c, x.syl)})));
+  const all = sentSyllables(ex) || [], seen = new Set(), rows = all.filter(x => !seen.has(x.c + x.syl) && seen.add(x.c + x.syl));
+  // on top: the sentence, each character in its tone colour, and its translation
+  let k = 0;
+  const hz = [...String(ex.hz)].map(c => HAN.test(c) && all[k] ? `<span style="color:${tv(toneOf(all[k++].syl))}">${esc(c)}</span>` : esc(c)).join('');
+  const head = `<div class="ch-head"><div class="ch-sent">${hz}</div>${exTrans(ex) ? `<div class="ch-tr">${esc(exTrans(ex))}</div>` : ''}</div>`;
+  charsDialog(rows.map(x => ({...x, mt: sentCharMeaning(x.c, x.syl)})), head);
 }
 let peekR = null, peekScope = null;   // peekScope: a list of its own for ‹ › (the report's "Often wrong"), else the cards on screen
 // ‹ › in the preview: the card before / after it in the list on screen (in a quiz only cards already opened, so nothing
@@ -3298,7 +3312,7 @@ function openForm(html, stack = false){
   fmBox.onkeydown = null;                   // a dialog's own key handler never outlives it
   fmGuard = pressDown; fmGuardReleased = false;
   fmBox.innerHTML = X_HTML() + html;
-  fmBox.classList.remove('narrow');          // a dialog that wants the confirm width adds it back after opening
+  fmBox.classList.remove('narrow', 'ch-dlg');   // a dialog that wants the confirm width (or its own layout) adds it back after opening
   fmOverlay.classList.add('on');
   fmOverlay.setAttribute('aria-hidden', 'false');
   fmBox.scrollTop = 0;
