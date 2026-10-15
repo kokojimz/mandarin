@@ -1379,7 +1379,7 @@ function readQuizCfg(v){
     const qs = (Array.isArray(v.q) ? v.q : [v.q]).filter((x, i, a) => QUIZ_KINDS.includes(x) && a.indexOf(x) === i);   // one type or several (mixed)
     if(qs.length) c.q = qs;
     if(['choice','type'].includes(v.a)) c.a = v.a;
-    if([2,3,4].includes(v.n)) c.n = v.n;
+    if([2,3,4,5].includes(v.n)) c.n = v.n;
     if(typeof v.tones === 'boolean') c.tones = v.tones;
     if(typeof v.hide === 'boolean') c.hide = v.hide;
     if([0,5,10,20].includes(v.timer)) c.timer = v.timer;
@@ -1444,7 +1444,7 @@ function openQuizSettings(draft){   // draft: the unsaved choices, when coming b
     <div class="qs-row"><div class="qs-label">${tx('Question')}</div><div class="seg"><button type="button" id="qsKinds" class="st-go"><span class="st-txt">${tx('Select question')}</span><span class="st-chev" aria-hidden="true">›</span></button></div></div>
     <div class="qs-row" id="qsHide"><div class="qs-label">${tx('Card display')}</div>${seg('hide', [['false','Show the word'],['true','Hide the word']])}</div>
     <div class="qs-row"><div class="qs-label">${tx('Answer')}</div>${seg('a', Object.entries(QUIZ_A))}</div>
-    <div class="qs-row" id="qsN"><div class="qs-label">${tx('Choices')}</div>${seg('n', [[2,'2'],[3,'3'],[4,'4']])}</div>
+    <div class="qs-row" id="qsN"><div class="qs-label">${tx('Choices')}</div>${seg('n', [[2,'2'],[3,'3'],[4,'4'],[5,'5']])}</div>
     <div class="qs-row" id="qsTones"><div class="qs-label">${tx('Tones in typed pīnyīn')}</div>${seg('tones', [['true','Must match'],['false','Ignore']])}</div>
     <div class="qs-row"><div class="qs-label">${tx('Time per card')}</div>${seg('timer', [[0,'Off'],[5,tx('{0}s', 5)],[10,tx('{0}s', 10)],[20,tx('{0}s', 20)]])}</div>
     <div class="fm-actions">
