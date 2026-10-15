@@ -226,19 +226,15 @@
   .quiz-card .qz-play.playing{ font-size:1.1rem; }
   .quiz-card .qz-play[hidden]{ display:none; }
   .qz-options{ display:flex; flex-direction:column; gap:10px; margin-bottom:6px; }
-  /* fill in the blank, once answered: ⓘ on the right just above the answers = every character of the sentence (like the card's ⓘ) */
-  /* fill in the blank, once answered: ⓘ (every character of the sentence) on the right of the right answer, or of the typed box;
-     that box gets 48px shorter to make room */
-  .qz-chars{ position:absolute; top:50%; right:-40px; transform:translateY(-50%); width:30px; height:30px; padding:4px; box-sizing:border-box;
-    display:flex; align-items:center; justify-content:center; border:0; background:transparent; color:var(--sub); cursor:pointer; -webkit-tap-highlight-color:transparent; }
+  /* fill in the blank, once answered: ⓘ (every character of the sentence) inside the right answer or the typed box, on the left
+     (the › is on the right); the whole 44px-wide, full-height strip is the tap area. Boxes keep their full width */
+  .qz-chars{ position:absolute; left:0; top:0; width:44px; height:100%; padding:0; display:flex; align-items:center; justify-content:center;
+    border:0; background:transparent; color:inherit; cursor:pointer; -webkit-tap-highlight-color:transparent; }
   .qz-chars[hidden]{ display:none; }
   .qz-chars:active{ opacity:.5; }
-  .qz-opt.has-i{ margin-right:48px; overflow:visible; }
-  .qz-options.done .qz-opt.has-i{ padding-left:86px; }   /* 48px more on the left: the text stays centred like the other answers */
-  .qz-opt > .qz-chars{ right:-40px; }   /* measured from inside the 1px border: centred in the 48px, the same gap left and right */
-  .qz-type{ position:relative; }
-  .qz-type > .qz-chars{ top:24px; right:9px; }   /* level with the box (48px tall), centred in the 48px beside it */
-  .qz-type.has-i input{ margin-right:48px; padding-left:62px; }   /* the text stays centred like the Check button below */
+  .qz-options.done .qz-opt.has-i{ padding-left:44px; padding-right:44px; }   /* the same on both sides: the text stays centred */
+  .qz-type > .qz-chars{ height:48px; color:#fff; }   /* over the box (48px tall), white on its green / red */
+  .qz-type.has-i input{ padding-left:44px; padding-right:44px; }
   .qz-options:empty{ display:none; }   /* typing: the answer box takes the options' place, same gap below the question */
   .qz-opt{
     padding:12px 14px; border-radius:12px; border:1px solid var(--border); background:transparent;
@@ -255,9 +251,8 @@
   .qz-tcol{ flex:1; min-width:0; display:flex; flex-direction:column; gap:8px; }
   .qz-tbtn{ min-width:0; padding:10px 2px; }
   .qz-tbtn.picked{ border-color:var(--accent); box-shadow:0 0 0 1px var(--accent); }
-  .qz-options.done .qz-tbtn{ box-shadow:none; }
   .qz-options.done .qz-tbtn.picked:not(.correct):not(.wrong){ border-color:var(--border); }   /* answered: only green / red remain */
-  .qz-options.done .qz-tbtn{ padding-left:2px; padding-right:2px; cursor:default; }
+  .qz-options.done .qz-tbtn{ padding-left:2px; padding-right:2px; cursor:default; box-shadow:none; }
   .qz-opt.correct{ background:#1e9e5a; color:#fff; border-color:#1e9e5a; }
   .qz-opt.wrong{ background:#d64545; color:#fff; border-color:#d64545; }
   /* time left for this card: a thin bar along the top that empties */
@@ -282,7 +277,7 @@
   .quiz-card.typing .qz-answer{ margin-top:-3px; margin-bottom:10px; }
   .qz-sent.last{ margin-bottom:18px; }
   /* typing the answer */
-  .qz-type{ display:flex; flex-direction:column; gap:10px; margin-bottom:6px; }
+  .qz-type{ position:relative; display:flex; flex-direction:column; gap:10px; margin-bottom:6px; }
   .qz-type[hidden], .qz-sent[hidden], .qz-answer[hidden], .qz-timer[hidden], .qz-tones[hidden]{ display:none; }
   .qz-type input{ flex:none; min-width:0; box-sizing:border-box; height:48px; padding:0 14px; border-radius:12px; border:1px solid var(--border); background:var(--bg); color:var(--text); font-size:16px; font-family:inherit; text-align:center; }
   .qz-type input::placeholder{ font-size:.8rem; }   /* the whole hint fits: 漢字 / pīnyīn / pin1 yin1 */
@@ -1329,7 +1324,7 @@ function syncQuizBtn(){
 const quizOverlay = document.getElementById('quizOverlay');
 const qzHanzi = document.getElementById('qzHanzi');
 const qzSub = document.getElementById('qzSub'), qzChars = document.getElementById('qzChars');
-// ⓘ on the right of the right answer (multiple choice) or of the typed box: only for a sentence whose characters line up with its pinyin.
+// ⓘ on the left inside the right answer (multiple choice) or the typed box: only for a sentence whose characters line up with its pinyin.
 // The multiple-choice one lives inside the answer, so it is saved with the answers for ‹ › (and wired again here)
 const I_HTML = '<svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.8"/><path d="M12 11v5"/><circle class="dot" cx="12" cy="7.9" r=".9"/></svg>';
 function showSentChars(ex, typed){
@@ -2222,7 +2217,12 @@ function openCharsDialog(r){
 // a sentence's characters with the syllable each has in its pinyin; Latin words ("KTV") are left out of both.
 // null when they don't line up one to one
 const HAN = /\p{Script=Han}/u;
+const SENT_SYL = new WeakMap();
 function sentSyllables(ex){
+  if(SENT_SYL.has(ex)) return SENT_SYL.get(ex);
+  const v = sentSyllables0(ex); SENT_SYL.set(ex, v); return v;
+}
+function sentSyllables0(ex){
   const chars = [...String(ex.hz || '')].filter(c => HAN.test(c));
   const latin = new Set((String(ex.hz).match(/[A-Za-z]+/g) || []).map(x => x.toLowerCase()));
   const clean = String(ex.py || '').replace(/[^A-Za-z\u00c0-\u024f\u0300-\u036f·'’ ]+/g, ' ').split(/\s+/).filter(t => t && !latin.has(t.toLowerCase())).join(' ');
@@ -2310,7 +2310,7 @@ function peekHTML(r){
     <div class="pk-actions">
       <button type="button" class="pk-mark pk-bm${bookmark === keyOf(r) ? ' on' : ''}" aria-label="${tx('Bookmark')}">${lineIcon('bm', 22)}</button>
       <button type="button" class="pk-mark pk-fav${isSaved(keyOf(r)) ? ' on' : ''}" aria-label="${tx('Add to group')}">${lineIcon('star', 22)}</button>
-      <button type="button" class="pk-mark pk-chars" aria-label="${tx('Meaning of each character')}"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.8"/><path d="M12 11v5"/><circle class="dot" cx="12" cy="7.9" r=".9"/></svg></button>
+      <button type="button" class="pk-mark pk-chars" aria-label="${tx('Meaning of each character')}">${I_HTML}</button>
       ${HAS_TTS ? `<button type="button" class="play pk-play" aria-label="${tx('Play pronunciation')}">${PLAY_IC}</button>` : ''}
     </div>
     ${tools}
