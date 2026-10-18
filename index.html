@@ -122,10 +122,11 @@
   .fm-exh{ display:flex; align-items:center; justify-content:space-between; font-size:.72rem; color:var(--sub); margin-bottom:6px; }
   .fm-exdel{ width:26px; height:26px; border:0; background:transparent; color:var(--sub); font-size:1.2rem; line-height:1; cursor:pointer; border-radius:50%; }
   .fm-exdel:active{ background:rgba(128,128,128,.15); }
-  .pk-tool.fm-ex-add{ display:flex; align-items:center; gap:8px; margin:0 auto; padding:6px 8px; border:0; }   /* icon + text, no outline (like the new-group +) */
+  .pk-tool.fm-ex-add{ display:flex; align-items:center; gap:8px; margin:0 auto; padding:6px 8px; border:0; }   /* icon + text, no outline (also "Create new group") */
   .fm-ex-add:active{ opacity:.6; }
   .fm-ex-add .ic-plus{ color:var(--text); }
   .fm-ex-add[hidden]{ display:none; }
+  .pk-tool.gp-add{ font-size:.9rem; margin-top:12px; }   /* "Create new group": under the list, outside its box */
   .fm-err{ color:#d64545; font-size:.78rem; margin:20px 0 0; text-align:center; }
   .fm-err:empty{ display:none; }
   .fm-actions{ display:flex; gap:8px; margin-top:20px; }
@@ -139,8 +140,6 @@
   .gp-row:first-child{ border-top:0; }
   .gp-row:active{ background:rgba(128,128,128,.12); }
   .gp-name{ flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-  .gp-new{ justify-content:center; }
-  .gp-new .gp-name{ flex:none; }
   /* Google Sheets link: input/link + button in one row, a small spinner while it loads, the tabs as a checklist */
   .sh-row{ display:flex; gap:8px; align-items:stretch; }
   .fm-field .sh-row input{ flex:1; min-width:0; width:auto; }
@@ -161,7 +160,6 @@
   .sh-count{ display:block; font-size:.72rem; color:var(--sub); margin-top:2px; }
   .sh-tab.off{ opacity:.5; cursor:default; }
   #fmGName:disabled{ opacity:.5; }
-  .gp-plus{ width:22px; height:22px; color:var(--text); display:flex; align-items:center; justify-content:center; flex:none; }
   .gp-check{ width:20px; height:20px; box-sizing:border-box; border-radius:50%; border:1.5px solid var(--border); flex:none; display:flex; align-items:center; justify-content:center; color:#fff; }
   .gp-row.on .gp-check{ background:var(--accent); border-color:var(--accent); }
   .gp-check svg{ display:none; width:10px; height:10px; }
@@ -3894,7 +3892,7 @@ function groupNameError(n, selfId){
   if(!n) return tx('Please type a name.');
   const low = n.toLowerCase();
   if(low === 'all') return tx('That name is reserved.');
-  if(LEVELS.some(l => l[0] !== selfId && (l[0].toLowerCase() === low || (l[2] && l[1].toLowerCase() === low)))) return tx('A group with this name already exists.');
+  if(LEVELS.some(l => l[0] !== selfId && (l[2] ? l[1] : l[0]).toLowerCase() === low)) return tx('A group with this name already exists.');   // N1–C1 by code, your groups by name (never by their hidden id g1, g2…)
   return '';
 }
 
@@ -3903,24 +3901,23 @@ function openGroupPicker(key){
   const r = D.find(x => keyOf(x) === key);
   if(!r) return;
   const homeOf = r[5] ? r[4] : null;                        // a card you made always stays in the group it was made in
+  // locked rows: the group a card you made lives in (always ticked), and groups linked to a Google Sheet (only the sheet's cards)
+  const lockMsg = g => g.src ? 'Cards of this group come from its Google Sheet' : g.id === homeOf ? 'Cards you made stay in their own group' : '';
   const rows = CUSTOM.groups.map(g => {
-    const on = g.refs.includes(key), home = g.id === homeOf, sheet = !!g.src && !home;   // a group linked to a sheet only has the sheet's cards
-    return `<button type="button" class="gp-row${on ? ' on' : ''}${home ? ' home' : ''}${sheet ? ' sheet' : ''}" data-g="${g.id}" aria-pressed="${on}"${home || sheet ? ' aria-disabled="true"' : ''}>
+    const on = g.refs.includes(key), lock = lockMsg(g), home = g.id === homeOf;
+    return `<button type="button" class="gp-row${on ? ' on' : ''}${home ? ' home' : lock ? ' sheet' : ''}" data-g="${g.id}" aria-pressed="${on}"${lock ? ` aria-disabled="true" data-lock="${lock}"` : ''}>
       <span class="gp-name">${esc(g.name)}</span>${CHECK_ICON}</button>`;
   }).join('');
   openForm(`
     <div class="fm-title">${tx('Add to group')}</div>
     <div class="fm-sub">${esc(fullWord(r[0]))}</div>
-    <div class="gp-list">
-      <button type="button" class="gp-row gp-new"><span class="gp-plus" aria-hidden="true">${PLUS_ICON}</span><span class="gp-name">${tx('Create new group')}</span></button>
-      ${rows}
-    </div>
+    ${rows ? `<div class="gp-list">${rows}</div>` : ''}
+    <button type="button" class="pk-tool fm-ex-add gp-add" id="fmNewG">${PLUS_ICON}<span>${tx('Create new group')}</span></button>
     <div class="fm-actions"><button type="button" class="cf-btn cf-yes" id="fmOk">${tx('Done')}</button></div>`);
   fmBox.classList.add('narrow');
-  fmBox.querySelector('.gp-new').onclick = () => openNewGroupDialog('', key);
+  document.getElementById('fmNewG').onclick = () => openNewGroupDialog('', key);
   fmBox.querySelectorAll('.gp-row[data-g]').forEach(b => b.onclick = () => {
-    if(b.classList.contains('home') && !isSheetGroup(b.dataset.g)){ toast(tx('Cards you made stay in their own group')); return; }
-    if(b.classList.contains('sheet') || b.classList.contains('home')){ toast(tx('Cards of this group come from its Google Sheet')); return; }
+    if(b.dataset.lock){ toast(tx(b.dataset.lock)); return; }
     const g = CUSTOM.groups.find(x => x.id === b.dataset.g);
     if(!g) return;
     const i = g.refs.indexOf(key);
