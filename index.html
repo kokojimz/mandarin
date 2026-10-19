@@ -2371,13 +2371,17 @@ function dictSentPy(hz, py){
   }
   return putSyllables(py, spans, rows, syl);
 }
-// cards (and their sentences) saved before everything was kept in the dictionary form, e.g. an older sheet import or backup: fix once
-{ let changed = false;
-  CUSTOM.cards.forEach(c => {
-    const p = dictOf(c.py, c.hz); if(p !== c.py){ c.py = p; changed = true; }
-    (c.ex || []).forEach(e => { const d = dictSentPy(e.hz, e.py); if(d !== e.py){ e.py = d; changed = true; } });
+// your cards (and their sentences) in the dictionary form, also when they come from an older save, a backup or another device;
+// true when something had to change
+function dictCustom(c){
+  let changed = false;
+  c.cards.forEach(x => {
+    const p = dictOf(x.py, x.hz); if(p !== x.py){ x.py = p; changed = true; }
+    (x.ex || []).forEach(e => { const d = dictSentPy(e.hz, e.py); if(d !== e.py){ e.py = d; changed = true; } });
   });
-  if(changed){ saveCustomLocal(); installCustom(); } }
+  return changed;
+}
+if(dictCustom(CUSTOM)){ saveCustomLocal(); installCustom(); }
 const exPy = ex => PY_MODE === 'dict' ? String(ex.py || '') : sentInfo(ex).spoken;
 function sentSyllables(ex){ const v = sentInfo(ex); return PY_MODE === 'dict' ? v.rows : v.spokenRows; }
 function sentSyllables0(ex){
@@ -2667,7 +2671,7 @@ async function initStorage(){
         const bm = (data && typeof data.bookmark === 'string' && data.bookmark) ? data.bookmark : null;
         const levels = (data && Array.isArray(data.levels)) ? data.levels : null;
         if(data && data.custom && !isDirty()){
-          const remote = sanitizeCustom(data.custom);
+          const remote = sanitizeCustom(data.custom); dictCustom(remote);
           if(JSON.stringify(remote) !== JSON.stringify(CUSTOM)){ CUSTOM = remote; saveCustomLocal(); applyCustomChange(true); }
         }else if(!(data && data.custom) && CUSTOM.groups.length){ setTimeout(scheduleSave, 0); }   // first sync: upload groups made offline
         if(!ready){ applyLoaded(bm, levels); }
@@ -4376,6 +4380,7 @@ function backupData(){
     pinyin: PY_MODE,
     sort: sortPref(),
     lang: LANG,
+    groupsBar: !document.getElementById('levelBar').classList.contains('closed'),
     custom: CUSTOM,                                      // your groups: saved cards (refs) and the cards you made
     history: HIST                                        // quiz results for the report
   };
@@ -4444,7 +4449,7 @@ async function exportBackup(name){
 }
 function importBackup(data){
   if(!data || data.app !== 'tocfl-flashcards' || typeof data !== 'object'){ toast(tx('This is not a TOCFL flashcards backup')); return; }
-  const custom = sanitizeCustom(data.custom);
+  const custom = sanitizeCustom(data.custom); dictCustom(custom);
   const tocfl = new Set(); for(let i = 0; i < BASE_N; i++) tocfl.add(fullWord(D[i][0]));
   const before = custom.cards.length;
   const linked = new Set(custom.groups.filter(g => g.src).map(g => g.id));
@@ -4479,6 +4484,7 @@ function importBackup(data){
       }
       if(data.lang === 'en' || data.lang === 'id'){ LANG = data.lang; try{ localStorage.setItem(LS_LANG, LANG); }catch(e){} applyLangStatic(); }
       if(typeof data.sound === 'boolean') setSound(data.sound);
+      if(typeof data.groupsBar === 'boolean') setBarOpen(data.groupsBar, true);
       if(data.pinyin === 'spoken' || data.pinyin === 'dict'){ PY_MODE = data.pinyin; try{ localStorage.setItem(LS_PYMODE, PY_MODE); }catch(e){} SIDX.length = 0; D.forEach(r => SIDX.push(sidxRow(r))); }
       if(SORTS.includes(data.sort)){ try{ localStorage.setItem(LS_SORT, data.sort); }catch(e){} }
       if(typeof data.voice === 'string' || data.voice === null){
