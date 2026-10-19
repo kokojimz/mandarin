@@ -2355,6 +2355,13 @@ function dictSentPy(hz, py){
   }
   return putSyllables(py, spans, rows, syl);
 }
+// cards (and their sentences) saved before everything was kept in the dictionary form, e.g. an older sheet import or backup: fix once
+{ let changed = false;
+  CUSTOM.cards.forEach(c => {
+    const p = dictOf(c.py, c.hz); if(p !== c.py){ c.py = p; changed = true; }
+    (c.ex || []).forEach(e => { const d = dictSentPy(e.hz, e.py); if(d !== e.py){ e.py = d; changed = true; } });
+  });
+  if(changed){ saveCustomLocal(); installCustom(); } }
 const exPy = ex => PY_MODE === 'dict' ? String(ex.py || '') : sentInfo(ex).spoken;
 function sentSyllables(ex){ const v = sentInfo(ex); return PY_MODE === 'dict' ? v.rows : v.spokenRows; }
 function sentSyllables0(ex){
@@ -3646,7 +3653,7 @@ function cardsFromRows(rows){
     const P = dictOf(cardPinyin(cell(r, col.py), H), H).slice(0, 200), M = one(r, col.m).slice(0, 500), MI = one(r, col.mi).slice(0, 500);
     if(!P || !M){ skipped++; continue; }            // same rules as a card you add: hanzi, pinyin and English meaning
     const S = one(r, col.s), id = [fullWord(H), P, M, MI].join('|');
-    let e = S ? {hz: S.slice(0, 500), py: normPinyin(one(r, col.spy), false).slice(0, 800), en: one(r, col.ten).slice(0, 800)} : null;
+    let e = S ? {hz: S.slice(0, 500), py: dictSentPy(S, normPinyin(one(r, col.spy), false)).slice(0, 800), en: one(r, col.ten).slice(0, 800)} : null;
     if(e && one(r, col.tid)) e.id = one(r, col.tid).slice(0, 800);
     if(e && exampleProblem(e, H, P)){ badEx++; e = null; }   // same rule as the card form: the card is kept, the sentence left out
     let c = byRow.get(id);
