@@ -34,7 +34,7 @@
   }
   button{ -webkit-tap-highlight-color:transparent; touch-action:manipulation; user-select:none; -webkit-user-select:none; }
   button:focus:not(:focus-visible){ outline:none; }
-  p.sub{ text-align:center; color:var(--sub); margin:16px 0 0; font-size:.72rem; white-space:nowrap; }
+  p.sub{ text-align:center; color:var(--sub); margin:14px 0 0; font-size:.72rem; white-space:nowrap; }   /* 14px: the line's own room above the letters makes it look like 16px, the gap used between all parts */
   #countSub{ font-size:.72rem; }   /* made smaller in code when the line would not fit on one line (narrow screens, long quiz info) */
   .controls{ display:flex; justify-content:center; gap:8px; margin:10px 0; flex-wrap:wrap; }
   .controls button{
@@ -46,7 +46,7 @@
   .controls button.active{ background:var(--accent); color:#fff; border-color:var(--accent); }
   .controls button small{ opacity:.75; margin-left:3px; font-size:.7rem; }
   /* level / group pills: label + small count, wrap onto more lines when needed */
-  #levelBar{ flex-wrap:wrap; gap:7px; max-width:780px; margin:12px auto 0; }
+  #levelBar{ flex-wrap:wrap; gap:7px; max-width:780px; margin:16px auto 0; }
   /* ▾ at the right end of the tools shows / hides the groups (remembered); hidden, the tools are the first thing on the page */
   #levelBar.closed{ display:none !important; }
   .bar-chev{ transition:transform .2s; }
@@ -214,7 +214,6 @@
   .tools.search-row{ max-width:960px; margin-top:16px; }
   .tools.action-row{ margin-top:6px; }
   .grid + .pager{ margin-top:16px; }
-  .tool-sep{ flex:none; align-self:stretch; width:1px; margin:6px 0; background:var(--border); }
   #toast{
     position:fixed; left:50%; bottom:calc(24px + env(safe-area-inset-bottom,0px)); z-index:90;
     transform:translate(-50%, 20px); opacity:0; pointer-events:none; transition:opacity .2s, transform .2s;
@@ -431,7 +430,7 @@
   }
   .pg-jump::-webkit-outer-spin-button, .pg-jump::-webkit-inner-spin-button{ -webkit-appearance:none; margin:0; }
   .empty{ text-align:center; color:var(--sub); padding:40px 0; }
-  footer{ text-align:center; color:var(--sub); font-size:.72rem; margin-top:16px; line-height:1.5; }   /* same gap as the card count above the search box */
+  footer{ text-align:center; color:var(--sub); font-size:.72rem; margin-top:14px; line-height:1.5; }   /* looks like the same 16px gap (the line's own room above the letters) */
   #peek{
     position:fixed; inset:0; z-index:70; display:flex; align-items:center; justify-content:center;   /* above the quiz overlay (60) so a card preview can open over it */
     padding:calc(20px + env(safe-area-inset-top,0px)) 20px calc(20px + env(safe-area-inset-bottom,0px));
@@ -611,14 +610,12 @@
 <body>
 
 <div class="tools action-row">
-  <button id="sortBtn" title="Sort" aria-label="Sort" data-tx-title="Sort"><svg class="tb-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4v16M3.5 16.5 7 20l3.5-3.5"/><path d="M13 6h8M13 12h5.5M13 18h3"/></svg></button>
-  <button id="shuffleBtn" title="Shuffle" aria-label="Shuffle" data-tx-title="Shuffle"><svg class="tb-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M16 3h5v5M4 20 21 3M21 16v5h-5M15 15l6 6M4 4l5 5"/></svg></button>
-  <button id="revealBtn" title="Reveal / hide all" aria-label="Reveal / hide all" data-tx-title="Reveal / hide all"><svg class="tb-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg></button>
-  <span class="tool-sep" aria-hidden="true"></span>
+  <button id="settingsBtn" title="Settings" aria-label="Settings" data-tx-title="Settings"><svg class="tb-ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
   <button id="quizBtn" title="Start quiz" aria-label="Start quiz"><svg class="tb-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5a3 3 0 1 0-5.997.125 4 4 0 0 0-2.526 5.77 4 4 0 0 0 .556 6.588A4 4 0 1 0 12 18Z"/><path d="M12 5a3 3 0 1 1 5.997.125 4 4 0 0 1 2.526 5.77 4 4 0 0 1-.556 6.588A4 4 0 1 1 12 18Z"/><path d="M15 13a4.5 4.5 0 0 1-3-4 4.5 4.5 0 0 1-3 4"/><path d="M17.599 6.5a3 3 0 0 0 .399-1.375"/><path d="M6.003 5.125A3 3 0 0 0 6.401 6.5"/><path d="M3.477 10.896a4 4 0 0 1 .585-.396"/><path d="M19.938 10.5a4 4 0 0 1 .585.396"/><path d="M6 18a4 4 0 0 1-1.967-.516"/><path d="M19.967 17.484A4 4 0 0 1 18 18"/></svg></button>
   <button id="reportBtn" title="Report" aria-label="Report" data-tx-title="Report"><svg class="tb-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4v16h16"/><path d="M7 15l4-4 3 3 5-6"/></svg></button>
-  <span class="tool-sep" aria-hidden="true"></span>
-  <button id="settingsBtn" title="Settings" aria-label="Settings" data-tx-title="Settings"><svg class="tb-ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
+  <button id="sortBtn" title="Sort" aria-label="Sort" data-tx-title="Sort"><svg class="tb-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 10 7 4l2.5 6M5.3 8h3.4M4.5 14h5l-5 6h5"/><path d="M16 4v16M12.5 16.5 16 20l3.5-3.5"/></svg></button>
+  <button id="shuffleBtn" title="Shuffle" aria-label="Shuffle" data-tx-title="Shuffle"><svg class="tb-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M16 3h5v5M4 20 21 3M21 16v5h-5M15 15l6 6M4 4l5 5"/></svg></button>
+  <button id="revealBtn" title="Reveal / hide all" aria-label="Reveal / hide all" data-tx-title="Reveal / hide all"><svg class="tb-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg></button>
   <button id="barBtn" title="Show groups" aria-label="Show groups" aria-expanded="false"><svg class="tb-ic bar-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
   <input id="importFile" type="file" accept=".json,application/json" hidden>
 </div>
