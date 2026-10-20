@@ -912,9 +912,9 @@ const exTrans = e => LANG === 'id' ? (e.id || e.en) : (e.en || e.id || '');
 // Groups are appended to LEVELS as [id, name, true]; their cards are appended to D as
 // [hanzi, pinyin, meaning, '', groupId, 'cu:<id>'] (the 6th field is the card's unique key).
 const HOLD_MS = 220;   // how long to hold a card or a group pill before it opens (finger)
-// mouse / touchpad: a tap-to-click can reach the page as a press that lasts a few hundred ms, so it must be held longer;
+// mouse / touchpad: a little longer than a finger (a touchpad tap-to-click can arrive as a press of ~100-250 ms);
 // a right-click opens it at once
-const holdMs = ev => ev.pointerType === 'mouse' ? 550 : HOLD_MS;
+const holdMs = ev => ev.pointerType === 'mouse' ? 330 : HOLD_MS;
 const LS_CUSTOM = 'tocfl-custom-v1';
 const BASE_N = D.length, BASE_LV = LEVELS.length;
 // The official TOCFL data (N1–C1 cards, levels and example sentences) is read-only:
@@ -4575,7 +4575,7 @@ function importBackup(data){
       if(data.lang === 'en' || data.lang === 'id'){ LANG = data.lang; try{ localStorage.setItem(LS_LANG, LANG); }catch(e){} applyLangStatic(); }
       if(typeof data.sound === 'boolean') setSound(data.sound);
       if(typeof data.groupsBar === 'boolean') setBarOpen(data.groupsBar, true);
-      if(typeof data.fullscreen === 'boolean' && FS_OK) setFullscreen(data.fullscreen);
+      if(typeof data.fullscreen === 'boolean' && FS_OK) setFullscreen(data.fullscreen);   // the Import tap: full screen now if it was On
       if(data.pinyin === 'spoken' || data.pinyin === 'dict'){ PY_MODE = data.pinyin; try{ localStorage.setItem(LS_PYMODE, PY_MODE); }catch(e){} SIDX.length = 0; D.forEach(r => SIDX.push(sidxRow(r))); }
       if(SORTS.includes(data.sort)){ try{ localStorage.setItem(LS_SORT, data.sort); }catch(e){} }
       if(typeof data.voice === 'string' || data.voice === null){
@@ -4631,8 +4631,7 @@ function openSettings(){
   });
   if(FS_OK) document.getElementById('stFs').addEventListener('click', e => {
     const b = e.target.closest('button'); if(!b) return;
-    setFullscreen(b.dataset.v === 'on');                 // inside the tap, so the browser allows it
-    document.querySelectorAll('#stFs button').forEach(x => x.classList.toggle('on', x === b));
+    setFullscreen(b.dataset.v === 'on');                 // inside the tap, so the browser allows it (the buttons follow in fsKeep)
   });
   if(HAS_TTS) document.getElementById('stSound').addEventListener('click', e => {
     const b = e.target.closest('button'); if(!b || (b.dataset.v === 'on') === SOUND_ON) return;
@@ -4649,29 +4648,42 @@ function openSettings(){
   document.getElementById('stImport').onclick = () => { closeForm(); importFile.value = ''; importFile.click(); };
 }
 document.getElementById('settingsBtn').addEventListener('click', openSettings);
-// ---- fullscreen. On: full screen right away, and again on the first tap each time the page is opened
-// (a browser only allows full screen from a tap or a key, never by itself). Not shown where the browser has no
-// full screen for pages (iPhone Safari: there "Add to Home Screen" opens it without the browser bars). ----
+// ---- fullscreen: On in Settings, or going full screen in any way (also the browser's own menu / F11), turns it On.
+// Only Off in Settings turns it Off: leaving full screen any other way (Esc, back gesture, browser button) keeps it On,
+// and the next tap anywhere goes full screen again; opened again / reloaded, the last choice is kept (first tap).
+// A browser only allows full screen from a tap or a key, never by itself. Not shown where the browser has no full
+// screen for pages (iPhone Safari: there "Add to Home Screen" opens it without the browser bars). ----
 const LS_FS = 'tocfl-fullscreen-v1';
 const FS_OK = !!(document.fullscreenEnabled || document.webkitFullscreenEnabled);
+const FS_MQ = window.matchMedia ? window.matchMedia('(display-mode: fullscreen)') : null;   // also the browser's own full screen (F11)
 let FS_ON = false;
 try{ FS_ON = FS_OK && localStorage.getItem(LS_FS) === '1'; }catch(e){}
-const inFullscreen = () => !!(document.fullscreenElement || document.webkitFullscreenElement);
+const inFullscreen = () => !!(document.fullscreenElement || document.webkitFullscreenElement || (FS_MQ && FS_MQ.matches));
 function fsCall(fn){ try{ const p = fn(); if(p && p.catch) p.catch(() => {}); }catch(e){} }   // a refused request is just ignored
-function setFullscreen(on, save = true){
+function fsKeep(on){
   FS_ON = FS_OK && !!on;
-  if(save) try{ localStorage.setItem(LS_FS, FS_ON ? '1' : '0'); }catch(e){}
+  try{ localStorage.setItem(LS_FS, FS_ON ? '1' : '0'); }catch(e){}
+  const seg = document.getElementById('stFs');          // Settings open: its On / Off follows too
+  if(seg) seg.querySelectorAll('button').forEach(x => x.classList.toggle('on', (x.dataset.v === 'on') === FS_ON));
+}
+function setFullscreen(on){
+  fsKeep(on);
   const el = document.documentElement;
   if(FS_ON && !inFullscreen()) fsCall(() => el.requestFullscreen ? el.requestFullscreen({navigationUI: 'hide'}) : el.webkitRequestFullscreen());
-  else if(!FS_ON && inFullscreen()) fsCall(() => document.exitFullscreen ? document.exitFullscreen() : document.webkitExitFullscreen());
+  else if(!FS_ON && (document.fullscreenElement || document.webkitFullscreenElement))
+    fsCall(() => document.exitFullscreen ? document.exitFullscreen() : document.webkitExitFullscreen());
 }
-if(FS_ON){                                              // opened again: full screen on the first tap / key (not Esc)
-  const first = e => {
-    if(e.type === 'keydown' && e.key === 'Escape') return;
-    ['pointerup', 'keydown'].forEach(ev => document.removeEventListener(ev, first, true));
-    if(FS_ON) setFullscreen(true, false);
+const onFsChange = () => { if(inFullscreen() && !FS_ON) fsKeep(true); };   // went full screen (also the browser's menu / F11); leaving changes nothing
+if(FS_OK){
+  ['fullscreenchange', 'webkitfullscreenchange'].forEach(ev => document.addEventListener(ev, onFsChange));
+  if(FS_MQ){ try{ FS_MQ.addEventListener('change', onFsChange); }catch(e){ try{ FS_MQ.addListener(onFsChange); }catch(e2){} } }
+  // On but not full screen (left in any way, or the page opened again): the next tap / key goes full screen again
+  const again = e => {
+    if(!FS_ON || inFullscreen() || (e.type === 'keydown' && e.key === 'Escape')) return;
+    if(e.target && e.target.closest && e.target.closest('#stFs')) return;   // the On / Off buttons themselves decide
+    setFullscreen(true);
   };
-  ['pointerup', 'keydown'].forEach(ev => document.addEventListener(ev, first, true));
+  ['pointerup', 'keydown'].forEach(ev => document.addEventListener(ev, again, true));
 }
 // the groups row: open or closed (closed at first; your choice is kept)
 const LS_BAR = 'tocfl-bar-v1';
