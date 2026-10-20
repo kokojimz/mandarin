@@ -4648,35 +4648,28 @@ function openSettings(){
   document.getElementById('stImport').onclick = () => { closeForm(); importFile.value = ''; importFile.click(); };
 }
 document.getElementById('settingsBtn').addEventListener('click', openSettings);
-// ---- fullscreen: On in Settings, or going full screen in any way (also the browser's own menu / F11), turns it On.
-// Only Off in Settings turns it Off: leaving full screen any other way (Esc, back gesture, browser button) keeps it On,
-// and the next tap anywhere goes full screen again; opened again / reloaded, the last choice is kept (first tap).
+// ---- fullscreen: only the setting decides. On: full screen now; leaving it any other way (Esc, back gesture, browser
+// button) keeps it On, and the next tap anywhere goes full screen again; opened again / reloaded, the last choice is kept
+// (first tap). Off: leaves full screen. The browser's own full screen (F11 / its menu) is left alone and changes nothing.
 // A browser only allows full screen from a tap or a key, never by itself. Not shown where the browser has no full
 // screen for pages (iPhone Safari: there "Add to Home Screen" opens it without the browser bars). ----
 const LS_FS = 'tocfl-fullscreen-v1';
 const FS_OK = !!(document.fullscreenEnabled || document.webkitFullscreenEnabled);
-const FS_MQ = window.matchMedia ? window.matchMedia('(display-mode: fullscreen)') : null;   // also the browser's own full screen (F11)
 let FS_ON = false;
 try{ FS_ON = FS_OK && localStorage.getItem(LS_FS) === '1'; }catch(e){}
-const inFullscreen = () => !!(document.fullscreenElement || document.webkitFullscreenElement || (FS_MQ && FS_MQ.matches));
+const inFullscreen = () => !!(document.fullscreenElement || document.webkitFullscreenElement);   // the page's full screen (not F11)
 function fsCall(fn){ try{ const p = fn(); if(p && p.catch) p.catch(() => {}); }catch(e){} }   // a refused request is just ignored
-function fsKeep(on){
+function setFullscreen(on){
   FS_ON = FS_OK && !!on;
   try{ localStorage.setItem(LS_FS, FS_ON ? '1' : '0'); }catch(e){}
-  const seg = document.getElementById('stFs');          // Settings open: its On / Off follows too
+  const seg = document.getElementById('stFs');          // Settings open: its On / Off follows
   if(seg) seg.querySelectorAll('button').forEach(x => x.classList.toggle('on', (x.dataset.v === 'on') === FS_ON));
-}
-function setFullscreen(on){
-  fsKeep(on);
   const el = document.documentElement;
   if(FS_ON && !inFullscreen()) fsCall(() => el.requestFullscreen ? el.requestFullscreen({navigationUI: 'hide'}) : el.webkitRequestFullscreen());
-  else if(!FS_ON && (document.fullscreenElement || document.webkitFullscreenElement))
+  else if(!FS_ON && inFullscreen())
     fsCall(() => document.exitFullscreen ? document.exitFullscreen() : document.webkitExitFullscreen());
 }
-const onFsChange = () => { if(inFullscreen() && !FS_ON) fsKeep(true); };   // went full screen (also the browser's menu / F11); leaving changes nothing
 if(FS_OK){
-  ['fullscreenchange', 'webkitfullscreenchange'].forEach(ev => document.addEventListener(ev, onFsChange));
-  if(FS_MQ){ try{ FS_MQ.addEventListener('change', onFsChange); }catch(e){ try{ FS_MQ.addListener(onFsChange); }catch(e2){} } }
   // On but not full screen (left in any way, or the page opened again): the next tap / key goes full screen again
   const again = e => {
     if(!FS_ON || inFullscreen() || (e.type === 'keydown' && e.key === 'Escape')) return;
