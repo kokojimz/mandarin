@@ -2064,6 +2064,7 @@ function openQuiz(r, card){
     quizAnswered = true; document.body.classList.add('qz-can-close'); quizAnsweredAt = Date.now();
     freezeQuizTimer();
     if(!quizResults.has(key)){ quizResults.set(key, ok); recordAnswer(r, ok, kind); }   // only the first answer per card counts (score and report)
+    const sfxMs = playSfx(ok ? 'right' : 'wrong');   // right / wrong sound (every question type, also when the timer runs out)
     if(quizResults.get(key) === false) card.classList.add('quiz-wrong');
     updateCountSub();
     saveSession();
@@ -2100,7 +2101,11 @@ function openQuiz(r, card){
     if(blank){ qzSub.textContent = ''; qzSub.style.display = 'none'; qzSent.classList.add('last'); showSentChars(blank.ex, typing); }
     else if(meaning) qzSub.textContent = correct;   // plain pinyin, as on the card but without the tone colours
     else qzSub.textContent = meaningOf(r);
-    if(!tone) speak(blank ? blank.ex.hz : fullWord(w), null);   // hear the right answer (not in the tone quiz: you've heard it already; ▶︎ is there)   // hear the right answer: the word, or the whole sentence for fill in the blank
+    if(!tone){   // the spoken answer starts once the right / wrong sound is over (not at all if you already moved on)
+      const say = blank ? blank.ex.hz : fullWord(w);
+      if(sfxMs > 0) setTimeout(() => { if(quizOverlay.classList.contains('on') && qzCurKey === key) speak(say, null); }, sfxMs + 200);
+      else speak(say, null);
+    }   // hear the right answer (not in the tone quiz: you've heard it already; ▶︎ is there)   // hear the right answer: the word, or the whole sentence for fill in the blank
     quizReview.set(key, {                     // how this question looked once answered, for ‹ › later
       hz: qzHanzi.style.display === 'none' ? null : qzHanzi.textContent, hzHTML: tone ? qzHanzi.innerHTML : null,
       sent: qzSent.hidden ? null : qzSent.innerHTML, sub: qzSub.style.display === 'none' ? null : qzSub.textContent,
@@ -2852,6 +2857,83 @@ function speak(text, btn){   // btn: the ▶︎ that shows ■ while speaking (n
   u.onend = done; u.onerror = done;
   setPlaying(btn); playingBtn = btn || null;         // show ■ right away
   try{ window.speechSynthesis.speak(u); }catch(e){ done(); }
+}
+
+// ---- right / wrong sound effects in the quiz ----
+// Default: two tiny sounds made on the spot with Web Audio (no audio files, nothing to license).
+// To use your own files instead, paste each one between the quotes as a data URI,
+// e.g. 'data:audio/mpeg;base64,//uQx...'. Empty = the built-in sound. Follows Settings > Sound (On / Off).
+const SFX_FILES = { right: '', wrong: '' };
+let sfxCtx = null, sfxOut = null;
+const sfxBuf = {};   // per sound: undefined = not started, null = decoding, false = failed (built-in sound is used), AudioBuffer = ready
+function sfxCtxGet(){
+  if(sfxCtx) return sfxCtx;
+  const AC = window.AudioContext || window.webkitAudioContext;
+  if(!AC) return null;
+  try{ sfxCtx = new AC(); }catch(e){ sfxCtx = null; return null; }
+  try{   // master: gain -> compressor -> speakers, so the sounds can be loud without distorting
+    const comp = sfxCtx.createDynamicsCompressor(); comp.threshold.value = -8; comp.knee.value = 6; comp.ratio.value = 8;
+    const mg = sfxCtx.createGain(); mg.gain.value = 1;
+    mg.connect(comp); comp.connect(sfxCtx.destination); sfxOut = mg;
+  }catch(e){ sfxOut = sfxCtx.destination; }
+  return sfxCtx;
+}
+function sfxLoad(kind){
+  const src = SFX_FILES[kind], c = sfxCtxGet();
+  if(!src || !c || sfxBuf[kind] !== undefined) return;
+  sfxBuf[kind] = null;
+  try{
+    const bin = atob(src.slice(src.indexOf(',') + 1)), u = new Uint8Array(bin.length);
+    for(let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i);
+    const ok = b => { sfxBuf[kind] = b; }, bad = () => { sfxBuf[kind] = false; };
+    const pr = c.decodeAudioData(u.buffer, ok, bad);
+    if(pr && pr.catch) pr.catch(bad);
+  }catch(e){ sfxBuf[kind] = false; }
+}
+// iPhone / Safari only start audio from inside a tap: the first tap anywhere unlocks it, also for the later (timer) sounds
+function sfxUnlock(){
+  const c = sfxCtxGet(); if(!c) return;
+  if(c.state !== 'running'){ try{ c.resume(); }catch(e){} }
+  sfxLoad('right'); sfxLoad('wrong');
+}
+['pointerdown', 'touchend', 'keydown'].forEach(ev => document.addEventListener(ev, sfxUnlock, {passive: true}));
+function playSfx(kind){   // 'right' | 'wrong'; returns how long it plays (ms), so the spoken answer can wait for it
+  if(!SOUND_ON) return 0;
+  const c = sfxCtxGet(); if(!c) return 0;
+  try{ if(c.state !== 'running') c.resume(); }catch(e){}
+  const t0 = c.currentTime + 0.01;
+  if(SFX_FILES[kind]){
+    sfxLoad(kind);
+    const b = sfxBuf[kind];
+    if(b){
+      try{
+        const s = c.createBufferSource(), g = c.createGain();
+        s.buffer = b; g.gain.value = 1.8; s.connect(g); g.connect(sfxOut || c.destination); s.start(t0);
+        return Math.round(b.duration * 1000);
+      }catch(e){}
+    }
+  }
+  const tone = (freq, t, dur, type, vol, out) => {
+    const o = c.createOscillator(), g = c.createGain();
+    o.type = type; o.frequency.setValueAtTime(freq, t);
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(vol, t + 0.015);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g); g.connect(out || sfxOut || c.destination);
+    o.start(t); o.stop(t + dur + 0.05);
+  };
+  try{
+    if(kind === 'right'){            // bright, rising two-note "ding-ding"
+      tone(880,    t0,        0.28, 'sine', 0.44);
+      tone(1318.5, t0 + 0.09, 0.40, 'sine', 0.44);
+      tone(2637,   t0 + 0.09, 0.25, 'sine', 0.10);   // a little sparkle on top
+    }else{                           // low, soft, falling "bzzt-bzzt"
+      const f = c.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 1200; f.connect(sfxOut || c.destination);
+      tone(196, t0,        0.16, 'sawtooth', 0.32, f);
+      tone(147, t0 + 0.17, 0.30, 'sawtooth', 0.32, f);
+    }
+  }catch(e){}
+  return kind === 'right' ? 500 : 480;
 }
 
 // ---- choose the voice (from Settings) ----
