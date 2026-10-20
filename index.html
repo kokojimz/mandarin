@@ -382,14 +382,15 @@
     align-content:start;
   }
   .card{
-    background:var(--card-bg); border:1px solid var(--border); border-radius:14px;
+    border-radius:14px;   /* the look (background, border) sits on the two faces below, so the whole card turns, not just its writing */
     text-align:center; cursor:pointer; user-select:none; -webkit-user-select:none; -webkit-touch-callout:none;
     perspective:700px; height:150px; position:relative;
   }
-  .card-inner{ position:relative; width:100%; height:100%; transition:transform .45s; transform-style:preserve-3d; }
+  .card-inner{ position:relative; width:100%; height:100%; transition:transform .45s; transform-style:preserve-3d; border-radius:inherit; }
   .card.flipped .card-inner{ transform:rotateY(180deg); }
   .face{
     position:absolute; inset:0; backface-visibility:hidden; -webkit-backface-visibility:hidden;
+    background:var(--card-bg); border:1px solid var(--border); border-radius:inherit;
     display:flex; flex-direction:column; align-items:center; justify-content:center; padding:8px 8px;
   }
   .back{ transform:rotateY(180deg); overflow:hidden; padding-bottom:43px; }
@@ -557,8 +558,8 @@
     -webkit-tap-highlight-color:transparent; outline:0;
   }
   .card.isbm .bm-toggle{ color:var(--accent); }
-  .card.quiz-pending{ border-color:var(--accent); box-shadow:inset 0 0 0 1px var(--accent); }
-  .card.quiz-wrong{ border-color:#d64545; box-shadow:inset 0 0 0 1px #d64545; }   /* wrong quiz answer: red border, front and back; gone when quiz mode is left */
+  .card.quiz-pending .face{ border-color:var(--accent); box-shadow:inset 0 0 0 1px var(--accent); }
+  .card.quiz-wrong .face{ border-color:#d64545; box-shadow:inset 0 0 0 1px #d64545; }   /* wrong quiz answer: red border, front and back; gone when quiz mode is left */
   .card.flash{ animation:bmflash 1.4s ease; }
   @keyframes bmflash{ 0%{transform:scale(1)} 20%{transform:scale(1.07)} 40%{transform:scale(1)} 60%{transform:scale(1.05)} 100%{transform:scale(1)} }
   /* bookmark: a compact pill on the search line (right side); the search box gets shorter */
@@ -2071,9 +2072,11 @@ function openQuiz(r, card){
     quizNext = () => { closeQuiz(); pendingQuizCard = card; pendingQuizKey = key; finishQuiz(); };
     syncQuizNav();
     if(blank) qzSent.innerHTML = sentenceHTML(blank, true);
-    if(tone){                                  // the word turns into its tone colours, to tie each colour to its tone
+    if(!blank){                                // every question type but fill in the blank: the word turns into its tone colours, to tie each colour to its tone
       const rds = correct.split(' / ');      // the reading you picked (好 hǎo / hào), else the first one
-      const rd = rds.find(x => { const t = x.split(' ').map(toneOf); return t.length === tonePicks.length && t.every((v, k) => v === tonePicks[k]); }) || rds[0];
+      let rd = rds[0];
+      if(tone) rd = rds.find(x => { const t = x.split(' ').map(toneOf); return t.length === tonePicks.length && t.every((v, k) => v === tonePicks[k]); }) || rds[0];
+      else if(typing){ const v = qzInput.value.trim(); rd = rds.find(x => pinyinMatches(v, x, quizCfg.tones, w)) || rds[0]; }   // the reading you typed
       const h = colorWord(w, rd); if(h) qzHanzi.innerHTML = h;
     }
     if(typing){
@@ -2101,13 +2104,13 @@ function openQuiz(r, card){
     if(blank){ qzSub.textContent = ''; qzSub.style.display = 'none'; qzSent.classList.add('last'); showSentChars(blank.ex, typing); }
     else if(meaning) qzSub.textContent = correct;   // plain pinyin, as on the card but without the tone colours
     else qzSub.textContent = meaningOf(r);
-    if(!tone){   // the spoken answer starts once the right / wrong sound is over (not at all if you already moved on)
+    if(!tone){   // hear the right answer once the right / wrong sound is over (not at all if you already moved on)
       const say = blank ? blank.ex.hz : fullWord(w);
       if(sfxMs > 0) setTimeout(() => { if(quizOverlay.classList.contains('on') && qzCurKey === key) speak(say, null); }, sfxMs + 200);
       else speak(say, null);
-    }   // hear the right answer (not in the tone quiz: you've heard it already; ▶︎ is there)   // hear the right answer: the word, or the whole sentence for fill in the blank
+    }   // the word, or the whole sentence for fill in the blank (not in the tone quiz: you've heard it already; ▶︎ is there)
     quizReview.set(key, {                     // how this question looked once answered, for ‹ › later
-      hz: qzHanzi.style.display === 'none' ? null : qzHanzi.textContent, hzHTML: tone ? qzHanzi.innerHTML : null,
+      hz: qzHanzi.style.display === 'none' ? null : qzHanzi.textContent, hzHTML: blank ? null : qzHanzi.innerHTML,
       sent: qzSent.hidden ? null : qzSent.innerHTML, sub: qzSub.style.display === 'none' ? null : qzSub.textContent,
       opts: typing ? null : qzOptions.innerHTML,
       typed: typing ? {v: qzInput.value, cls: qzInput.className} : null, ans: qzAnswer.hidden ? null : qzAnswer.innerHTML, tone, ex: blank ? blank.ex : null});
@@ -2129,8 +2132,8 @@ function openQuiz(r, card){
   document.body.classList.toggle('qz-can-close', !quizCfg.timer);
   quizOverlay.classList.add('on');
   quizOverlay.setAttribute('aria-hidden', 'false');
+  unlockSpeech(); sfxWake();           // inside the tap: lets iPhone speak / play the sounds a moment later too (after the right / wrong sound, the timer)
   if(tone){                            // the word, once the dialog has finished opening; ▶︎ plays it again
-    unlockSpeech();                    // inside the tap: lets iPhone speak a moment later too
     clearTimeout(tonePlayT);
     tonePlayT = setTimeout(() => { if(quizOverlay.classList.contains('on') && qzCurKey === key && !quizAnswered) speak(fullWord(w), qzPlay); }, 350);
   }
@@ -2192,7 +2195,7 @@ function openQuizReview(r){
   stopSpeech(); stopQuizTimer(); qzTimer.hidden = true;
   document.body.classList.add('qz-can-close');
   qzHanzi.style.display = v && v.hz == null ? 'none' : ''; qzHanzi.textContent = v && v.hz != null ? v.hz : r[0];
-  if(v && v.hzHTML) qzHanzi.innerHTML = v.hzHTML;   // the tone quiz: the word in its tone colours
+  if(v && v.hzHTML) qzHanzi.innerHTML = v.hzHTML;   // every quiz but fill in the blank: the word in its tone colours
   qzSent.hidden = !(v && v.sent); qzSent.innerHTML = v && v.sent ? v.sent : ''; qzSent.classList.toggle('last', !!(v && v.sent && v.sub == null));
   qzSub.style.display = v && v.sub == null ? 'none' : ''; qzSub.textContent = v ? (v.sub || '') : meaningOf(r);
   qzOptions.innerHTML = v && v.opts ? v.opts : ''; qzOptions.classList.toggle('done', !!(v && v.opts));
@@ -2859,67 +2862,37 @@ function speak(text, btn){   // btn: the ▶︎ that shows ■ while speaking (n
   try{ window.speechSynthesis.speak(u); }catch(e){ done(); }
 }
 
-// ---- right / wrong sound effects in the quiz ----
-// Default: two tiny sounds made on the spot with Web Audio (no audio files, nothing to license).
-// To use your own files instead, paste each one between the quotes as a data URI,
-// e.g. 'data:audio/mpeg;base64,//uQx...'. Empty = the built-in sound. Follows Settings > Sound (On / Off).
-const SFX_FILES = { right: '', wrong: '' };
+// ---- right / wrong sounds in the quiz: short tones made with Web Audio (no audio files); they follow Settings › Sound ----
 let sfxCtx = null, sfxOut = null;
-const sfxBuf = {};   // per sound: undefined = not started, null = decoding, false = failed (built-in sound is used), AudioBuffer = ready
 function sfxCtxGet(){
   if(sfxCtx) return sfxCtx;
   const AC = window.AudioContext || window.webkitAudioContext;
   if(!AC) return null;
-  try{ sfxCtx = new AC(); }catch(e){ sfxCtx = null; return null; }
-  try{   // master: gain -> compressor -> speakers, so the sounds can be loud without distorting
+  try{ sfxCtx = new AC(); }catch(e){ return null; }
+  try{   // gain -> compressor -> speakers, so the sounds can be loud without distorting
     const comp = sfxCtx.createDynamicsCompressor(); comp.threshold.value = -8; comp.knee.value = 6; comp.ratio.value = 8;
-    const mg = sfxCtx.createGain(); mg.gain.value = 1;
-    mg.connect(comp); comp.connect(sfxCtx.destination); sfxOut = mg;
+    const mg = sfxCtx.createGain(); mg.connect(comp); comp.connect(sfxCtx.destination); sfxOut = mg;
   }catch(e){ sfxOut = sfxCtx.destination; }
   return sfxCtx;
 }
-function sfxLoad(kind){
-  const src = SFX_FILES[kind], c = sfxCtxGet();
-  if(!src || !c || sfxBuf[kind] !== undefined) return;
-  sfxBuf[kind] = null;
-  try{
-    const bin = atob(src.slice(src.indexOf(',') + 1)), u = new Uint8Array(bin.length);
-    for(let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i);
-    const ok = b => { sfxBuf[kind] = b; }, bad = () => { sfxBuf[kind] = false; };
-    const pr = c.decodeAudioData(u.buffer, ok, bad);
-    if(pr && pr.catch) pr.catch(bad);
-  }catch(e){ sfxBuf[kind] = false; }
+// iPhone / Safari only start audio from inside a tap: opening a question (a tap) wakes it up, also for the timer's sound later
+function sfxWake(){
+  if(!SOUND_ON) return;
+  const c = sfxCtxGet();
+  if(c && c.state !== 'running'){ try{ c.resume(); }catch(e){} }
 }
-// iPhone / Safari only start audio from inside a tap: the first tap anywhere unlocks it, also for the later (timer) sounds
-function sfxUnlock(){
-  const c = sfxCtxGet(); if(!c) return;
-  if(c.state !== 'running'){ try{ c.resume(); }catch(e){} }
-  sfxLoad('right'); sfxLoad('wrong');
-}
-['pointerdown', 'touchend', 'keydown'].forEach(ev => document.addEventListener(ev, sfxUnlock, {passive: true}));
 function playSfx(kind){   // 'right' | 'wrong'; returns how long it plays (ms), so the spoken answer can wait for it
   if(!SOUND_ON) return 0;
   const c = sfxCtxGet(); if(!c) return 0;
   try{ if(c.state !== 'running') c.resume(); }catch(e){}
   const t0 = c.currentTime + 0.01;
-  if(SFX_FILES[kind]){
-    sfxLoad(kind);
-    const b = sfxBuf[kind];
-    if(b){
-      try{
-        const s = c.createBufferSource(), g = c.createGain();
-        s.buffer = b; g.gain.value = 1.8; s.connect(g); g.connect(sfxOut || c.destination); s.start(t0);
-        return Math.round(b.duration * 1000);
-      }catch(e){}
-    }
-  }
   const tone = (freq, t, dur, type, vol, out) => {
     const o = c.createOscillator(), g = c.createGain();
     o.type = type; o.frequency.setValueAtTime(freq, t);
     g.gain.setValueAtTime(0.0001, t);
     g.gain.exponentialRampToValueAtTime(vol, t + 0.015);
     g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-    o.connect(g); g.connect(out || sfxOut || c.destination);
+    o.connect(g); g.connect(out || sfxOut);
     o.start(t); o.stop(t + dur + 0.05);
   };
   try{
@@ -2928,11 +2901,11 @@ function playSfx(kind){   // 'right' | 'wrong'; returns how long it plays (ms), 
       tone(1318.5, t0 + 0.09, 0.40, 'sine', 0.44);
       tone(2637,   t0 + 0.09, 0.25, 'sine', 0.10);   // a little sparkle on top
     }else{                           // low, soft, falling "bzzt-bzzt"
-      const f = c.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 1200; f.connect(sfxOut || c.destination);
+      const f = c.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 1200; f.connect(sfxOut);
       tone(196, t0,        0.16, 'sawtooth', 0.32, f);
       tone(147, t0 + 0.17, 0.30, 'sawtooth', 0.32, f);
     }
-  }catch(e){}
+  }catch(e){ return 0; }
   return kind === 'right' ? 500 : 480;
 }
 
