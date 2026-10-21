@@ -3747,8 +3747,9 @@ function planWordRows(items){
 }
 // the TOCFL cards closest to a hanzi that is no card, so that as few characters as possible are left out:
 // 1. the same word with its optional part (車 -> 車(子));
-// 2. else the word cut into cards, longest first from the left (小張 -> 小 + 張, 拿回去 -> 拿 + 回去);
-// 3. nothing fits at all (one character): up to 3 cards that contain it, not ticked at first.
+// 2. else the word cut into cards: as few characters left out as possible, then as few (long) pieces as possible
+//    (沒辦法 -> 沒 + 辦法, 小張 -> 小 + 張);
+// 3. a character still left out: cards that have it anywhere (王 -> 國王), not ticked at first;
 // -> {cands: [{key, r, strong}], rest: [what no card covers]}; strong = ticked at first.
 let SUG_IDX = null;
 function suggestCards(w){
@@ -3761,16 +3762,29 @@ function suggestCards(w){
   const chars = [...w];
   const whole = SUG_IDX.get(w);
   if(whole){ add(whole, true); return {cands: out, rest}; }
-  for(let i = 0; i < chars.length;){
-    let n = chars.length - i;
-    while(n > 0 && !SUG_IDX.has(chars.slice(i, i + n).join(''))) n--;
-    if(n){ add(SUG_IDX.get(chars.slice(i, i + n).join('')), true); i += n; }
-    else rest.push(chars[i++]);
+  // best cut: fewest characters left out, then fewest (so longest) pieces: 拿回去 -> 拿 + 回去 when 回去 is a card
+  const L = chars.length, best = Array(L + 1).fill(null);   // best[i]: the best cut of the first i characters
+  best[0] = {miss: 0, n: 0, prev: -1, card: null};
+  const better = (a, b) => !b || a.miss < b.miss || (a.miss === b.miss && a.n < b.n);
+  for(let i = 0; i < L; i++){
+    if(!best[i]) continue;
+    const skip = {miss: best[i].miss + 1, n: best[i].n, prev: i, card: null};   // this character has no card
+    if(better(skip, best[i + 1])) best[i + 1] = skip;
+    for(let j = i + 1; j <= L; j++){
+      const r = SUG_IDX.get(chars.slice(i, j).join(''));
+      const c = r && {miss: best[i].miss, n: best[i].n + 1, prev: i, card: r};
+      if(c && better(c, best[j])) best[j] = c;
+    }
   }
-  if(!out.length){                                      // no piece is a card: cards that contain the word, else the word stays left out
-    [...SUG_IDX.entries()].filter(([f]) => f.includes(w)).sort((a, b) => a[0].length - b[0].length).slice(0, 3).forEach(([, r]) => add(r, false));
-    return {cands: out, rest: out.length ? [] : [w]};
-  }
+  const cut = [];
+  for(let j = L; j > 0; j = best[j].prev) cut.unshift({at: best[j].prev, to: j, card: best[j].card});
+  cut.forEach(x => { if(x.card) add(x.card, true); });
+  // 3. a character no piece covers: up to 3 cards that have it anywhere in them (王 -> 國王), not ticked at first
+  cut.forEach(x => {
+    if(x.card) return;
+    const c = chars[x.at], has = [...SUG_IDX.entries()].filter(([f]) => f.includes(c)).sort((a, b) => [...a[0]].length - [...b[0]].length).slice(0, 3);
+    if(has.length) has.forEach(([, r]) => add(r, false)); else rest.push(c);
+  });
   return {cands: out, rest};
 }
 async function readSheetRows(src){   // every tab with its name, else just the tab in the link (or the first one), without its name
