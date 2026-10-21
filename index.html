@@ -449,7 +449,7 @@
   #peek.on{ opacity:1; }
   #peek.stay{ pointer-events:auto; cursor:pointer; }
   .peek-card{
-    width:min(100%, var(--dlg-l)); max-height:var(--dlg-h); overflow:auto; text-align:center;
+    width:min(100%, var(--dlg-l)); max-height:var(--dlg-h); overflow-x:hidden; overflow-y:auto; text-align:center;
     overscroll-behavior:contain; -webkit-overflow-scrolling:touch; touch-action:pan-y;
     background:var(--card-bg); color:var(--text); border:1px solid var(--border); border-radius:20px;
     position:relative; padding:26px 22px; box-shadow:0 20px 60px rgba(0,0,0,.35);
@@ -472,6 +472,18 @@
   /* ✕ in the top-right corner of every dialog: a zero-size sticky float, so it stays put while a long dialog scrolls
      and never pushes the centred title aside */
   .confirm-card{ position:relative; }
+  /* scrollbars (computer): a thin line that shows only while scrolling, then fades, like on a phone */
+  @supports selector(::-webkit-scrollbar){
+    ::-webkit-scrollbar{ width:4px; height:4px; }
+    ::-webkit-scrollbar-track, ::-webkit-scrollbar-corner{ background:transparent; }
+    ::-webkit-scrollbar-button{ display:none; }
+    ::-webkit-scrollbar-thumb{ background:transparent; border-radius:4px; }
+    .scrolling::-webkit-scrollbar-thumb{ background:rgba(128,128,128,.55); }
+  }
+  @supports not selector(::-webkit-scrollbar){      /* Firefox */
+    *{ scrollbar-width:thin; scrollbar-color:transparent transparent; }
+    .scrolling{ scrollbar-color:rgba(128,128,128,.55) transparent; }
+  }
   .x-close{ position:sticky; top:0; float:right; width:0; height:0; z-index:3; }
   .x-btn, .o-btn{ position:absolute; right:-14px; top:-18px; width:34px; height:34px; border:0; border-radius:50%; padding:0;
     background:transparent; color:var(--sub); font:inherit; font-size:1rem; line-height:34px; text-align:center; cursor:pointer; -webkit-tap-highlight-color:transparent; }
@@ -3552,6 +3564,13 @@ function closeForm(){
   fmOverlay.setAttribute('aria-hidden', 'true');
   if(document.activeElement && fmBox.contains(document.activeElement)) document.activeElement.blur();
 }
+// scrollbars show only while something scrolls (see the CSS), then fade
+document.addEventListener('scroll', e => {
+  const el = e.target === document ? document.documentElement : e.target;
+  if(!el.classList) return;
+  el.classList.add('scrolling');
+  clearTimeout(el._sbT); el._sbT = setTimeout(() => el.classList.remove('scrolling'), 900);
+}, {capture: true, passive: true});
 // tapping outside / Esc on a page opened from Settings acts like its Cancel (back to Settings)
 const dismissForm = () => { if(fmBack) fmBack(); else closeForm(); };
 fmOverlay.addEventListener('click', e => { if(e.target === fmOverlay || e.target.closest('.x-btn')) dismissForm(); });
