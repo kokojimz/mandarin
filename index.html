@@ -3095,28 +3095,22 @@ function updateCountSub(){
   fitCountSub();
   alignScore();                                  // (does nothing outside quiz mode)
 }
-// The cards a selection of levels/groups shows, in the given order. With the original order and exactly
-// one of your groups selected, that group is shown in the order its cards were saved.
-function selectionList(sel, ord, groupOrder){
+// The cards a selection of levels/groups shows, in the given order. Sorted by Group (the original order) that is
+// N1 → C1, then the cards you made, whichever pills are selected.
+function selectionList(sel, ord){
   const mine = [...sel].filter(isCustomLv);
-  const out = ord.filter(i => {
+  return ord.filter(i => {
     const r = D[i];
     if(!isCustomLv(r[4]) && sel.has(r[4])) return true;
     if(!mine.length) return false;
     const gs = GROUPS_OF.get(keyOf(r));
     return !!gs && mine.some(g => gs.has(g));
   });
-  if(groupOrder && mine.length === 1 && sel.size === 1 && ord.every((v, k) => v === k)){
-    const g = CUSTOM.groups.find(x => x.id === mine[0]);
-    const pos = new Map(g.refs.map((k, n) => [k, n]));
-    out.sort((a, b) => pos.get(keyOf(D[a])) - pos.get(keyOf(D[b])));
-  }
-  return out;
 }
 function refresh(keepPage){
   stopSpeech();
   const q = query.trim().toLowerCase();
-  list = selectionList(active, order, !q);
+  list = selectionList(active, order);
   if(quizMode && quizOnly) list = list.filter(i => quizOnly.has(keyOf(D[i])));   // "often wrong" quiz: only those cards of the selected levels / groups
   if(quizMode && onlyBlank() && !quizOnly) list = list.filter(i => blankOf(D[i]));   // fill-the-blank quiz: only cards with an example sentence
   if(q){
