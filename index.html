@@ -3741,27 +3741,43 @@ function planWordRows(items){
     const p = plan.get(low), k = byWord.get(word);
     if(k){ if(!p.keys.includes(k)) p.keys.push(k); return; }
     if(p.missing.includes(word) || p.sugs.some(x => x.word === word)) return;
-    const cands = suggestCards(word);
-    if(cands.length) p.sugs.push({word, cands}); else p.missing.push(word);
+    const {cands, rest} = suggestCards(word);
+    if(cands.length) p.sugs.push({word, cands});
+    rest.forEach(c => { if(!p.missing.includes(c)) p.missing.push(c); });   // what nothing covers (the word, or its leftover characters)
   });
-  return [...plan.values()].map(p => {                 // a card a later row brings anyway is no suggestion
-    p.sugs = p.sugs.map(x => ({word: x.word, cands: x.cands.filter(c => !p.keys.includes(c.key))})).filter(x => x.cands.length);
+  return [...plan.values()].map(p => {                 // only cards the group doesn't get yet: not from a row, not suggested above
+    const seen = new Set(p.keys);
+    p.sugs = p.sugs.map(x => ({word: x.word, cands: x.cands.filter(c => !seen.has(c.key) && seen.add(c.key))})).filter(x => x.cands.length);
     return p;
   });
 }
-// the TOCFL cards closest to a hanzi that is no card: first the same word with its optional part (車 -> 車(子));
-// else up to 3 cards that contain it, or (3+ characters) the 2 longest cards inside it. strong = surely the same word (ticked at first).
+// the TOCFL cards closest to a hanzi that is no card, so that as few characters as possible are left out:
+// 1. the same word with its optional part (車 -> 車(子));
+// 2. else the word cut into cards, longest first from the left (小張 -> 小 + 張, 拿回去 -> 拿 + 回去);
+// 3. nothing fits at all (one character): up to 3 cards that contain it, not ticked at first.
+// -> {cands: [{key, r, strong}], rest: [what no card covers]}; strong = ticked at first.
 let SUG_IDX = null;
 function suggestCards(w){
-  if(!SUG_IDX) SUG_IDX = D.slice(0, BASE_N).map(r => ({r, full: fullWord(r[0]), short: r[0].replace(/\([^)]*\)/g, '')}));
-  const out = [], add = (r, strong) => { const key = keyOf(r); if(!out.some(x => x.key === key)) out.push({key, r, strong}); };
-  SUG_IDX.forEach(x => { if(x.short === w) add(x.r, true); });
-  if(!out.length){
-    SUG_IDX.filter(x => x.full !== w && x.full.includes(w)).sort((a, b) => a.full.length - b.full.length).slice(0, 3).forEach(x => add(x.r, false));
-    if(!out.length && [...w].length >= 3)
-      SUG_IDX.filter(x => [...x.full].length >= 2 && w.includes(x.full)).sort((a, b) => b.full.length - a.full.length).slice(0, 2).forEach(x => add(x.r, false));
+  if(!SUG_IDX){                                         // written form -> card (the full form first, then without the optional part)
+    SUG_IDX = new Map();
+    D.slice(0, BASE_N).forEach(r => { const f = fullWord(r[0]); if(!SUG_IDX.has(f)) SUG_IDX.set(f, r); });
+    D.slice(0, BASE_N).forEach(r => { const s = r[0].replace(/\([^)]*\)/g, ''); if(!SUG_IDX.has(s)) SUG_IDX.set(s, r); });
   }
-  return out;
+  const out = [], rest = [], add = (r, strong) => { const key = keyOf(r); if(!out.some(x => x.key === key)) out.push({key, r, strong}); };
+  const chars = [...w];
+  const whole = SUG_IDX.get(w);
+  if(whole){ add(whole, true); return {cands: out, rest}; }
+  for(let i = 0; i < chars.length;){
+    let n = chars.length - i;
+    while(n > 0 && !SUG_IDX.has(chars.slice(i, i + n).join(''))) n--;
+    if(n){ add(SUG_IDX.get(chars.slice(i, i + n).join('')), true); i += n; }
+    else rest.push(chars[i++]);
+  }
+  if(!out.length){                                      // no piece is a card: cards that contain the word, else the word stays left out
+    [...SUG_IDX.entries()].filter(([f]) => f.includes(w)).sort((a, b) => a[0].length - b[0].length).slice(0, 3).forEach(([, r]) => add(r, false));
+    return {cands: out, rest: out.length ? [] : [w]};
+  }
+  return {cands: out, rest};
 }
 async function readSheetRows(src){   // every tab with its name, else just the tab in the link (or the first one), without its name
   cspBlocked = false; sheetReached = false;
@@ -3838,12 +3854,11 @@ function openFavDialog(){
     status.textContent = tx(plan.length > 1 ? 'Choose the groups to add.' : 'This group will be added.');
     listEl.innerHTML = plan.map((p, n) => {
       const ok = p.keys.length > 0 || p.sugs.length > 0;
-      const first = p.sugs.map(x => x.cands.length === 1 && x.cands[0].strong);   // one sure match: ticked at first
-      const on = p.keys.length > 0 || first.some(Boolean);
+      const on = p.keys.length > 0 || p.sugs.some(x => x.cands.some(c => c.strong));
       return `<button type="button" class="gp-row sh-tab sh-grp${on ? ' on' : ''}${ok ? '' : ' off'}" data-n="${n}" aria-pressed="${on}"${ok ? '' : ' aria-disabled="true"'}>
         <span class="gp-name"><span class="sh-name"></span><span class="sh-count"></span>
         ${p.missing.length ? `<span class="sh-count wf-miss" lang="zh-TW">${esc(tx('Not found: {0}', p.missing.join('、')))}</span>` : ''}</span>
-        ${CHECK_ICON}</button>` + p.sugs.map((x, i) => x.cands.map(c => `<button type="button" class="gp-row sh-tab sh-sug${first[i] ? ' on' : ''}" data-n="${n}" data-k="${escAttr(c.key)}" aria-pressed="${first[i]}">
+        ${CHECK_ICON}</button>` + p.sugs.map(x => x.cands.map(c => `<button type="button" class="gp-row sh-tab sh-sug${c.strong ? ' on' : ''}" data-n="${n}" data-k="${escAttr(c.key)}" aria-pressed="${c.strong}">
         <span class="gp-name"><span class="sh-name" lang="zh-TW">${esc(x.word)} → ${esc(c.r[0])}</span><span class="sh-count">${esc(lvLabel(c.r[4]) + ' · ' + shortMeaning(c.r))}</span></span>
         ${CHECK_ICON}</button>`).join('')).join('');
     }).join('');
