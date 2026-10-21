@@ -3853,7 +3853,9 @@ function openFavDialog(){
       const on = !b.classList.contains('on');
       b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); errEl.textContent = '';
       const grp = listEl.querySelector(`.sh-grp[data-n="${b.dataset.n}"]`);
-      if(b.classList.contains('sh-sug') && on && !grp.classList.contains('on')){ grp.classList.add('on'); grp.setAttribute('aria-pressed', true); }   // a ticked suggestion: its group too
+      const tick = (x, v) => { x.classList.toggle('on', v); x.setAttribute('aria-pressed', v); };
+      if(b.classList.contains('sh-sug')){ if(on) tick(grp, true); }   // a ticked suggestion: its group too
+      else if(!on) listEl.querySelectorAll(`.sh-sug[data-n="${b.dataset.n}"]`).forEach(x => tick(x, false));   // group left out: its suggestions too
       names();
     });
   };
