@@ -133,6 +133,11 @@
   .add-seg{ margin-bottom:20px; }
   .cf-btn.wf-file{ width:100%; padding:11px 14px; font-size:.85rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   .cf-btn.wf-file.on{ color:var(--accent); }   /* the file picked */
+  .gp-row.sh-sug{ padding-left:30px; }   /* a card suggested for a hanzi that is no card, under its group */
+  .gp-row.sy-row{ cursor:default; padding-top:10px; padding-bottom:10px; }
+  .gp-row.sy-row:active{ background:transparent; }
+  .sy-row .cf-btn.sh-btn{ flex:none; padding:10px 16px; line-height:1.2; }
+  .sy-row .sh-count{ display:flex; align-items:center; gap:6px; white-space:normal; }
   .sh-count.wf-miss{ white-space:normal; color:#d64545; line-height:1.5; }   /* the hanzi of this group that are no card */
   .pk-tool.gp-add{ font-size:.9rem; margin-top:12px; }   /* "Create new group": under the list, outside its box */
   .fm-err{ color:#d64545; font-size:.78rem; margin:20px 0 0; text-align:center; }
@@ -413,7 +418,7 @@
   .pinyin{ font-size:1.2rem; font-weight:700; margin-bottom:3px; line-height:1.25; }
   .meaning{
     font-size:.74rem; color:var(--sub); line-height:1.3;
-    display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
+    display:-webkit-box; -webkit-line-clamp:2; line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
   }
   .lv{ position:absolute; top:6px; left:8px; font-size:.6rem; color:var(--sub); opacity:.85; }
   .pager{ display:flex; justify-content:center; align-items:center; gap:6px; flex-wrap:nowrap; margin:26px auto 6px; max-width:960px; scroll-margin-bottom:120px; }
@@ -604,7 +609,7 @@
     .hz-small{ font-size:1.3rem; }
     .hz-small.l{ font-size:1rem; }
     .pinyin{ font-size:1.05rem; }
-    .meaning{ font-size:.66rem; line-height:1.25; -webkit-line-clamp:2; }
+    .meaning{ font-size:.66rem; line-height:1.25; -webkit-line-clamp:2; line-clamp:2; }
     .lv{ top:4px; left:6px; font-size:.55rem; }
     .fav-toggle{ padding:0 0 4px 0; font-size:1.3rem; }
     .bm-toggle{ padding:5px 0 0 0; }
@@ -897,7 +902,7 @@ const LS_LANG = 'tocfl-lang-v1';
 let LANG = 'en';
 try{ if(localStorage.getItem(LS_LANG) === 'id') LANG = 'id'; }catch(e){}
 MEAN_ID.forEach((m, i) => { D[i].mi = m; });
-const ID_TEXT = {"Fullscreen": "Layar penuh", "Excel file": "File Excel", "Upload an Excel file or paste a Google Sheets link.": "Upload file Excel atau tempel link Google Sheets.", "Upload Excel": "Upload Excel", "Create a group from a name or a sheet, or favorite many cards at once.": "Buat grup dari nama atau sheet, atau favoritkan banyak kartu sekaligus.", "Create new": "Buat baru", "Mass favorite": "Favorit massal", "Choose the groups to add.": "Pilih grup yang mau ditambahkan.", "This group will be added.": "Grup ini akan ditambahkan.", "Not found: {0}": "Tidak ditemukan: {0}", "Choose at least one group.": "Pilih minimal satu grup.", "No hanzi were found in this sheet.": "Tidak ada hanzi di sheet ini.", "Every tab is read. The columns, from left to right:": "Semua tab dibaca. Urutan kolom dari kiri ke kanan:", "* An empty group cell uses the group above. Each group in the sheet becomes a new group.": "* Sel grup yang kosong ikut grup di atasnya. Setiap grup di sheet jadi grup baru.", "Google Sheets link": "Link Google Sheets", "Show groups": "Tampilkan grup", "Hide groups": "Sembunyikan grup", "Pinyin tones": "Nada pinyin", "As spoken": "Sesuai ucapan", "Dictionary": "Kamus", "Open card": "Buka kartu", "All quizzes": "Semua kuis", "Previous quiz": "Kuis sebelumnya", "Next quiz": "Kuis berikutnya", "No results for this quiz yet.": "Belum ada hasil untuk kuis ini.", "Settings": "Pengaturan", "Shuffle": "Acak", "Reveal / hide all": "Buka / tutup semua", "Start quiz": "Mulai kuis", "Start": "Mulai", "漢字 / pīnyīn / meaning…": "漢字 / pīnyīn / arti…", "Search by hanzi, pinyin or meaning": "Cari berdasarkan hanzi, pinyin, atau arti", "Found a bug?": "Nemu bug?", "Cancel": "Batal", "Check": "Periksa", "OK": "OK", "{0} — hold to rename or delete": "{0} — tahan untuk ganti nama atau hapus", "All": "Semua", "New group": "Grup baru", "Pinyin of the word": "Pinyin kata", "Fill in the blank": "Isi bagian kosong", "Meaning of the word": "Arti kata", "Which meaning matches this word?": "Arti mana yang sesuai dengan kata ini?", "Multiple choice": "Pilihan ganda", "Type it": "Ketik", "Quiz": "Kuis", "Choose how you want to be quizzed.": "Atur cara kuis yang kamu inginkan.", "Question": "Soal", "Card display": "Tampilan kartu", "Show the word": "Tampilkan kata", "Hide the word": "Sembunyikan kata", "Answer": "Jawaban", "Choices": "Jumlah pilihan", "Tones in typed pinyin": "Nada pada pinyin yang diketik", "Must match": "Harus tepat", "Ignore": "Abaikan", "Time per card": "Waktu per kartu", "Off": "Mati", "{0}s": "{0} dtk", "Save": "Simpan", "Exit quiz mode?": "Keluar dari mode kuis?", "Exiting quiz mode will reset your quiz score.": "Keluar dari mode kuis akan mengatur ulang skormu.", "Exit": "Keluar", "Type the missing word.": "Ketik kata yang hilang.", "Which word fills the blank?": "Kata mana yang mengisi bagian kosong?", "Type the pinyin of this word.": "Ketik pinyin kata ini.", "Which pinyin matches this word?": "Pinyin mana yang sesuai dengan kata ini?", "Delete": "Hapus", "Edit": "Ubah", "Bookmark": "Penanda", "Add to group": "Tambahkan ke grup", "Play pronunciation": "Putar pelafalan", "Stop": "Berhenti", "Delete card?": "Hapus kartu?", "The card \"{0}\" will be deleted from \"{1}\". This cannot be undone.": "Kartu \"{0}\" akan dihapus dari \"{1}\". Tindakan ini tidak bisa dibatalkan.", "Continue from {0}": "Lanjutkan dari {0}", "Remove bookmark?": "Hapus penanda?", "The card \"{0}\" will no longer be marked as your bookmark.": "Kartu \"{0}\" tidak akan ditandai lagi sebagai penandamu.", "Remove": "Hapus", "Change bookmark?": "Ganti penanda?", "Your current bookmark on \"{0}\" will be replaced with this card.": "Penandamu saat ini di \"{0}\" akan diganti dengan kartu ini.", "Your current bookmark will be replaced with this card.": "Penandamu saat ini akan diganti dengan kartu ini.", "Change": "Ganti", "Set bookmark?": "Pasang penanda?", "This card will be marked as your bookmark so you can jump back to it later.": "Kartu ini akan ditandai sebagai penanda supaya kamu bisa kembali ke sini nanti.", "Set": "Pasang", "Taiwan": "Taiwan", "China": "Tiongkok", "Hong Kong": "Hong Kong", "Cantonese": "Kanton", "Singapore": "Singapura", "Automatic": "Otomatis", "Voice": "Jenis suara", "Tap a voice to hear it.": "Ketuk suara untuk mendengarnya.", "No Chinese voices were found on this device.": "Tidak ada suara bahasa Mandarin di perangkat ini.", "Cards": "Kartu", "Tap and hold a card for details": "Ketuk dan tahan kartu untuk lihat detail", "Prev": "Kembali", "Next": "Lanjut", "Jump to page {0}-{1}": "Lompat ke halaman {0}-{1}", "Jump to a page between {0} and {1}": "Lompat ke halaman antara {0} dan {1}", "Page number {0} to {1}": "Nomor halaman {0} sampai {1}", "Add a card to {0}": "Tambahkan kartu ke {0}", "Add card": "Tambah kartu", "Give your new group a name.": "Beri nama untuk grup barumu.", "Group name": "Nama grup", "Create": "Buat", "Saved to \"{0}\"": "Disimpan ke \"{0}\"", "Please type a name.": "Silakan ketik nama.", "That name is reserved.": "Nama itu tidak bisa dipakai.", "A group with this name already exists.": "Grup dengan nama ini sudah ada.", "Create new group": "Buat grup baru", "Done": "Selesai", "Cards you made stay in their own group": "Kartu buatanmu tetap berada di grupnya sendiri", "Edit group": "Ubah grup", "This group has 1 card.": "Grup ini berisi 1 kartu.", "This group has {0} cards.": "Grup ini berisi {0} kartu.", "Delete group?": "Hapus grup?", "The group \"{0}\" will be deleted": "Grup \"{0}\" akan dihapus", ", together with the 1 card you made in it": ", beserta 1 kartu yang kamu buat di dalamnya", ", together with the {0} cards you made in it": ", beserta {0} kartu yang kamu buat di dalamnya", ". Saved TOCFL cards stay in TOCFL. This cannot be undone": ". Kartu TOCFL yang disimpan tetap ada di TOCFL. Tindakan ini tidak bisa dibatalkan", "Edit card": "Ubah kartu", "New card": "Kartu baru", "Card in \"{0}\".": "Kartu di \"{0}\".", "Add a card to \"{0}\".": "Tambahkan kartu ke \"{0}\".", "yìn ní rén  or  yin4 ni2 ren2": "yìn ní rén  atau  yin4 ni2 ren2", "Example sentences (optional)": "Contoh kalimat (opsional)", "Add sentence": "Tambah kalimat", "Sentence {0}: please type the sentence.": "Kalimat {0}: silakan ketik kalimatnya.", "Sentence {0} must contain the word \"{1}\".": "Kalimat {0} harus memuat kata \"{1}\".", "Sentence {0}: please type the pinyin.": "Kalimat {0}: silakan ketik pinyinnya.", "Sentence {0}: the pinyin must contain \"{1}\".": "Kalimat {0}: pinyinnya harus memuat \"{1}\".", "Sentence {0}: please type the English translation.": "Kalimat {0}: silakan ketik terjemahan bahasa Inggrisnya.", "1 sentence left out": "1 kalimat tidak dipakai", "{0} sentences left out": "{0} kalimat tidak dipakai", "A sentence is used only when it contains the word, its pinyin contains the word's pinyin, and it has an English translation. Otherwise it is left out (the card stays).": "Kalimat hanya dipakai kalau memuat katanya, pinyinnya memuat pinyin kata itu, dan ada terjemahan bahasa Inggrisnya. Kalau tidak, kalimatnya tidak dipakai (kartunya tetap ada).", "Sentence {0}": "Kalimat {0}", "More example sentences: copy the row and change only the sentence. If any other cell is different, the row becomes a card of its own.": "Lebih dari satu contoh kalimat: salin barisnya dan ubah kalimatnya saja. Kalau ada sel lain yang berbeda, baris itu jadi kartu sendiri.", "Sentence": "Kalimat", "Add": "Tambah", "\"{0}\" is already in your group \"{1}\".": "\"{0}\" sudah ada di grupmu \"{1}\".", "\"{0}\" is already a TOCFL card ({1}). TOCFL cards can't be added or edited.": "\"{0}\" sudah menjadi kartu TOCFL ({1}). Kartu TOCFL tidak bisa ditambahkan atau diubah.", "Pinyin suggested per character, please check the tones.": "Pinyin disarankan per karakter, mohon periksa nadanya.", "Please type the hanzi.": "Silakan ketik hanzinya.", "Hanzi must contain Chinese characters.": "Hanzi harus berisi karakter Mandarin.", "\"{0}\" is already a TOCFL card ({1}) and can't be added or edited.": "\"{0}\" sudah menjadi kartu TOCFL ({1}) dan tidak bisa ditambahkan atau diubah.", "Please type the pinyin.": "Silakan ketik pinyinnya.", "The card \"{0}\" will be deleted. This cannot be undone.": "Kartu \"{0}\" akan dihapus. Tindakan ini tidak bisa dibatalkan.", "Export backup": "Ekspor cadangan", "Your groups, saved cards, bookmark, quiz report and settings will be saved in this file.": "Grup, kartu tersimpan, penanda, rapor kuis, dan pengaturanmu akan disimpan di file ini.", "File name": "Nama file", "Export": "Ekspor", "Import": "Impor", "Backup exported": "Cadangan berhasil diekspor", "Backup exported: {0}": "Cadangan diekspor: {0}", "Export failed on this device": "Ekspor gagal di perangkat ini", "This is not a TOCFL flashcards backup": "Ini bukan file cadangan TOCFL flashcards", "Import backup?": "Impor cadangan?", "Your groups, saved cards, bookmark, quiz report and settings will be replaced with the ones in this file ({0}, {1})": "Grup, kartu tersimpan, penanda, rapor kuis, dan pengaturanmu akan diganti dengan isi file ini ({0}, {1})", "Imported {0}, {1}": "Berhasil mengimpor {0}, {1}", " ({0} skipped)": " ({0} dilewati)", "Could not read this file": "File ini tidak bisa dibaca", "1 group": "1 grup", "{0} groups": "{0} grup", "1 card": "1 kartu", "{0} cards": "{0} kartu", "Change how the app looks and sounds.": "Atur tampilan, suara, dan bahasa aplikasi.", "Theme": "Tema", "Dark": "Gelap", "Light": "Terang", "Backup": "Cadangan", "Language": "Bahasa", "Meaning (English)": "Arti (Inggris)", "Meaning (Indonesian)": "Arti (Indonesia)", "Translation (English)": "Terjemahan (Inggris)", "Translation (Indonesian)": "Terjemahan (Indonesia)", "Please type the English meaning.": "Silakan ketik arti dalam bahasa Inggris.", "Reading the sheet…": "Membaca sheet…", "Choose the sheets to add.": "Pilih sheet yang mau ditambahkan.", "This sheet will be added.": "Sheet ini akan ditambahkan.", "No cards found": "Tidak ada kartu", "Choose at least one sheet.": "Pilih minimal satu sheet.", "This is not a Google Sheets link.": "Ini bukan link Google Sheets.", "Couldn't read this sheet. Make sure it's shared with \"Anyone with the link\" and you're online.": "Sheet ini tidak bisa dibaca. Pastikan aksesnya \"Siapa saja yang memiliki link\" dan kamu sedang online.", "Sheet": "Sheet", "Sync": "Sinkron", "Syncing…": "Menyinkronkan…", "Synced: {0}": "Tersinkron: {0}", "Last synced {0}": "Terakhir disinkron {0}", "1 row skipped": "1 baris dilewati", "{0} rows skipped": "{0} baris dilewati", "This sheet was not found in the spreadsheet.": "Sheet ini tidak ditemukan di spreadsheet.", "Added {0}": "Ditambahkan {0}", "This viewer doesn't let the app go online. Open the file in a browser (Safari, Chrome) to use sheet links.": "Penampil ini tidak mengizinkan aplikasi terhubung ke internet. Buka file ini di browser (Safari, Chrome) untuk memakai link sheet.", "Favorite": "Favorit", "Cards of this group come from its Google Sheet": "Kartu grup ini berasal dari Google Sheet-nya", "The group \"{0}\" and its cards will be deleted. Your Google Sheet stays as it is.": "Grup \"{0}\" beserta kartunya akan dihapus. Google Sheet-mu tetap seperti semula.", "Sheet format": "Format sheet", "Hanzi": "Hanzi", "Pinyin": "Pinyin", "Pinyin (sentence)": "Pinyin (kalimat)", "Every tab (the sheets at the bottom of the spreadsheet) becomes its own group, and the group gets the tab's name. The columns, from left to right:": "Setiap tab (lembar di bagian bawah spreadsheet) jadi satu grup sendiri, dan nama grupnya sama dengan nama tab itu. Urutan kolom dari kiri ke kanan:", "* Required: rows without them are skipped. Pinyin can be yìn ní rén or yin4 ni2 ren2.": "* Wajib: baris tanpa isian ini dilewati. Pinyin boleh yìn ní rén atau yin4 ni2 ren2.", "Think too long and Saber will take you airborne.": "Kebanyakan mikir keburu diangkat Saber.", "Report": "Rapor", "Your quiz results, day by day.": "Hasil kuismu dari hari ke hari.", "Cards quizzed": "Kartu dikuis", "Correct": "Benar", "Day streak": "Hari beruntun", "Correct answers per day": "Jawaban benar per hari", "Tap the chart to see the numbers of a day.": "Ketuk grafik untuk melihat angka di hari itu.", "Often wrong": "Sering salah", "Often wrong ({0})": "Sering salah ({0})", "All selected cards": "Semua kartu terpilih", "Wrong {0}× of {1}": "Salah {0}× dari {1}", "No wrong answers yet.": "Belum ada jawaban salah.", "Right {0} of {1} times in a row": "Benar {0} dari {1} kali berturut-turut", "A card leaves this list after {0} right answers in a row.": "Kartu hilang dari daftar ini setelah {0} kali benar berturut-turut.", "End": "Akhiri", "Quiz settings": "Pengaturan kuis", "Restart quiz?": "Mulai ulang kuis?", "The quiz starts again and your quiz score is reset.": "Kuis dimulai lagi dari awal dan skormu diatur ulang.", "Restart": "Mulai ulang", "Clear history": "Hapus riwayat", "Clear quiz history?": "Hapus riwayat kuis?", "All quiz results in the report will be deleted. This cannot be undone.": "Semua hasil kuis di rapor akan dihapus. Tindakan ini tidak bisa dibatalkan.", "Clear": "Hapus", "No quiz results yet. Answer a few cards in quiz mode, then come back here.": "Belum ada hasil kuis. Jawab beberapa kartu di mode kuis, lalu kembali ke sini.", "Meaning of each character": "Arti tiap karakter", "No meaning yet": "Belum ada arti", "Sound": "Suara", "On": "Nyala", "Close": "Tutup", "1 more example": "1 contoh lainnya", "{0} more examples": "{0} contoh lainnya", "Previous card": "Kartu sebelumnya", "Next card": "Kartu berikutnya", "Pick one or more.": "Pilih satu atau lebih.", "Select question": "Pilih soal", "Select voice": "Pilih suara", "Mixed ({0})": "Campuran ({0})", "Tone of the word": "Nada kata", "Listen and pick the tones.": "Dengarkan lalu pilih nadanya.", "Tone:": "Nada:", "1st": "1", "2nd": "2", "3rd": "3", "4th": "4", "Neutral": "Netral", "Sort": "Urutkan", "Order": "Urutan", "Group": "Grup", "Choose how the cards are ordered.": "Pilih cara mengurutkan kartu."};
+const ID_TEXT = {"Each tab becomes a group named after it. The columns, from left to right:": "Setiap tab jadi satu grup dengan nama tab itu. Urutan kolom dari kiri ke kanan:", "* Required. Pinyin: yìn ní rén or yin4 ni2 ren2.": "* Wajib. Pinyin: yìn ní rén atau yin4 ni2 ren2.", "More sentences: repeat the row, change only the sentence.": "Lebih dari satu kalimat: ulangi barisnya, ganti kalimatnya saja.", "A sentence needs the word, its pinyin and an English translation.": "Kalimat harus memuat kata dan pinyinnya, serta terjemahan Inggris.", "Make an empty group, a synced group, or favorite many cards at once.": "Buat grup kosong, grup sinkron, atau favoritkan banyak kartu sekaligus.", "Synced": "Sinkron", "Favorites": "Favorit", "Group 1": "Grup 1", "Your synced groups": "Grup sinkronmu", "Upload an Excel file or paste a Google Sheets link.": "Upload file Excel atau tempel link Google Sheets.", "File format": "Format file", "For Excel and Google Sheets. Every tab is read. The columns, from left to right:": "Untuk Excel dan Google Sheets. Semua tab dibaca. Urutan kolom dari kiri ke kanan:", "* An empty group cell uses the group above. Each group in the file becomes a new group.": "* Sel grup yang kosong ikut grup di atasnya. Setiap grup di file jadi grup baru.", "Fullscreen": "Layar penuh", "Excel file": "File Excel", "Upload Excel": "Upload Excel", "Create new": "Buat baru", "Choose the groups to add.": "Pilih grup yang mau ditambahkan.", "This group will be added.": "Grup ini akan ditambahkan.", "Not found: {0}": "Tidak ditemukan: {0}", "Choose at least one group.": "Pilih minimal satu grup.", "No hanzi were found in this sheet.": "Tidak ada hanzi di sheet ini.", "Google Sheets link": "Link Google Sheets", "Show groups": "Tampilkan grup", "Hide groups": "Sembunyikan grup", "Pinyin tones": "Nada pinyin", "As spoken": "Sesuai ucapan", "Dictionary": "Kamus", "Open card": "Buka kartu", "All quizzes": "Semua kuis", "Previous quiz": "Kuis sebelumnya", "Next quiz": "Kuis berikutnya", "No results for this quiz yet.": "Belum ada hasil untuk kuis ini.", "Settings": "Pengaturan", "Shuffle": "Acak", "Reveal / hide all": "Buka / tutup semua", "Start quiz": "Mulai kuis", "Start": "Mulai", "漢字 / pīnyīn / meaning…": "漢字 / pīnyīn / arti…", "Search by hanzi, pinyin or meaning": "Cari berdasarkan hanzi, pinyin, atau arti", "Found a bug?": "Nemu bug?", "Cancel": "Batal", "Check": "Periksa", "OK": "OK", "{0} — hold to rename or delete": "{0} — tahan untuk ganti nama atau hapus", "All": "Semua", "New group": "Grup baru", "Pinyin of the word": "Pinyin kata", "Fill in the blank": "Isi bagian kosong", "Meaning of the word": "Arti kata", "Which meaning matches this word?": "Arti mana yang sesuai dengan kata ini?", "Multiple choice": "Pilihan ganda", "Type it": "Ketik", "Quiz": "Kuis", "Choose how you want to be quizzed.": "Atur cara kuis yang kamu inginkan.", "Question": "Soal", "Card display": "Tampilan kartu", "Show the word": "Tampilkan kata", "Hide the word": "Sembunyikan kata", "Answer": "Jawaban", "Choices": "Jumlah pilihan", "Tones in typed pinyin": "Nada pada pinyin yang diketik", "Must match": "Harus tepat", "Ignore": "Abaikan", "Time per card": "Waktu per kartu", "Off": "Mati", "{0}s": "{0} dtk", "Save": "Simpan", "Exit quiz mode?": "Keluar dari mode kuis?", "Exiting quiz mode will reset your quiz score.": "Keluar dari mode kuis akan mengatur ulang skormu.", "Exit": "Keluar", "Type the missing word.": "Ketik kata yang hilang.", "Which word fills the blank?": "Kata mana yang mengisi bagian kosong?", "Type the pinyin of this word.": "Ketik pinyin kata ini.", "Which pinyin matches this word?": "Pinyin mana yang sesuai dengan kata ini?", "Delete": "Hapus", "Edit": "Ubah", "Bookmark": "Penanda", "Add to group": "Tambahkan ke grup", "Play pronunciation": "Putar pelafalan", "Stop": "Berhenti", "Delete card?": "Hapus kartu?", "The card \"{0}\" will be deleted from \"{1}\". This cannot be undone.": "Kartu \"{0}\" akan dihapus dari \"{1}\". Tindakan ini tidak bisa dibatalkan.", "Continue from {0}": "Lanjutkan dari {0}", "Remove bookmark?": "Hapus penanda?", "The card \"{0}\" will no longer be marked as your bookmark.": "Kartu \"{0}\" tidak akan ditandai lagi sebagai penandamu.", "Remove": "Hapus", "Change bookmark?": "Ganti penanda?", "Your current bookmark on \"{0}\" will be replaced with this card.": "Penandamu saat ini di \"{0}\" akan diganti dengan kartu ini.", "Your current bookmark will be replaced with this card.": "Penandamu saat ini akan diganti dengan kartu ini.", "Change": "Ganti", "Set bookmark?": "Pasang penanda?", "This card will be marked as your bookmark so you can jump back to it later.": "Kartu ini akan ditandai sebagai penanda supaya kamu bisa kembali ke sini nanti.", "Set": "Pasang", "Taiwan": "Taiwan", "China": "Tiongkok", "Hong Kong": "Hong Kong", "Cantonese": "Kanton", "Singapore": "Singapura", "Automatic": "Otomatis", "Voice": "Jenis suara", "Tap a voice to hear it.": "Ketuk suara untuk mendengarnya.", "No Chinese voices were found on this device.": "Tidak ada suara bahasa Mandarin di perangkat ini.", "Cards": "Kartu", "Tap and hold a card for details": "Ketuk dan tahan kartu untuk lihat detail", "Prev": "Kembali", "Next": "Lanjut", "Jump to page {0}-{1}": "Lompat ke halaman {0}-{1}", "Jump to a page between {0} and {1}": "Lompat ke halaman antara {0} dan {1}", "Page number {0} to {1}": "Nomor halaman {0} sampai {1}", "Add a card to {0}": "Tambahkan kartu ke {0}", "Add card": "Tambah kartu", "Give your new group a name.": "Beri nama untuk grup barumu.", "Group name": "Nama grup", "Create": "Buat", "Saved to \"{0}\"": "Disimpan ke \"{0}\"", "Please type a name.": "Silakan ketik nama.", "That name is reserved.": "Nama itu tidak bisa dipakai.", "A group with this name already exists.": "Grup dengan nama ini sudah ada.", "Create new group": "Buat grup baru", "Done": "Selesai", "Cards you made stay in their own group": "Kartu buatanmu tetap berada di grupnya sendiri", "Edit group": "Ubah grup", "This group has 1 card.": "Grup ini berisi 1 kartu.", "This group has {0} cards.": "Grup ini berisi {0} kartu.", "Delete group?": "Hapus grup?", "The group \"{0}\" will be deleted": "Grup \"{0}\" akan dihapus", ", together with the 1 card you made in it": ", beserta 1 kartu yang kamu buat di dalamnya", ", together with the {0} cards you made in it": ", beserta {0} kartu yang kamu buat di dalamnya", ". Saved TOCFL cards stay in TOCFL. This cannot be undone": ". Kartu TOCFL yang disimpan tetap ada di TOCFL. Tindakan ini tidak bisa dibatalkan", "Edit card": "Ubah kartu", "New card": "Kartu baru", "Card in \"{0}\".": "Kartu di \"{0}\".", "Add a card to \"{0}\".": "Tambahkan kartu ke \"{0}\".", "yìn ní rén  or  yin4 ni2 ren2": "yìn ní rén  atau  yin4 ni2 ren2", "Example sentences (optional)": "Contoh kalimat (opsional)", "Add sentence": "Tambah kalimat", "Sentence {0}: please type the sentence.": "Kalimat {0}: silakan ketik kalimatnya.", "Sentence {0} must contain the word \"{1}\".": "Kalimat {0} harus memuat kata \"{1}\".", "Sentence {0}: please type the pinyin.": "Kalimat {0}: silakan ketik pinyinnya.", "Sentence {0}: the pinyin must contain \"{1}\".": "Kalimat {0}: pinyinnya harus memuat \"{1}\".", "Sentence {0}: please type the English translation.": "Kalimat {0}: silakan ketik terjemahan bahasa Inggrisnya.", "1 sentence left out": "1 kalimat tidak dipakai", "{0} sentences left out": "{0} kalimat tidak dipakai", "Sentence {0}": "Kalimat {0}", "Sentence": "Kalimat", "Add": "Tambah", "\"{0}\" is already in your group \"{1}\".": "\"{0}\" sudah ada di grupmu \"{1}\".", "\"{0}\" is already a TOCFL card ({1}). TOCFL cards can't be added or edited.": "\"{0}\" sudah menjadi kartu TOCFL ({1}). Kartu TOCFL tidak bisa ditambahkan atau diubah.", "Pinyin suggested per character, please check the tones.": "Pinyin disarankan per karakter, mohon periksa nadanya.", "Please type the hanzi.": "Silakan ketik hanzinya.", "Hanzi must contain Chinese characters.": "Hanzi harus berisi karakter Mandarin.", "\"{0}\" is already a TOCFL card ({1}) and can't be added or edited.": "\"{0}\" sudah menjadi kartu TOCFL ({1}) dan tidak bisa ditambahkan atau diubah.", "Please type the pinyin.": "Silakan ketik pinyinnya.", "The card \"{0}\" will be deleted. This cannot be undone.": "Kartu \"{0}\" akan dihapus. Tindakan ini tidak bisa dibatalkan.", "Export backup": "Ekspor cadangan", "Your groups, saved cards, bookmark, quiz report and settings will be saved in this file.": "Grup, kartu tersimpan, penanda, rapor kuis, dan pengaturanmu akan disimpan di file ini.", "File name": "Nama file", "Export": "Ekspor", "Import": "Impor", "Backup exported": "Cadangan berhasil diekspor", "Backup exported: {0}": "Cadangan diekspor: {0}", "Export failed on this device": "Ekspor gagal di perangkat ini", "This is not a TOCFL flashcards backup": "Ini bukan file cadangan TOCFL flashcards", "Import backup?": "Impor cadangan?", "Your groups, saved cards, bookmark, quiz report and settings will be replaced with the ones in this file ({0}, {1})": "Grup, kartu tersimpan, penanda, rapor kuis, dan pengaturanmu akan diganti dengan isi file ini ({0}, {1})", "Imported {0}, {1}": "Berhasil mengimpor {0}, {1}", " ({0} skipped)": " ({0} dilewati)", "Could not read this file": "File ini tidak bisa dibaca", "1 group": "1 grup", "{0} groups": "{0} grup", "1 card": "1 kartu", "{0} cards": "{0} kartu", "Change how the app looks and sounds.": "Atur tampilan, suara, dan bahasa aplikasi.", "Theme": "Tema", "Dark": "Gelap", "Light": "Terang", "Backup": "Cadangan", "Language": "Bahasa", "Meaning (English)": "Arti (Inggris)", "Meaning (Indonesian)": "Arti (Indonesia)", "Translation (English)": "Terjemahan (Inggris)", "Translation (Indonesian)": "Terjemahan (Indonesia)", "Please type the English meaning.": "Silakan ketik arti dalam bahasa Inggris.", "Reading the sheet…": "Membaca sheet…", "Choose the sheets to add.": "Pilih sheet yang mau ditambahkan.", "This sheet will be added.": "Sheet ini akan ditambahkan.", "No cards found": "Tidak ada kartu", "Choose at least one sheet.": "Pilih minimal satu sheet.", "This is not a Google Sheets link.": "Ini bukan link Google Sheets.", "Couldn't read this sheet. Make sure it's shared with \"Anyone with the link\" and you're online.": "Sheet ini tidak bisa dibaca. Pastikan aksesnya \"Siapa saja yang memiliki link\" dan kamu sedang online.", "Sheet": "Sheet", "Sync": "Sinkron", "Syncing…": "Menyinkronkan…", "Synced: {0}": "Tersinkron: {0}", "Last synced {0}": "Terakhir disinkron {0}", "1 row skipped": "1 baris dilewati", "{0} rows skipped": "{0} baris dilewati", "This sheet was not found in the spreadsheet.": "Sheet ini tidak ditemukan di spreadsheet.", "Added {0}": "Ditambahkan {0}", "This viewer doesn't let the app go online. Open the file in a browser (Safari, Chrome) to use sheet links.": "Penampil ini tidak mengizinkan aplikasi terhubung ke internet. Buka file ini di browser (Safari, Chrome) untuk memakai link sheet.", "Cards of this group come from its Google Sheet": "Kartu grup ini berasal dari Google Sheet-nya", "The group \"{0}\" and its cards will be deleted. Your Google Sheet stays as it is.": "Grup \"{0}\" beserta kartunya akan dihapus. Google Sheet-mu tetap seperti semula.", "Sheet format": "Format sheet", "Hanzi": "Hanzi", "Pinyin": "Pinyin", "Pinyin (sentence)": "Pinyin (kalimat)", "Think too long and Saber will take you airborne.": "Kebanyakan mikir keburu diangkat Saber.", "Report": "Rapor", "Your quiz results, day by day.": "Hasil kuismu dari hari ke hari.", "Cards quizzed": "Kartu dikuis", "Correct": "Benar", "Day streak": "Hari beruntun", "Correct answers per day": "Jawaban benar per hari", "Tap the chart to see the numbers of a day.": "Ketuk grafik untuk melihat angka di hari itu.", "Often wrong": "Sering salah", "Often wrong ({0})": "Sering salah ({0})", "All selected cards": "Semua kartu terpilih", "Wrong {0}× of {1}": "Salah {0}× dari {1}", "No wrong answers yet.": "Belum ada jawaban salah.", "Right {0} of {1} times in a row": "Benar {0} dari {1} kali berturut-turut", "A card leaves this list after {0} right answers in a row.": "Kartu hilang dari daftar ini setelah {0} kali benar berturut-turut.", "End": "Akhiri", "Quiz settings": "Pengaturan kuis", "Restart quiz?": "Mulai ulang kuis?", "The quiz starts again and your quiz score is reset.": "Kuis dimulai lagi dari awal dan skormu diatur ulang.", "Restart": "Mulai ulang", "Clear history": "Hapus riwayat", "Clear quiz history?": "Hapus riwayat kuis?", "All quiz results in the report will be deleted. This cannot be undone.": "Semua hasil kuis di rapor akan dihapus. Tindakan ini tidak bisa dibatalkan.", "Clear": "Hapus", "No quiz results yet. Answer a few cards in quiz mode, then come back here.": "Belum ada hasil kuis. Jawab beberapa kartu di mode kuis, lalu kembali ke sini.", "Meaning of each character": "Arti tiap karakter", "No meaning yet": "Belum ada arti", "Sound": "Suara", "On": "Nyala", "Close": "Tutup", "1 more example": "1 contoh lainnya", "{0} more examples": "{0} contoh lainnya", "Previous card": "Kartu sebelumnya", "Next card": "Kartu berikutnya", "Pick one or more.": "Pilih satu atau lebih.", "Select question": "Pilih soal", "Select voice": "Pilih suara", "Mixed ({0})": "Campuran ({0})", "Tone of the word": "Nada kata", "Listen and pick the tones.": "Dengarkan lalu pilih nadanya.", "Tone:": "Nada:", "1st": "1", "2nd": "2", "3rd": "3", "4th": "4", "Neutral": "Netral", "Sort": "Urutkan", "Order": "Urutan", "Group": "Grup", "Choose how the cards are ordered.": "Pilih cara mengurutkan kartu."};
 // tx('Saved to "{0}"', name): the text in the chosen language, with {0}, {1}… filled in
 function tx(s, ...a){
   let r = (LANG === 'id' && ID_TEXT[s] != null) ? ID_TEXT[s] : s;
@@ -3725,57 +3730,88 @@ function wordRowsOf(tabs, fallback){
   });
   return out.slice(0, 5000);
 }
-// the groups a sheet would make: [{name, keys, missing}] in sheet order (same name = one group; hanzi that are no card -> missing)
+// the groups a sheet would make: [{name, keys, sugs, missing}] in sheet order (same name = one group).
+// A hanzi that is no card gets the closest cards instead (sugs: [{word, cands}]); missing: the ones with nothing close.
 function planWordRows(items){
   const byWord = new Map(), plan = new Map();
   D.slice(0, BASE_N).forEach(r => { const w = fullWord(r[0]); if(!byWord.has(w)) byWord.set(w, keyOf(r)); });
   items.forEach(({word, group}) => {
     const low = group.toLowerCase();
-    if(!plan.has(low)) plan.set(low, {name: group, keys: [], missing: []});
+    if(!plan.has(low)) plan.set(low, {name: group, keys: [], sugs: [], missing: []});
     const p = plan.get(low), k = byWord.get(word);
-    if(k){ if(!p.keys.includes(k)) p.keys.push(k); } else if(!p.missing.includes(word)) p.missing.push(word);
+    if(k){ if(!p.keys.includes(k)) p.keys.push(k); return; }
+    if(p.missing.includes(word) || p.sugs.some(x => x.word === word)) return;
+    const cands = suggestCards(word);
+    if(cands.length) p.sugs.push({word, cands}); else p.missing.push(word);
   });
-  return [...plan.values()];
+  return [...plan.values()].map(p => {                 // a card a later row brings anyway is no suggestion
+    p.sugs = p.sugs.map(x => ({word: x.word, cands: x.cands.filter(c => !p.keys.includes(c.key))})).filter(x => x.cands.length);
+    return p;
+  });
+}
+// the TOCFL cards closest to a hanzi that is no card: first the same word with its optional part (車 -> 車(子));
+// else up to 3 cards that contain it, or (3+ characters) the 2 longest cards inside it. strong = surely the same word (ticked at first).
+let SUG_IDX = null;
+function suggestCards(w){
+  if(!SUG_IDX) SUG_IDX = D.slice(0, BASE_N).map(r => ({r, full: fullWord(r[0]), short: r[0].replace(/\([^)]*\)/g, '')}));
+  const out = [], add = (r, strong) => { const key = keyOf(r); if(!out.some(x => x.key === key)) out.push({key, r, strong}); };
+  SUG_IDX.forEach(x => { if(x.short === w) add(x.r, true); });
+  if(!out.length){
+    SUG_IDX.filter(x => x.full !== w && x.full.includes(w)).sort((a, b) => a.full.length - b.full.length).slice(0, 3).forEach(x => add(x.r, false));
+    if(!out.length && [...w].length >= 3)
+      SUG_IDX.filter(x => [...x.full].length >= 2 && w.includes(x.full)).sort((a, b) => b.full.length - a.full.length).slice(0, 2).forEach(x => add(x.r, false));
+  }
+  return out;
 }
 async function readSheetRows(src){   // every tab with its name, else just the tab in the link (or the first one), without its name
   cspBlocked = false; sheetReached = false;
   try{ return await fetchWorkbook(src.id); } catch(e){}
   return [{name: '', i: -1, gid: src.gid || '0', rows: await fetchTabAny(src.id, {gid: src.gid || '0'})}];
 }
-// the + after the groups opens one dialog with two pages: a new group, or Mass favorite
-const ADD_SEG = cur => `<div class="seg add-seg" id="addSeg">${[['new', 'Create new'], ['mass', 'Mass favorite']].map(([k, l]) =>
+// groups just made from a file / sheet: close the dialog and show only them
+function showMadeGroups(made){
+  active.clear(); made.forEach(id => active.add(id));
+  clearSearch(); levelsTouched = true;
+  closeForm();
+  applyCustomChange();
+  toast(tx('Added {0}', txN(made.length, '1 group', '{0} groups')));
+}
+// the + after the groups opens one dialog with three pages: Create new (an empty group by its name), Synced (your own
+// cards from a Google Sheet, kept in step with it) and Favorites (many TOCFL cards at once from Excel / a Google Sheet)
+const ADD_SEG = cur => `<div class="seg add-seg" id="addSeg">${[['new', 'Create new'], ['sync', 'Synced'], ['fav', 'Favorites']].map(([k, l]) =>
   `<button type="button" data-v="${k}" class="${k === cur ? 'on' : ''}">${tx(l)}</button>`).join('')}</div>`;
 function wireAddSeg(leave){   // switch page in place (what was typed on the other page is dropped)
   document.getElementById('addSeg').addEventListener('click', e => {
     const b = e.target.closest('button'); if(!b || b.classList.contains('on')) return;
     leave();
-    if(b.dataset.v === 'new') openNewGroupDialog(); else openMassSave();
+    ({new: openNewGroupDialog, sync: openSyncDialog, fav: openFavDialog})[b.dataset.v]();
   });
 }
-// Mass favorite: many cards at once (like the ☆ on a card) from a Google Sheet: the hanzi, and the group name in the column
-// after it. Check shows the groups it would make (with the hanzi that are no card); you pick which, then Save.
-function openMassSave(){
+// Favorites: many groups at once (like the ☆ on a card) from Excel / a Google Sheet: the hanzi, and the group name in
+// the column after it. A file / link shows the groups it would make first (with the hanzi that are no card); you pick
+// which, then Create.
+function openFavDialog(){
   openForm(`
-    <div class="fm-title">${tx('New group')}</div>   <!-- same title on both pages of the + dialog -->
-    <div class="fm-sub">${tx('Create a group from a name or a sheet, or favorite many cards at once.')}</div>
-    ${ADD_SEG('mass')}
+    <div class="fm-title">${tx('New group')}</div>
+    <div class="fm-sub">${tx('Make an empty group, a synced group, or favorite many cards at once.')}</div>
+    ${ADD_SEG('fav')}
     <div class="fm-field"><label for="fmXls">${tx('Excel file')}</label>
       <button type="button" class="cf-btn wf-file" id="fmXls">${tx('Upload Excel')}</button>
       <input type="file" id="fmXlsIn" accept=".xlsx,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv" hidden></div>
     <div class="fm-field"><label for="fmWfLink">${tx('Google Sheets link')}</label>
       <div class="sh-row"><input id="fmWfLink" type="url" inputmode="url" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="https://docs.google.com/spreadsheets/d/…">
       <button type="button" class="cf-btn sh-btn" id="fmCheck">${tx('Check')}</button></div>
-      <details class="fm-ex sh-help"><summary>${tx('Sheet format')}</summary>
-        <p>${tx('Every tab is read. The columns, from left to right:')}</p>
+      <details class="fm-ex sh-help"><summary>${tx('File format')}</summary>
+        <p>${tx('For Excel and Google Sheets. Every tab is read. The columns, from left to right:')}</p>
         <ol><li>${tx('Hanzi')} <b>*</b></li><li>${tx('Group')} <b>*</b></li></ol>
-        <p>${tx('* An empty group cell uses the group above. Each group in the sheet becomes a new group.')}</p>
+        <p>${tx('* An empty group cell uses the group above. Each group in the file becomes a new group.')}</p>
       </details>
       <div class="sh-status" id="fmShStatus"></div>
       <div class="gp-list sh-list" id="fmShList" hidden></div></div>
     <div class="fm-err" id="fmErr"></div>
     <div class="fm-actions">
       <button type="button" class="cf-btn" id="fmCancel">${tx('Cancel')}</button>
-      <button type="button" class="cf-btn cf-yes" id="fmOk">${tx('Save')}</button>
+      <button type="button" class="cf-btn cf-yes" id="fmOk">${tx('Create')}</button>
     </div>`);
   const link = document.getElementById('fmWfLink'), chk = document.getElementById('fmCheck');
   const xls = document.getElementById('fmXls'), xlsIn = document.getElementById('fmXlsIn');
@@ -3783,7 +3819,7 @@ function openMassSave(){
   let plan = null, run = 0, loading = false;
   const clear = () => { run++; plan = null; loading = false; status.innerHTML = ''; listEl.hidden = true; listEl.innerHTML = ''; chk.disabled = false; };
   const noFile = () => { xls.textContent = tx('Upload Excel'); xls.classList.remove('on'); };
-  // a link or a file: read its tabs, then show the groups it would make
+  // a file or a link: read its tabs, then show the groups it would make
   const read = async (getTabs, failHTML) => {
     errEl.textContent = '';
     const me = ++run; loading = true; plan = null;
@@ -3801,18 +3837,34 @@ function openMassSave(){
     plan = planWordRows(items);
     status.textContent = tx(plan.length > 1 ? 'Choose the groups to add.' : 'This group will be added.');
     listEl.innerHTML = plan.map((p, n) => {
-      const ok = p.keys.length > 0;
-      return `<button type="button" class="gp-row sh-tab${ok ? ' on' : ' off'}" data-n="${n}" aria-pressed="${ok}"${ok ? '' : ' aria-disabled="true"'}>
-        <span class="gp-name"><span class="sh-name"></span><span class="sh-count">${ok ? esc(txN(p.keys.length, '1 card', '{0} cards')) : tx('No cards found')}</span>
+      const ok = p.keys.length > 0 || p.sugs.length > 0;
+      const first = p.sugs.map(x => x.cands.length === 1 && x.cands[0].strong);   // one sure match: ticked at first
+      const on = p.keys.length > 0 || first.some(Boolean);
+      return `<button type="button" class="gp-row sh-tab sh-grp${on ? ' on' : ''}${ok ? '' : ' off'}" data-n="${n}" aria-pressed="${on}"${ok ? '' : ' aria-disabled="true"'}>
+        <span class="gp-name"><span class="sh-name"></span><span class="sh-count"></span>
         ${p.missing.length ? `<span class="sh-count wf-miss" lang="zh-TW">${esc(tx('Not found: {0}', p.missing.join('、')))}</span>` : ''}</span>
-        ${CHECK_ICON}</button>`;
+        ${CHECK_ICON}</button>` + p.sugs.map((x, i) => x.cands.map(c => `<button type="button" class="gp-row sh-tab sh-sug${first[i] ? ' on' : ''}" data-n="${n}" data-k="${escAttr(c.key)}" aria-pressed="${first[i]}">
+        <span class="gp-name"><span class="sh-name" lang="zh-TW">${esc(x.word)} → ${esc(c.r[0])}</span><span class="sh-count">${esc(lvLabel(c.r[4]) + ' · ' + shortMeaning(c.r))}</span></span>
+        ${CHECK_ICON}</button>`).join('')).join('');
     }).join('');
     listEl.hidden = false; names();
     listEl.querySelectorAll('.sh-tab').forEach(b => b.onclick = () => {
       if(b.classList.contains('off')) return;
       const on = !b.classList.contains('on');
       b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); errEl.textContent = '';
+      const grp = listEl.querySelector(`.sh-grp[data-n="${b.dataset.n}"]`);
+      if(b.classList.contains('sh-sug') && on && !grp.classList.contains('on')){ grp.classList.add('on'); grp.setAttribute('aria-pressed', true); }   // a ticked suggestion: its group too
       names();
+    });
+  };
+  const keysOf = n => [...new Set([...plan[n].keys, ...[...listEl.querySelectorAll(`.sh-sug.on[data-n="${n}"]`)].map(b => b.dataset.k)])];
+  const names = () => {                                  // names (a used one gets " (2)") and card counts, as Create will make them
+    const used = [];
+    listEl.querySelectorAll('.sh-grp').forEach(b => {
+      const n = uniqueGroupName(plan[+b.dataset.n].name, null, used), k = keysOf(+b.dataset.n).length;
+      if(b.classList.contains('on') && k) used.push(n);
+      b.querySelector('.sh-name').textContent = n;
+      b.querySelector('.sh-count').textContent = k ? txN(k, '1 card', '{0} cards') : tx('No cards found');
     });
   };
   const check = () => {
@@ -3821,35 +3873,24 @@ function openMassSave(){
     noFile();
     read(() => readSheetRows(src), sheetErrHTML);
   };
-  const names = () => {                                  // a name already used gets " (2)"; the ticked groups, top to bottom, as Save makes them
-    const used = [];
-    listEl.querySelectorAll('.sh-tab').forEach(b => {
-      const n = uniqueGroupName(plan[+b.dataset.n].name, null, used);
-      if(b.classList.contains('on')) used.push(n);
-      b.querySelector('.sh-name').textContent = n;
-    });
-  };
-  const save = () => {
+  const go = () => {
     if(loading) return;
-    if(!plan){                                          // Save before Check: read the link first
-      if(link.value.trim()) check(); else if(!xls.classList.contains('on')) errEl.textContent = tx('Upload an Excel file or paste a Google Sheets link.');
+    if(plan){                                            // the groups from the file / link
+      const picked = [...listEl.querySelectorAll('.sh-grp.on')].map(b => +b.dataset.n).filter(n => keysOf(n).length);
+      if(!picked.length){ errEl.textContent = tx('Choose at least one group.'); return; }
+      const made = picked.map(n => {                     // always new groups, named as shown in the list
+        const id = 'g' + (++CUSTOM.seq);
+        CUSTOM.groups.push({id, name: uniqueGroupName(plan[n].name), refs: keysOf(n)});
+        return id;
+      });
+      showMadeGroups(made);
       return;
     }
-    const picked = [...listEl.querySelectorAll('.sh-tab.on')].map(b => plan[+b.dataset.n]);
-    if(!picked.length){ errEl.textContent = tx('Choose at least one group.'); return; }
-    const made = picked.map(p => {                       // always new groups, named as shown in the list
-      const id = 'g' + (++CUSTOM.seq);
-      CUSTOM.groups.push({id, name: uniqueGroupName(p.name), refs: p.keys.slice()});
-      return id;
-    });
-    active.clear(); made.forEach(id => active.add(id));
-    clearSearch(); levelsTouched = true;
-    closeForm();
-    applyCustomChange();
-    toast(tx('Added {0}', txN(made.length, '1 group', '{0} groups')));
+    if(link.value.trim()) check();                       // Create before Check: read the link first
+    else if(!xls.classList.contains('on')) errEl.textContent = tx('Upload an Excel file or paste a Google Sheets link.');   // (a file that could not be read keeps its message)
   };
   document.getElementById('fmCancel').onclick = () => { run++; closeForm(); };
-  document.getElementById('fmOk').onclick = save;
+  document.getElementById('fmOk').onclick = go;
   chk.onclick = check;
   wireAddSeg(() => { run++; });
   link.addEventListener('input', () => { errEl.textContent = ''; if(plan || loading) clear(); noFile(); });
@@ -3866,7 +3907,7 @@ function openMassSave(){
       rd.onload = () => { try{ ok(isX ? readXlsx(rd.result) : [{name: '', rows: csvRows(rd.result)}]); }catch(e){ no(e); } };
       if(isX) rd.readAsArrayBuffer(f); else rd.readAsText(f);
     }), () => esc(tx('Could not read this file')));
-  };                                                    // no autofocus: the Excel button comes first (and no keyboard popping up)
+  };
 }
 
 // --- rows -> cards. Column titles are not read: the Hanzi column is the leftmost one full of Chinese words,
@@ -4021,47 +4062,96 @@ async function syncSheetGroup(code){
 const sheetCountText = t => txN(t.cards.length, '1 card', '{0} cards') + (t.skipped ? ' · ' + txN(t.skipped, '1 row skipped', '{0} rows skipped') : '')
   + (t.badEx ? ' · ' + txN(t.badEx, '1 sentence left out', '{0} sentences left out') : '');
 const SHEET_ERR = 'Couldn\'t read this sheet. Make sure it\'s shared with "Anyone with the link" and you\'re online.';
+const syncLine = g => txN(C[g.id] || 0, '1 card', '{0} cards') + (g.src.t ? ' · ' + tx('Last synced {0}', syncTime(g.src.t)) : '');
 const syncTime = t => new Date(t).toLocaleString(LANG === 'id' ? 'id-ID' : 'en-US', {dateStyle: 'medium', timeStyle: 'short'});
 const OFFLINE_ERR = 'This viewer doesn\'t let the app go online. Open the file in a browser (Safari, Chrome) to use sheet links.';
 const sheetErrHTML = e => esc(tx(e && e.missing ? 'This sheet was not found in the spreadsheet.' : e && e.offline ? OFFLINE_ERR : SHEET_ERR));
 const spinner = () => '<span class="sh-spin" aria-hidden="true"></span>';
 
 // -- new group (a name, or tabs from a Google Sheets link) --
+// Create new: an empty group by its name. forKey: from "Add to group" (☆): that card goes in, then back to the picker
 function openNewGroupDialog(name, forKey){
-  const withSheet = !forKey;                              // "Create new group" inside "Add to group" makes a plain group
   openForm(`
     <div class="fm-title">${tx('New group')}</div>
-    <div class="fm-sub">${tx(withSheet ? 'Create a group from a name or a sheet, or favorite many cards at once.' : 'Give your new group a name.')}</div>
-    ${withSheet ? ADD_SEG('new') : ''}
+    <div class="fm-sub">${tx(forKey ? 'Give your new group a name.' : 'Make an empty group, a synced group, or favorite many cards at once.')}</div>
+    ${forKey ? '' : ADD_SEG('new')}
     <div class="fm-field"><label for="fmGName">${tx('Group name')}</label>
-      <input id="fmGName" maxlength="24" autocomplete="off" placeholder="${tx('Favorite')}" value="${escAttr(name || '')}"></div>
-    ${withSheet ? `<div class="fm-field"><label for="fmLink">${tx('Google Sheets link')}</label>
-      <div class="sh-row"><input id="fmLink" type="url" inputmode="url" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="https://docs.google.com/spreadsheets/d/…">
-      <button type="button" class="cf-btn sh-btn" id="fmCheck">${tx('Check')}</button></div>
-      <details class="fm-ex sh-help"><summary>${tx('Sheet format')}</summary>
-        <p>${tx('Every tab (the sheets at the bottom of the spreadsheet) becomes its own group, and the group gets the tab\'s name. The columns, from left to right:')}</p>
-        <ol>${[['Hanzi', 1], ['Pinyin', 1], ['Meaning (English)', 1], ['Meaning (Indonesian)'], ['Sentence'], ['Pinyin (sentence)'], ['Translation (English)'], ['Translation (Indonesian)']]
-          .map(([t, req]) => `<li>${esc(tx(t))}${req ? ' <b>*</b>' : ''}</li>`).join('')}</ol>
-        <p>${tx('* Required: rows without them are skipped. Pinyin can be yìn ní rén or yin4 ni2 ren2.')}</p>
-        <p>${tx('More example sentences: copy the row and change only the sentence. If any other cell is different, the row becomes a card of its own.')}</p>
-        <p>${tx('A sentence is used only when it contains the word, its pinyin contains the word\'s pinyin, and it has an English translation. Otherwise it is left out (the card stays).')}</p>
-      </details>
-      <div class="sh-status" id="fmShStatus"></div>
-      <div class="gp-list sh-list" id="fmShList" hidden></div></div>` : ''}
+      <input id="fmGName" maxlength="24" autocomplete="off" placeholder="${tx('Group 1')}" value="${escAttr(name || '')}"></div>
     <div class="fm-err" id="fmErr"></div>
     <div class="fm-actions">
       <button type="button" class="cf-btn" id="fmCancel">${tx('Cancel')}</button>
       <button type="button" class="cf-btn cf-yes" id="fmOk">${tx('Create')}</button>
     </div>`, !!forKey);
   const inp = document.getElementById('fmGName'), errEl = document.getElementById('fmErr');
-  const link = document.getElementById('fmLink'), chk = document.getElementById('fmCheck');
+  const go = () => {
+    const n = inp.value.trim().replace(/\s+/g, ' ');
+    const err = groupNameError(n);
+    if(err){ errEl.textContent = noEnd(err); inp.focus(); return; }
+    const id = 'g' + (++CUSTOM.seq);
+    CUSTOM.groups.push({id, name: n, refs: forKey ? [forKey] : []});
+    if(!forKey) showOnly(id);
+    closeForm();
+    applyCustomChange();
+    if(forKey){ openGroupPicker(forKey); toast(tx('Saved to "{0}"', n)); }
+  };
+  const cancel = () => { closeForm(); if(forKey) openGroupPicker(forKey); };
+  document.getElementById('fmCancel').onclick = cancel;
+  if(forKey) fmBack = cancel;                          // Esc / tapping outside also goes back to the picker
+  else wireAddSeg(() => {});
+  document.getElementById('fmOk').onclick = go;
+  inp.addEventListener('keydown', e => { if(e.key === 'Enter' && !isIME(e)){ e.preventDefault(); go(); } });
+  inp.addEventListener('input', () => { errEl.textContent = ''; });
+  focusSoon(inp);
+}
+// Synced group: your own cards from a Google Sheet (hanzi, pinyin, meanings, sentences); each tab becomes a group that
+// keeps following its sheet (Sync when holding its pill)
+function openSyncDialog(){
+  openForm(`
+    <div class="fm-title">${tx('New group')}</div>
+    <div class="fm-sub">${tx('Make an empty group, a synced group, or favorite many cards at once.')}</div>
+    ${ADD_SEG('sync')}
+    <div class="fm-field"><label for="fmLink">${tx('Google Sheets link')}</label>
+      <div class="sh-row"><input id="fmLink" type="url" inputmode="url" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="https://docs.google.com/spreadsheets/d/…">
+      <button type="button" class="cf-btn sh-btn" id="fmCheck">${tx('Check')}</button></div>
+      <details class="fm-ex sh-help"><summary>${tx('Sheet format')}</summary>
+        <p>${tx('Each tab becomes a group named after it. The columns, from left to right:')}</p>
+        <ol>${[['Hanzi', 1], ['Pinyin', 1], ['Meaning (English)', 1], ['Meaning (Indonesian)'], ['Sentence'], ['Pinyin (sentence)'], ['Translation (English)'], ['Translation (Indonesian)']]
+          .map(([t, req]) => `<li>${esc(tx(t))}${req ? ' <b>*</b>' : ''}</li>`).join('')}</ol>
+        <p>${tx('* Required. Pinyin: yìn ní rén or yin4 ni2 ren2.')}</p>
+        <p>${tx('More sentences: repeat the row, change only the sentence.')}</p>
+        <p>${tx('A sentence needs the word, its pinyin and an English translation.')}</p>
+      </details>
+      <div class="sh-status" id="fmShStatus"></div>
+      <div class="gp-list sh-list" id="fmShList" hidden></div></div>
+    ${CUSTOM.groups.some(g => g.src) ? `<div class="fm-field"><label>${tx('Your synced groups')}</label>
+      <div class="gp-list" id="fmSyncList">${CUSTOM.groups.filter(g => g.src).map(g => `<div class="gp-row sy-row" data-g="${g.id}">
+        <span class="gp-name"><span class="sh-name">${esc(g.name)}</span><span class="sh-count">${esc(syncLine(g))}</span></span>
+        <button type="button" class="cf-btn sh-btn sy-btn">${tx('Sync')}</button></div>`).join('')}</div></div>` : ''}
+    <div class="fm-err" id="fmErr"></div>
+    <div class="fm-actions">
+      <button type="button" class="cf-btn" id="fmCancel">${tx('Cancel')}</button>
+      <button type="button" class="cf-btn cf-yes" id="fmOk">${tx('Create')}</button>
+    </div>`);
+  const errEl = document.getElementById('fmErr'), link = document.getElementById('fmLink'), chk = document.getElementById('fmCheck');
+  fmBox.querySelectorAll('.sy-row').forEach(row => {     // read a linked sheet again: its cards (and name) follow the sheet
+    const btn = row.querySelector('.sy-btn'), line = row.querySelector('.sh-count');
+    btn.onclick = async () => {
+      btn.disabled = true; line.classList.remove('wf-miss');
+      line.innerHTML = spinner() + esc(tx('Syncing…'));
+      try{
+        const t = await syncSheetGroup(row.dataset.g);
+        if(!fmBox.contains(row)) return;
+        row.querySelector('.sh-name').textContent = CUSTOM.groups.find(x => x.id === row.dataset.g).name;
+        line.textContent = tx('Synced: {0}', sheetCountText(t));
+      }catch(e){
+        if(!fmBox.contains(row)) return;
+        line.classList.add('wf-miss'); line.innerHTML = sheetErrHTML(e);
+      }finally{ btn.disabled = false; }
+    };
+  });
   const status = document.getElementById('fmShStatus'), listEl = document.getElementById('fmShList');
   let tabs = null, src = null, run = 0, loading = false;
-  const clearSheets = () => {
-    run++; tabs = null; src = null; loading = false;
-    if(!link) return;
-    status.innerHTML = ''; listEl.hidden = true; listEl.innerHTML = ''; chk.disabled = false; inp.disabled = false;
-  };
+  const clearSheets = () => { run++; tabs = null; src = null; loading = false; status.innerHTML = ''; listEl.hidden = true; listEl.innerHTML = ''; chk.disabled = false; };
   const check = async () => {
     errEl.textContent = '';
     const s = sheetIdOf(link.value);
@@ -4078,12 +4168,10 @@ function openNewGroupDialog(name, forKey){
     if(me !== run || !fmBox.contains(status)) return;     // the link changed or the dialog closed meanwhile
     loading = false; chk.disabled = false; tabs = got; src = s;
     status.textContent = tx(tabs.length > 1 ? 'Choose the sheets to add.' : 'This sheet will be added.');
-    const named = tabs.some(t => t.name);
-    inp.disabled = named;                                  // the groups are named after the tabs
     listEl.innerHTML = tabs.map((t, n) => {
       const ok = t.cards.length > 0;
       return `<button type="button" class="gp-row sh-tab${ok ? ' on' : ' off'}" data-n="${n}" aria-pressed="${ok}"${ok ? '' : ' aria-disabled="true"'}>
-        <span class="gp-name"><span class="sh-name">${esc(t.name || inp.value.trim() || tx('Sheet'))}</span><span class="sh-count">${ok ? esc(sheetCountText(t)) : tx('No cards found')}</span></span>
+        <span class="gp-name"><span class="sh-name">${esc(t.name || tx('Sheet'))}</span><span class="sh-count">${ok ? esc(sheetCountText(t)) : tx('No cards found')}</span></span>
         ${CHECK_ICON}</button>`;
     }).join('');
     listEl.hidden = false;
@@ -4095,53 +4183,26 @@ function openNewGroupDialog(name, forKey){
   };
   const go = () => {
     if(loading) return;
-    if(link && link.value.trim()){
-      if(!tabs){ check(); return; }                       // Create before Check: read the link first
-      const picked = [...listEl.querySelectorAll('.sh-tab.on')].map(b => tabs[+b.dataset.n]);
-      if(!picked.length){ errEl.textContent = tx('Choose at least one sheet.'); return; }
-      const made = [];
-      picked.forEach(t => {
-        const id = 'g' + (++CUSTOM.seq);
-        const g = {id, name: uniqueGroupName(t.name || inp.value.trim() || tx('Sheet')), refs: [], src: {id: src.id, n: t.name, i: t.i}};
-        if(t.gid && !t.name) g.src.gid = t.gid;
-        CUSTOM.groups.push(g);
-        fillSheetGroup(g, t);
-        made.push(id);
-      });
-      active.clear(); made.forEach(id => active.add(id));
-      clearSearch();
-      levelsTouched = true;
-      closeForm();
-      applyCustomChange();
-      toast(tx('Added {0}', txN(made.length, '1 group', '{0} groups')));
-      return;
-    }
-    const n = inp.value.trim().replace(/\s+/g, ' ');
-    const err = groupNameError(n);
-    if(err){ errEl.textContent = noEnd(err); inp.focus(); return; }
-    const id = 'g' + (++CUSTOM.seq);
-    CUSTOM.groups.push({id, name:n, refs: forKey ? [forKey] : []});
-    if(!forKey) showOnly(id);
-    closeForm();
-    applyCustomChange();
-    if(forKey){ openGroupPicker(forKey); toast(tx('Saved to "{0}"', n)); }
+    if(!tabs){ if(link.value.trim()) check(); else { errEl.textContent = tx('This is not a Google Sheets link.'); link.focus(); } return; }   // Create before Check: read the link first
+    const picked = [...listEl.querySelectorAll('.sh-tab.on')].map(b => tabs[+b.dataset.n]);
+    if(!picked.length){ errEl.textContent = tx('Choose at least one sheet.'); return; }
+    const made = picked.map(t => {
+      const id = 'g' + (++CUSTOM.seq);
+      const g = {id, name: uniqueGroupName(t.name || tx('Sheet')), refs: [], src: {id: src.id, n: t.name, i: t.i}};
+      if(t.gid && !t.name) g.src.gid = t.gid;
+      CUSTOM.groups.push(g);
+      fillSheetGroup(g, t);
+      return id;
+    });
+    showMadeGroups(made);
   };
-  const cancel = () => { run++; closeForm(); if(forKey) openGroupPicker(forKey); };
-  document.getElementById('fmCancel').onclick = cancel;
-  if(forKey) fmBack = cancel;                          // Esc / tapping outside also goes back to the picker
-  if(withSheet) wireAddSeg(() => { run++; });
+  document.getElementById('fmCancel').onclick = () => { run++; closeForm(); };
   document.getElementById('fmOk').onclick = go;
-  inp.addEventListener('keydown', e => { if(e.key === 'Enter' && !isIME(e)){ e.preventDefault(); go(); } });
-  inp.addEventListener('input', () => {
-    errEl.textContent = '';
-    if(tabs && !tabs.some(t => t.name)) listEl.querySelectorAll('.sh-name').forEach(x => { x.textContent = inp.value.trim() || tx('Sheet'); });
-  });
-  if(link){
-    chk.onclick = check;
-    link.addEventListener('input', () => { errEl.textContent = ''; if(tabs || loading) clearSheets(); });
-    link.addEventListener('keydown', e => { if(e.key === 'Enter' && !isIME(e)){ e.preventDefault(); check(); } });
-  }
-  focusSoon(inp);
+  wireAddSeg(() => { run++; });
+  chk.onclick = check;
+  link.addEventListener('input', () => { errEl.textContent = ''; if(tabs || loading) clearSheets(); });
+  link.addEventListener('keydown', e => { if(e.key === 'Enter' && !isIME(e)){ e.preventDefault(); check(); } });
+  focusSoon(link);
 }
 function groupNameError(n, selfId){
   if(!n) return tx('Please type a name.');
@@ -4192,7 +4253,7 @@ function openGroupDialog(code){
     <div class="fm-title">${tx('Edit group')}</div>
     <div class="fm-sub">${n === 1 ? tx('This group has 1 card.') : tx('This group has {0} cards.', n)}</div>
     <div class="fm-field"><label for="fmGName">${tx('Group name')}</label>
-      <input id="fmGName" maxlength="24" autocomplete="off" placeholder="${tx('Favorite')}" value="${escAttr(g.name)}"${g.src ? ' disabled' : ''}></div>
+      <input id="fmGName" maxlength="24" autocomplete="off" placeholder="${tx('Group 1')}" value="${escAttr(g.name)}"${g.src ? ' disabled' : ''}></div>
     ${g.src ? `<div class="fm-field"><label>Google Sheets</label>
       <div class="sh-row"><a class="sh-link" href="${escAttr(sheetLink(g.src))}" target="_blank" rel="noopener">${esc(sheetLink(g.src))}</a>
       <button type="button" class="cf-btn sh-btn" id="fmSync">${tx('Sync')}</button></div>
