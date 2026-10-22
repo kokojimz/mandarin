@@ -235,8 +235,8 @@
   .qz-hanzi{ font-size:2.4rem; font-weight:700; margin-bottom:4px; }
   .qz-mask{ position:relative; color:transparent; user-select:none; -webkit-user-select:none; }   /* the tone quiz: a dot per character until answered */
   .qz-mask::after{ content:''; position:absolute; left:50%; top:50%; width:.42em; height:.42em; margin:-.21em 0 0 -.21em; border-radius:.21em; background:var(--accent); }
-  /* while the word is spoken the dots move like an audio wave: each one stretches up and down and back, one after another */
-  .qz-mask.wave::after{ animation:qzwave .7s ease-in-out infinite; animation-delay:calc(var(--i) * .12s); }
+  /* when the word is spoken each dot stretches up and down once and back, one after another, like the syllables */
+  .qz-mask.wave::after{ animation:qzwave .55s ease-in-out both; animation-delay:calc(var(--i) * .22s); }
   @keyframes qzwave{ 0%, 100%{ height:.42em; margin-top:-.21em; } 50%{ height:1.1em; margin-top:-.55em; } }
   .qz-sub{ font-size:.8rem; color:var(--sub); margin-bottom:18px; }
   .qz-hrow{ text-align:center; }
@@ -2866,16 +2866,13 @@ function pickVoice(key = chosenVoice){
   VOICES.forEach(v => { const sc = score(v); if(sc > bs){ bs = sc; best = v; } });
   return best;
 }
-function setIdle(b){ if(!b) return; b.classList.remove('playing'); b.innerHTML = PLAY_IC; b.setAttribute('aria-label', tx('Play pronunciation')); if(b === qzPlay) qzWave(false); }
-function setPlaying(b){ if(!b) return; b.classList.add('playing'); b.innerHTML = STOP_IC; b.setAttribute('aria-label', tx('Stop')); if(b === qzPlay) qzWave(true); }
-// the tone quiz's dots: a wave while the word is spoken; when it ends each dot finishes its stretch first (no sudden stop)
-function qzWave(on){
+function setIdle(b){ if(!b) return; b.classList.remove('playing'); b.innerHTML = PLAY_IC; b.setAttribute('aria-label', tx('Play pronunciation')); }
+function setPlaying(b){ if(!b) return; b.classList.add('playing'); b.innerHTML = STOP_IC; b.setAttribute('aria-label', tx('Stop')); if(b === qzPlay) qzWave(); }
+// the tone quiz's dots: one wave each time the word is spoken (it plays to its end, also when the speech is stopped)
+function qzWave(){
   qzHanzi.querySelectorAll('.qz-mask').forEach(m => {
-    m.onanimationstart = () => { m._live = true; };
-    if(on){ m.onanimationiteration = null; m.classList.add('wave'); return; }
-    if(!m.classList.contains('wave')) return;
-    if(!m._live){ m.classList.remove('wave'); return; }    // still waiting for its turn: nothing to finish
-    m.onanimationiteration = () => { m.onanimationiteration = null; m._live = false; m.classList.remove('wave'); };
+    m.classList.remove('wave'); void m.offsetWidth; m.classList.add('wave');   // restart it on every ▶︎
+    m.onanimationend = () => m.classList.remove('wave');
   });
 }
 function stopSpeech(){
