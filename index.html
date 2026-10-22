@@ -1466,7 +1466,7 @@ const ifNoScoreLost = (title, msg, yes, fn) => quizMode && quizResults.size
   ? askConfirm(tx(title), tx(msg), tx(yes)).then(ok => { if(ok) fn(); }) : fn();
 // ---- quiz settings (saved in this browser) ----
 const LS_QUIZ = 'tocfl-quiz-v1';
-const QUIZ_KINDS = ['pinyin', 'tone', 'meaning', 'blank'];
+const QUIZ_KINDS = ['pinyin', 'meaning', 'tone', 'blank'];
 const QUIZ_DEFAULT = {q:['pinyin'], a:'choice', n:3, tones:true, timer:0, hide:false, src:'all'};
 // keeps only valid values (from this browser or from a backup file)
 function readQuizCfg(v){
@@ -1485,9 +1485,9 @@ function readQuizCfg(v){
 }
 let quizCfg = {...QUIZ_DEFAULT};
 const quizKinds = () => Array.isArray(quizCfg.q) ? quizCfg.q : [quizCfg.q];   // the question types picked for this quiz
-// a type that locks an option locks it for the whole quiz, mixed or not: fill in the blank hides every word,
-// meaning makes every question multiple choice, tone makes typed tones count
-const quizHides = () => quizCfg.hide || quizKinds().includes('blank');
+// a type that locks an option locks it for the whole quiz, mixed or not: fill in the blank and tone hide every word
+// (it would give the answer away), meaning makes every question multiple choice, tone makes typed tones count
+const quizHides = () => quizCfg.hide || quizKinds().some(k => k === 'blank' || k === 'tone');
 const quizTones = () => quizCfg.tones || quizKinds().includes('tone');
 const quizAnswerMode = () => quizKinds().includes('meaning') ? 'choice' : quizCfg.a;
 const onlyBlank = () => { const k = quizKinds(); return k.length === 1 && k[0] === 'blank'; };
@@ -1503,7 +1503,7 @@ function kindOf(r){
   return pool[((h ^ h >>> 15) >>> 0) % pool.length];
 }
 try{ quizCfg = readQuizCfg(JSON.parse(localStorage.getItem(LS_QUIZ) || 'null')); }catch(e){}
-const QUIZ_Q = {pinyin:'Pinyin of the word', tone:'Tone of the word', meaning:'Meaning of the word', blank:'Fill in the blank'}, QUIZ_A = {choice:'Multiple choice', type:'Type it'};
+const QUIZ_Q = {pinyin:'Pinyin of the word', meaning:'Meaning of the word', tone:'Tone of the word', blank:'Fill in the blank'}, QUIZ_A = {choice:'Multiple choice', type:'Type it'};
 // the quiz button: Start saves the settings and (re)starts the quiz, Cancel changes nothing.
 // src: 'all' = the selected levels / groups, 'wrong' = the report's "Often wrong" list. Every choice is kept for next time.
 // the question types (one or more: mixed), picked on a page of their own opened from the quiz settings, like the voice list
@@ -1550,8 +1550,8 @@ function openQuizSettings(draft){   // draft: the unsaved choices, when coming b
     </div>`);
   if(!wrongKeys.length) fmBox.querySelector('.seg[data-k="src"] [data-v="wrong"]').disabled = true;   // nothing wrong yet
   const sync = () => {
-    // fill in the blank always hides the word: the row stays, locked on "Hide the word"
-    const lock = c.q.includes('blank');
+    // fill in the blank and tone always hide the word (it would give the answer away): the row stays, locked on "Hide the word"
+    const lock = c.q.some(k => k === 'blank' || k === 'tone');
     fmBox.querySelectorAll('#qsHide button').forEach(b => { b.disabled = lock; b.classList.toggle('on', lock ? b.dataset.v === 'true' : String(c.hide) === b.dataset.v); });
     // meaning questions are always multiple choice: with it picked, the row stays locked on "Multiple choice"
     const choiceOnly = c.q.includes('meaning'), a = choiceOnly ? 'choice' : c.a;
