@@ -1856,12 +1856,13 @@ function pinyinMatches(typed, py, tones, w){
 }
 let quizLowT = null;
 function stopQuizTimer(){ clearTimeout(quizTimerT); clearTimeout(quizLowT); quizTimerT = quizLowT = null; }
-function startQuizTimer(onEnd){
+function startQuizTimer(onEnd, wait){   // wait: the bar shows full but doesn't run yet (call again to start it)
   stopQuizTimer();
   if(!quizCfg.timer){ qzTimer.hidden = true; return; }
   qzTimer.hidden = false; qzTimer.classList.remove('low');
   const bar = qzTimer.firstElementChild, ms = quizCfg.timer * 1000;
   bar.style.transition = 'none'; bar.style.width = '100%'; void bar.offsetWidth;
+  if(wait) return;
   bar.style.transition = `width ${ms}ms linear`; bar.style.width = '0%';
   quizLowT = setTimeout(() => qzTimer.classList.add('low'), ms * .7);
   quizTimerT = setTimeout(() => { quizTimerT = null; onEnd(); }, ms);
@@ -2165,14 +2166,23 @@ function openQuiz(r, card){
     qzInput.onclick = e => e.stopPropagation();
   }
   syncQuizNav();
-  startQuizTimer(() => settle(false, true));
+  // the tone quiz: the time starts once the word has been said (at once with the sound off)
+  const toneWait = tone && SOUND_ON && HAS_TTS;
+  let timerOn = false;
+  const runTimer = () => { if(timerOn || quizAnswered || qzCurKey !== key || !quizOverlay.classList.contains('on')) return; timerOn = true; startQuizTimer(() => settle(false, true)); };
+  startQuizTimer(() => settle(false, true), toneWait);
+  if(!toneWait) timerOn = true;
   document.body.classList.toggle('qz-can-close', !quizCfg.timer);
   quizOverlay.classList.add('on');
   quizOverlay.setAttribute('aria-hidden', 'false');
   unlockSpeech(); sfxWake();           // inside the tap: lets iPhone speak / play the sounds a moment later too (after the right / wrong sound, the timer)
   if(tone){                            // the word, once the dialog has finished opening; ▶︎ plays it again
     clearTimeout(tonePlayT);
-    tonePlayT = setTimeout(() => { if(quizOverlay.classList.contains('on') && qzCurKey === key && !quizAnswered) speak(fullWord(w), qzPlay); }, 350);
+    tonePlayT = setTimeout(() => {
+      if(!(quizOverlay.classList.contains('on') && qzCurKey === key && !quizAnswered)) return;
+      speak(fullWord(w), qzPlay, runTimer);
+      setTimeout(runTimer, 6000);                // in case this browser never says the speech ended
+    }, 350);
   }
   // typing: the answer box waits for your tap (no keyboard popping up by itself)
 }
@@ -2917,7 +2927,7 @@ function unlockSpeech(){
 }
 // a ▶︎ / ■ button: plays the text, or stops it while it plays; does nothing with the sound off (the ▶︎ is dimmed then)
 function toggleSpeak(btn, text){ if(!SOUND_ON) return; if(btn.classList.contains('playing')) stopSpeech(); else speak(text, btn); }
-function speak(text, btn){   // btn: the ▶︎ that shows ■ while speaking (none for the quiz's automatic answer)
+function speak(text, btn, after){   // after: once the speech has ended (or failed / was stopped)   // btn: the ▶︎ that shows ■ while speaking (none for the quiz's automatic answer)
   if(!HAS_TTS || !SOUND_ON) return;
   stopSpeech();
   const u = new SpeechSynthesisUtterance(text);
@@ -2925,7 +2935,7 @@ function speak(text, btn){   // btn: the ▶︎ that shows ■ while speaking (n
   const v = pickVoice();
   if(v){ u.voice = v; u.lang = v.lang; }
   u.rate = 0.85;
-  const done = ()=>{ setIdle(btn); if(playingBtn === btn) playingBtn = null; };
+  const done = ()=>{ setIdle(btn); if(playingBtn === btn) playingBtn = null; if(after){ const f = after; after = null; f(); } };
   let t0 = 0; const seq = ++speakSeq;
   u.onstart = () => { t0 = performance.now(); if(btn && btn === qzPlay) qzWave(); };   // the dots start with the voice, not before
   u.onend = () => { if(t0 && seq === speakSeq) learnSyl(text, performance.now() - t0); done(); };   // only when heard to the end
