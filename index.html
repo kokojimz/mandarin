@@ -233,6 +233,11 @@
   #toast.on{ opacity:1; transform:translate(-50%, 0); }
   .confirm-card.quiz-card{ width:min(100%, var(--dlg-m)); position:relative; overflow-x:hidden; }
   .qz-hanzi{ font-size:2.4rem; font-weight:700; margin-bottom:4px; }
+  .qz-mask{ position:relative; color:transparent; user-select:none; -webkit-user-select:none; }   /* the tone quiz: a dot per character until answered */
+  .qz-mask::after{ content:''; position:absolute; left:50%; top:50%; width:.42em; height:.42em; margin:-.21em 0 0 -.21em; border-radius:.21em; background:var(--accent); }
+  /* while the word is spoken the dots move like an audio wave: each one stretches up and down and back, one after another */
+  .qz-mask.wave::after{ animation:qzwave .7s ease-in-out infinite; animation-delay:calc(var(--i) * .12s); }
+  @keyframes qzwave{ 0%, 100%{ height:.42em; margin-top:-.21em; } 50%{ height:1.1em; margin-top:-.55em; } }
   .qz-sub{ font-size:.8rem; color:var(--sub); margin-bottom:18px; }
   .qz-hrow{ text-align:center; }
   .qz-hrow .qz-hanzi{ display:inline-block; vertical-align:middle; }
@@ -2027,6 +2032,7 @@ function openQuiz(r, card){
     qzInput.placeholder = '漢字 / pīnyīn / pin1 yin1';
   }else{
     qzHanzi.style.display = ''; qzHanzi.textContent = w;
+    if(tone) qzHanzi.innerHTML = [...fullWord(w)].map((c, i) => `<span class="qz-mask" style="--i:${i}">${esc(c)}</span>`).join('');   // one dot per syllable heard (電視(機): 3, no brackets)   // the tone quiz: the word stays hidden (a dot per character, a wave while it is spoken) until answered
     qzSent.hidden = true; qzSent.innerHTML = '';
     qzSub.textContent = tx(meaning ? 'Which meaning matches this word?' : tone ? 'Listen and pick the tones.' : typing ? 'Type the pinyin of this word.' : 'Which pinyin matches this word?');
     qzInput.placeholder = 'pīnyīn / pin1 yin1';      // just says what to type (an example word here looked like an answer)
@@ -2104,7 +2110,7 @@ function openQuiz(r, card){
       let rd = rds[0];
       if(tone) rd = rds.find(x => { const t = x.split(' ').map(toneOf); return t.length === tonePicks.length && t.every((v, k) => v === tonePicks[k]); }) || rds[0];
       else if(typing){ const v = qzInput.value.trim(); rd = rds.find(x => pinyinMatches(v, x, quizCfg.tones, w)) || rds[0]; }   // the reading you typed
-      const h = colorWord(w, rd); if(h) qzHanzi.innerHTML = h;
+      const h = colorWord(w, rd); if(h) qzHanzi.innerHTML = h; else qzHanzi.textContent = w;
     }
     if(typing){
       qzInput.disabled = true; qzCheck.disabled = true; qzInput.blur(); setTypedDone(r);
@@ -2133,7 +2139,7 @@ function openQuiz(r, card){
     else qzSub.textContent = meaningOf(r);
     if(!tone){   // hear the right answer once the right / wrong sound is over (not at all if you already moved on)
       const say = blank ? blank.ex.hz : fullWord(w);
-      if(sfxMs > 0) setTimeout(() => { if(quizOverlay.classList.contains('on') && qzCurKey === key) speak(say, null); }, sfxMs + 200);
+      if(sfxMs > 0) setTimeout(() => { if(quizOverlay.classList.contains('on') && qzCurKey === key) speak(say, null); }, sfxMs - 50);   // starts as the sound's tail fades
       else speak(say, null);
     }   // the word, or the whole sentence for fill in the blank (not in the tone quiz: you've heard it already; ▶︎ is there)
     quizReview.set(key, {                     // how this question looked once answered, for ‹ › later
@@ -2860,8 +2866,18 @@ function pickVoice(key = chosenVoice){
   VOICES.forEach(v => { const sc = score(v); if(sc > bs){ bs = sc; best = v; } });
   return best;
 }
-function setIdle(b){ if(!b) return; b.classList.remove('playing'); b.innerHTML = PLAY_IC; b.setAttribute('aria-label', tx('Play pronunciation')); }
-function setPlaying(b){ if(!b) return; b.classList.add('playing'); b.innerHTML = STOP_IC; b.setAttribute('aria-label', tx('Stop')); }
+function setIdle(b){ if(!b) return; b.classList.remove('playing'); b.innerHTML = PLAY_IC; b.setAttribute('aria-label', tx('Play pronunciation')); if(b === qzPlay) qzWave(false); }
+function setPlaying(b){ if(!b) return; b.classList.add('playing'); b.innerHTML = STOP_IC; b.setAttribute('aria-label', tx('Stop')); if(b === qzPlay) qzWave(true); }
+// the tone quiz's dots: a wave while the word is spoken; when it ends each dot finishes its stretch first (no sudden stop)
+function qzWave(on){
+  qzHanzi.querySelectorAll('.qz-mask').forEach(m => {
+    m.onanimationstart = () => { m._live = true; };
+    if(on){ m.onanimationiteration = null; m.classList.add('wave'); return; }
+    if(!m.classList.contains('wave')) return;
+    if(!m._live){ m.classList.remove('wave'); return; }    // still waiting for its turn: nothing to finish
+    m.onanimationiteration = () => { m.onanimationiteration = null; m._live = false; m.classList.remove('wave'); };
+  });
+}
 function stopSpeech(){
   if(!HAS_TTS) return;
   try{ window.speechSynthesis.cancel(); }catch(e){}
@@ -2933,7 +2949,7 @@ function playSfx(kind){   // 'right' | 'wrong'; returns how long it plays (ms), 
       tone(147, t0 + 0.17, 0.30, 'sawtooth', 0.32, f);
     }
   }catch(e){ return 0; }
-  return kind === 'right' ? 500 : 480;
+  return kind === 'right' ? 425 : 525;   // how long it is heard: the ding is over sooner than the two-beat buzz
 }
 
 // ---- choose the voice (from Settings) ----
