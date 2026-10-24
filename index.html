@@ -505,11 +505,14 @@
   .confirm-card{ position:relative; }
   /* scrollbars (computer): a thin line that shows only while scrolling, then fades, like on a phone */
   @supports selector(::-webkit-scrollbar){
-    ::-webkit-scrollbar{ width:4px; height:4px; }
+    /* like iPhone: the line sits a little inside the edge (a transparent border around a 4px line) and, in a dialog,
+       stops short of the rounded corners */
+    ::-webkit-scrollbar{ width:10px; height:10px; }
     ::-webkit-scrollbar-track, ::-webkit-scrollbar-corner{ background:transparent; }
     ::-webkit-scrollbar-button{ display:none; }
-    ::-webkit-scrollbar-thumb{ background:transparent; border-radius:4px; }
-    .scrolling::-webkit-scrollbar-thumb{ background:rgba(128,128,128,.55); }
+    ::-webkit-scrollbar-thumb{ background:transparent; border:3px solid transparent; background-clip:padding-box; border-radius:10px; }
+    .scrolling::-webkit-scrollbar-thumb{ background-color:rgba(128,128,128,.55); }
+    .confirm-card::-webkit-scrollbar-track, .peek-card::-webkit-scrollbar-track{ margin:16px 0; }
   }
   @supports not selector(::-webkit-scrollbar){      /* Firefox */
     *{ scrollbar-width:thin; scrollbar-color:transparent transparent; }
