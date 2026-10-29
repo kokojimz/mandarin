@@ -2992,17 +2992,20 @@ function voiceKey(v){
   for(const x of VOICES){ if(x === v) break; if([x.voiceURI || '', x.name || '', x.lang || ''].join('|') === base) n++; }
   return base + '#' + n;
 }
-const chineseVoices = () => { loadVoices(); return VOICES.filter(v => /^(zh|cmn|yue)/i.test(v.lang || '')); };
+// Mandarin voices only: Cantonese ones (yue, zh-HK, zh-MO, or named so) read every word in Cantonese, not with the pinyin shown
+const isMandarin = v => { const l = (v.lang || '').replace('_','-').toLowerCase(), n = ((v.name || '') + ' ' + (v.voiceURI || '')).toLowerCase();
+  return /^(zh|cmn)/.test(l) && !/^zh-(hk|mo)|yue/.test(l) && !/cantonese|粵|粤|廣東|广东/.test(n); };
+const chineseVoices = () => { loadVoices(); return VOICES.filter(isMandarin); };
 function pickVoice(key = chosenVoice){
   loadVoices();
-  if(key){ const v = VOICES.find(x => voiceKey(x) === key); if(v) return v; }   // the voice you picked yourself
+  if(key){ const v = VOICES.find(x => voiceKey(x) === key); if(v && isMandarin(v)) return v; }   // the voice you picked yourself (a Cantonese one picked before: back to Automatic)
   const norm = v => (v.lang || '').replace('_','-').toLowerCase();
   // rank the Chinese voices: Taiwan first; within the same region Premium > Enhanced > other good voices > the rest
   const score = v => {
     const l = norm(v), n = ((v.name || '') + ' ' + (v.voiceURI || '')).toLowerCase();
-    if(!l.startsWith('zh') && !l.startsWith('cmn')) return -1;
+    if(!isMandarin(v)) return -1;
     let sc = 0;
-    if(l === 'zh-tw') sc += 100; else if(l.startsWith('zh-tw')) sc += 90; else if(l.startsWith('zh-hk')) sc += 20; else sc += 10;
+    if(l === 'zh-tw') sc += 100; else if(l.startsWith('zh-tw')) sc += 90; else sc += 10;
     if(/premium/.test(n)) sc += 50;
     else if(/enhanced/.test(n)) sc += 35;
     else if(/natural|neural|google|online/.test(n)) sc += 25;
@@ -3125,7 +3128,7 @@ function playSfx(kind){   // 'right' | 'wrong'; returns how long it plays (ms), 
 }
 
 // ---- choose the voice (from Settings) ----
-const REGION = {'zh-tw':'Taiwan', 'zh-cn':'China', 'zh-hk':'Hong Kong', 'yue-hk':'Cantonese', 'zh-sg':'Singapore'};
+const REGION = {'zh-tw':'Taiwan', 'zh-cn':'China', 'zh-sg':'Singapore'};
 function openVoicePicker(back){   // opened from Settings; Save keeps the voice, both buttons return to Settings
   let cur = chosenVoice;
   const vs = chineseVoices();
