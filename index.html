@@ -1795,8 +1795,8 @@ function openReport(){
       ${wrong.length ? `<div class="rp-note">${tx('A card leaves this list after {0} right answers in a row.', MASTER_STREAK)}</div>` : ''}
     </div>`}
     <div class="rp-actions">
-      <button type="button" class="cf-btn cf-yes" id="fmOk">${tx('Done')}</button>
       ${!anyAtAll ? '' : `<button type="button" class="cf-btn cf-danger" id="rpClear">${tx('Clear history')}</button>`}
+      <button type="button" class="cf-btn cf-yes" id="fmOk">${tx('Done')}</button>
     </div>`);
   const box = document.getElementById('rpChart');
   const draw = () => {
