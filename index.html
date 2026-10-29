@@ -297,6 +297,8 @@
   .qz-options.done .qz-obank .qz-word, .qz-sent .qz-word.correct, .qz-sent .qz-word.wrong{ cursor:default; }
   .qz-sent .qz-word.correct{ background:#1e9e5a; color:#fff; border-color:#1e9e5a; }
   .qz-sent .qz-word.wrong{ background:#d64545; color:#fff; border-color:#d64545; }
+  /* checked: ⓘ (every character of the sentence) right after your last word on the line, as tall as a word box */
+  .qz-olw > .qz-chars{ position:static; width:32px; height:auto; min-height:calc(1.3rem + 16px); flex:none; color:var(--text); }
   .qz-obank{ display:flex; flex-wrap:wrap; justify-content:center; align-content:flex-start; align-items:flex-start; gap:8px; }
   /* a word's place among the words to tap: an empty dashed copy of it (same size and shape) stays when the word is on the line */
   .qz-oslot{ position:relative; display:inline-flex; }
@@ -1461,7 +1463,9 @@ function showSentChars(ex, typed){
   const has = !!(ex && sentSyllables(ex)), open = e => { e.stopPropagation(); if(ex) openSentChars(ex); };
   qzChars.hidden = !(has && typed); qzType.classList.toggle('has-i', has && typed);
   qzChars.onclick = open;
-  if(has && !typed){
+  const olw = qzSent.querySelector('.qz-olw');   // arrange the words: after the last word on the line
+  if(has && olw && !olw.querySelector('.qz-chars')) olw.insertAdjacentHTML('beforeend', `<span class="qz-chars" role="button" tabindex="0" aria-label="${escAttr(tx('Meaning of each character'))}">${I_HTML}</span>`);
+  if(has && !typed && !olw){
     const ok = qzOptions.querySelector('.qz-opt.correct');
     if(ok && !ok.querySelector('.qz-chars')){
       ok.classList.add('has-i');
@@ -1469,6 +1473,7 @@ function showSentChars(ex, typed){
     }
   }
   qzOptions.querySelectorAll('.qz-chars').forEach(b => b.onclick = open);
+  qzSent.querySelectorAll('.qz-olw .qz-chars').forEach(b => { b.onclick = open; b.onkeydown = e => { if(e.key === 'Enter' || e.key === ' ') open(e); }; });
 }
 const qzOptions = document.getElementById('qzOptions');
 // switch quiz mode on (keys: just those cards, "Often wrong"; null: the selected levels / groups) or off.
@@ -2251,7 +2256,7 @@ function openQuiz(r, card){
       qzOptions.classList.add('done');
     }
     // after answering: fill in the blank shows just the full sentence; the pinyin quiz shows the meaning, the meaning quiz the pinyin
-    if(sent){ qzSub.textContent = ''; qzSub.style.display = 'none'; qzSent.classList.add('last'); if(blank) showSentChars(blank.ex, typing); }   // arrange the words: the translation stays on top
+    if(sent){ qzSub.textContent = ''; qzSub.style.display = 'none'; qzSent.classList.add('last'); showSentChars(sent.ex, typing); }   // arrange the words: the translation stays on top
     else if(meaning) qzSub.textContent = correct;   // plain pinyin, as on the card but without the tone colours
     else qzSub.textContent = meaningOf(r);
     if(!tone){   // hear the right answer once the right / wrong sound is over (not at all if you already moved on)
@@ -2263,7 +2268,7 @@ function openQuiz(r, card){
       hz: qzHanzi.style.display === 'none' ? null : qzHanzi.textContent, hzHTML: sent ? null : qzHanzi.innerHTML,
       sent: qzSent.hidden ? null : qzSent.innerHTML, sub: qzSub.style.display === 'none' ? null : qzSub.textContent,
       opts: typing ? null : qzOptions.innerHTML,
-      typed: typing ? {v: qzInput.value, cls: qzInput.className} : null, ans: qzAnswer.hidden ? null : qzAnswer.innerHTML, tone, ex: blank ? blank.ex : null});
+      typed: typing ? {v: qzInput.value, cls: qzInput.className} : null, ans: qzAnswer.hidden ? null : qzAnswer.innerHTML, tone, ex: sent ? sent.ex : null});
   }
 
   if(typing){
