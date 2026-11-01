@@ -3224,7 +3224,7 @@ function makeCard(r){
       card.classList.add('flipped'); card.classList.remove('quiz-pending');
       flippedKeys.add(card.dataset.key); saveSession();
       if(was) openQuizReview(r);
-      else{ suppressUntil = Date.now() + 500; setTimeout(() => { if(quizMode && card.isConnected) openQuizReview(r); }, 460); }   // face down (👁): it turns over first, then the question
+      else{ suppressUntil = Date.now() + 300; setTimeout(() => { if(quizMode && card.isConnected) openQuizReview(r); }, 250); }   // face down (👁): the question once the card is past half its turn (its back showing)
       return;
     }
     const isFlipped = card.classList.toggle('flipped');
