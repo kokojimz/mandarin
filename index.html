@@ -13,7 +13,7 @@
 </script>
 <style>
   :root{
-    --tear-fiber:#e2d8c4; --tear-fiber2:#bdb098; --tear-seam:rgba(0,0,0,.28); --tape-clear:rgba(120,105,80,.16); --tape-edge:rgba(90,75,50,.22);
+    --tear-fiber:#e2d8c4; --tear-seam:rgba(0,0,0,.28); --tape-clear:rgba(120,105,80,.16); --tape-edge:rgba(90,75,50,.22);
     --bg:#faf7f2; --card-bg:#ffffff; --text:#222; --sub:#777; --border:#e4ddd0; --accent:#e08b2b;
     --t1:#3f7fe0; --t2:#3fa15e; --t3:#e08b2b; --t4:#e0523f; --t0:#9b5de5;
     /* report chart: one fixed colour per group (validated categorical palette, light / dark steps) */
@@ -23,7 +23,7 @@
     padding-bottom:env(safe-area-inset-bottom,0px);
   }
   :root[data-theme="dark"]{
-    --tear-fiber:#5a5447; --tear-fiber2:#7a7262; --tear-seam:rgba(0,0,0,.7); --tape-clear:rgba(255,255,255,.16); --tape-edge:rgba(255,255,255,.18);
+    --tear-fiber:#5a5447; --tear-seam:rgba(0,0,0,.7); --tape-clear:rgba(255,255,255,.16); --tape-edge:rgba(255,255,255,.18);
     --bg:#1b1a17; --card-bg:#26241f; --text:#eee; --sub:#9a978f; --border:#3a362e;
     --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500; --s5:#d55181; --s6:#008300; --s7:#9085e9; --s8:#e66767;
   }
@@ -624,18 +624,15 @@
   .card.quiz-pending .face{ border-color:var(--accent); box-shadow:inset 0 0 0 1px var(--accent); }
   /* a card answered wrong is torn: a corner is gone (top-left of the open side = top-right of the closed one), with what was written there.
      Right on its last ↻: the corner is back, a thin line where it tore, and on the open side a piece of clear tape over it */
-  .card.quiz-wrong:not(.quiz-fixed) .front{ clip-path:polygon(calc(100% - 66px) 0,0 0,0 100%,100% 100%,100% 62px,calc(100% - 1.5px) 59.7px,calc(100% - 3.0px) 57.3px,calc(100% - 5.4px) 55.7px,calc(100% - 5.0px) 51.8px,calc(100% - 8.3px) 51.0px,calc(100% - 11.7px) 50.5px,calc(100% - 12.9px) 47.9px,calc(100% - 14.5px) 45.7px,calc(100% - 16.5px) 43.8px,calc(100% - 16.3px) 39.9px,calc(100% - 21.0px) 40.7px,calc(100% - 19.6px) 35.5px,calc(100% - 22.3px) 34.4px,calc(100% - 25.6px) 33.9px,calc(100% - 26.5px) 31.0px,calc(100% - 31.5px) 32.4px,calc(100% - 29.6px) 26.5px,calc(100% - 33.9px) 27.2px,calc(100% - 35.3px) 24.8px,calc(100% - 36.4px) 22.0px,calc(100% - 39.2px) 21.1px,calc(100% - 38.7px) 16.6px,calc(100% - 41.4px) 15.6px,calc(100% - 46.1px) 17.1px,calc(100% - 45.9px) 12.7px,calc(100% - 48.3px) 11.4px,calc(100% - 51.6px) 11.3px,calc(100% - 54.0px) 10.2px,calc(100% - 54.8px) 6.9px,calc(100% - 56.8px) 5.2px,calc(100% - 58.9px) 3.7px,calc(100% - 62.0px) 3.4px,calc(100% - 64.2px) 2.0px); }
-  .card.quiz-wrong:not(.quiz-fixed) .back{ clip-path:polygon(66px 0,100% 0,100% 100%,0 100%,0 62px,1.5px 59.7px,3.0px 57.3px,5.4px 55.7px,5.0px 51.8px,8.3px 51.0px,11.7px 50.5px,12.9px 47.9px,14.5px 45.7px,16.5px 43.8px,16.3px 39.9px,21.0px 40.7px,19.6px 35.5px,22.3px 34.4px,25.6px 33.9px,26.5px 31.0px,31.5px 32.4px,29.6px 26.5px,33.9px 27.2px,35.3px 24.8px,36.4px 22.0px,39.2px 21.1px,38.7px 16.6px,41.4px 15.6px,46.1px 17.1px,45.9px 12.7px,48.3px 11.4px,51.6px 11.3px,54.0px 10.2px,54.8px 6.9px,56.8px 5.2px,58.9px 3.7px,62.0px 3.4px,64.2px 2.0px); }
+  .card.quiz-wrong:not(.quiz-fixed) .front{ clip-path:polygon(calc(100% - 64px) 0,0 0,0 100%,100% 100%,100% 60px,calc(100% - 5.1px) 56.2px,calc(100% - 7.9px) 50.4px,calc(100% - 12.5px) 46.4px,calc(100% - 17.5px) 42.8px,calc(100% - 21.1px) 38.0px,calc(100% - 24.6px) 33.1px,calc(100% - 28.8px) 29.0px,calc(100% - 32.4px) 24.2px,calc(100% - 36.8px) 20.4px,calc(100% - 42.4px) 18.1px,calc(100% - 46.2px) 13.7px,calc(100% - 50.3px) 9.7px,calc(100% - 54.6px) 6.1px,calc(100% - 60.2px) 4.2px); }
+  .card.quiz-wrong:not(.quiz-fixed) .back{ clip-path:polygon(64px 0,100% 0,100% 100%,0 100%,0 60px,5.1px 56.2px,7.9px 50.4px,12.5px 46.4px,17.5px 42.8px,21.1px 38.0px,24.6px 33.1px,28.8px 29.0px,32.4px 24.2px,36.8px 20.4px,42.4px 18.1px,46.2px 13.7px,50.3px 9.7px,54.6px 6.1px,60.2px 4.2px); }
   .tear{ display:none; position:absolute; top:0; width:70px; height:66px; overflow:visible; pointer-events:none; z-index:1; }
   .front .tear{ right:0; transform:scaleX(-1); }
   .back .tear{ left:0; }
   .card.quiz-wrong .tear{ display:block; }
   .tear path{ fill:none; stroke-linejoin:round; stroke-linecap:round; }
-  /* torn: the paper's pale core along the edge (half the stroke shows), shading into the card */
-  .card.quiz-wrong:not(.quiz-fixed) .tr-core{ stroke:var(--tear-fiber); stroke-width:5; }
-  .card.quiz-wrong:not(.quiz-fixed) .tr-fib{ stroke:var(--tear-fiber2); stroke-width:7; opacity:.35; }   /* a soft, wider shade of the core: the torn paper's thickness */
-  .card.quiz-fixed .tr-core{ stroke:var(--tear-seam); stroke-width:1; }
-  .card.quiz-fixed .tr-fib{ display:none; }
+  .card.quiz-wrong:not(.quiz-fixed) .tear path{ stroke:var(--tear-fiber); stroke-width:2.6; }   /* torn: a thin pale edge (half the stroke shows) */
+  .card.quiz-fixed .tear path{ stroke:var(--tear-seam); stroke-width:1; }
   .tape{ display:none; position:absolute; top:20px; left:-2px; width:70px; height:20px; transform:rotate(-42deg); pointer-events:none; z-index:2;
     clip-path:polygon(0 8%,4% 0,8% 10%,12% 0,88% 0,92% 10%,96% 0,100% 8%,96% 20%,100% 32%,96% 44%,100% 56%,96% 68%,100% 80%,96% 92%,100% 100%,0 100%,4% 90%,0 78%,4% 66%,0 54%,4% 42%,0 30%,4% 18%); }
   .card.quiz-fixed .tape{ display:block; }
@@ -1419,7 +1416,7 @@ const qzHanzi = document.getElementById('qzHanzi');
 const qzSub = document.getElementById('qzSub');
 // ⓘ (the meaning of each character), here and in the card preview
 // the torn edge of a card answered wrong (see .tear)
-const TEAR_SVG = '<svg class="tear" viewBox="0 0 70 66" aria-hidden="true"><path class="tr-fib" d="M66 0 L64.2 2.0 L62.0 3.4 L58.9 3.7 L56.8 5.2 L54.8 6.9 L54.0 10.2 L51.6 11.3 L48.3 11.4 L45.9 12.7 L46.1 17.1 L41.4 15.6 L38.7 16.6 L39.2 21.1 L36.4 22.0 L35.3 24.8 L33.9 27.2 L29.6 26.5 L31.5 32.4 L26.5 31.0 L25.6 33.9 L22.3 34.4 L19.6 35.5 L21.0 40.7 L16.3 39.9 L16.5 43.8 L14.5 45.7 L12.9 47.9 L11.7 50.5 L8.3 51.0 L5.0 51.8 L5.4 55.7 L3.0 57.3 L1.5 59.7 L0 62"/><path class="tr-core" d="M66 0 L64.2 2.0 L62.0 3.4 L58.9 3.7 L56.8 5.2 L54.8 6.9 L54.0 10.2 L51.6 11.3 L48.3 11.4 L45.9 12.7 L46.1 17.1 L41.4 15.6 L38.7 16.6 L39.2 21.1 L36.4 22.0 L35.3 24.8 L33.9 27.2 L29.6 26.5 L31.5 32.4 L26.5 31.0 L25.6 33.9 L22.3 34.4 L19.6 35.5 L21.0 40.7 L16.3 39.9 L16.5 43.8 L14.5 45.7 L12.9 47.9 L11.7 50.5 L8.3 51.0 L5.0 51.8 L5.4 55.7 L3.0 57.3 L1.5 59.7 L0 62"/></svg>';
+const TEAR_SVG = '<svg class="tear" viewBox="0 0 70 66" aria-hidden="true"><path d="M64.0 0.0 L60.2 4.2 L54.6 6.1 L50.3 9.7 L46.2 13.7 L42.4 18.1 L36.8 20.4 L32.4 24.2 L28.8 29.0 L24.6 33.1 L21.1 38.0 L17.5 42.8 L12.5 46.4 L7.9 50.4 L5.1 56.2 L0.0 60.0"/></svg>';
 const I_HTML = '<svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.8"/><path d="M12 11v5"/><circle class="dot" cx="12" cy="7.9" r=".9"/></svg>';
 // the row under an answered question: ↻ try it again just for practice (score, report and this answer stay as they are), ⓘ the meaning of each character
 const qzFoot = document.getElementById('qzFoot'), qzRetry = document.getElementById('qzRetry'), qzIBtn = document.getElementById('qzIBtn'), qzSnd = document.getElementById('qzSnd');
