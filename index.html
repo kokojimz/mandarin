@@ -249,8 +249,7 @@
   .quiz-card .qz-play.playing{ font-size:1.1rem; }
   .quiz-card .qz-play[hidden]{ display:none; }
   .qz-options{ display:flex; flex-direction:column; gap:10px; margin-bottom:6px; }
-  .qz-foot{ display:flex; justify-content:center; align-items:center; gap:6px; margin:12px 0 -10px; }   /* under every question: 🔈 ⓘ ↻ */
-  .qz-tones:not([hidden]) + .qz-foot{ margin-top:12px; padding-top:8px; border-top:1px solid var(--border); }   /* under the tone key: a thin line between them, as wide as the answers */
+  .qz-foot{ display:flex; justify-content:center; align-items:center; gap:6px; margin:17px 0 -10px; }   /* the icons sit as far from the answers as from the bottom edge */   /* under every question: 🔈 ⓘ ↻ */
   .qz-foot .pk-mark{ height:28px; min-width:40px; }   /* small: the row adds little to the dialog */
   .qz-foot[hidden]{ display:none; }
   .qz-foot .pk-mark:disabled{ opacity:.3; cursor:default; }   /* ↻ and ⓘ wait for the answer */
