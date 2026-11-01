@@ -620,6 +620,12 @@
   }
   .card.isbm .bm-toggle{ color:var(--accent); }
   .card.quiz-pending .face{ border-color:var(--accent); box-shadow:inset 0 0 0 1px var(--accent); }
+  /* a card answered wrong, then right on its last ↻: a plaster across the top-left corner (over the level label) */
+  .plaster{ display:none; position:absolute; top:12px; left:-10px; width:78px; height:22px; transform:rotate(-38deg); border-radius:11px; z-index:2; pointer-events:none;
+    background:#e9c8a2; box-shadow:0 1px 2px rgba(0,0,0,.35); overflow:hidden; }
+  .plaster::before{ content:""; position:absolute; left:26px; top:3px; width:26px; height:16px; border-radius:4px; background:#d9ac80; }
+  .plaster::after{ content:""; position:absolute; inset:0; background:radial-gradient(circle, rgba(120,80,40,.35) 1px, transparent 1.4px) 4px 4px/6px 6px; }
+  .card.quiz-fixed .plaster{ display:block; }
   .card.quiz-wrong .face{ border-color:#d64545; box-shadow:inset 0 0 0 1px #d64545; }   /* wrong quiz answer: red border, front and back; gone when quiz mode is left */
   .card.flash{ animation:bmflash 1.4s ease; }
   @keyframes bmflash{ 0%{transform:scale(1)} 20%{transform:scale(1.07)} 40%{transform:scale(1)} 60%{transform:scale(1.05)} 100%{transform:scale(1)} }
@@ -1380,6 +1386,7 @@ let quizMode = false;
 const quizWrongs  = new Map();   // 'p:' / 'b<sentence>:' / 'm<lang>:' + card key -> indexes (into D) of its wrong options, so reopening a card never reshuffles the wrong answers (only their positions change)
 const quizResults = new Map();   // card key -> true (right) / false (wrong); first answer per card only
 const quizBlank   = new Map();   // card key -> its fill-the-blank sentence (index into its examples), this quiz only
+const quizFixed   = new Map();   // card key -> true when a card answered wrong was then right on its last ↻ (a plaster on the card; the score stays)
 const quizKindMap = new Map();   // card key -> the question type it got when first opened, kept for this quiz (sound back on doesn't turn it into a tone question again)
 const quizReview  = new Map();   // card key -> how its question looked once answered (this quiz only), for ‹ › and tapping the card again
 // kept in this browser apart from the session (it is bigger and only changes when a question is answered), so a reload still shows your mistakes
@@ -1434,7 +1441,7 @@ const qzOptions = document.getElementById('qzOptions');
 function setQuiz(on, keys = null){
   quizMode = on;
   quizOnly = on && keys && keys.length ? new Set(keys) : null;
-  quizResults.clear(); quizWrongs.clear(); openedOnce.clear(); quizReview.clear(); quizBlank.clear(); quizKindMap.clear(); saveReviews();
+  quizResults.clear(); quizWrongs.clear(); openedOnce.clear(); quizReview.clear(); quizBlank.clear(); quizKindMap.clear(); quizFixed.clear(); saveReviews();
   if(on) quizSeed = Math.floor(Math.random() * 4294967296);   // a new mix of question types for every new quiz
   if(on){                                // shuffle once, and close every card so all of them start face-down
     order = shuffle(order.slice());
@@ -2261,12 +2268,16 @@ function openQuiz(r, card){
       else speak(say, null);
     }   // the word, or the whole sentence for fill in the blank (not in the tone quiz: you've heard it already; ▶︎ is there)
     showQzFoot(r, sent && sent.ex, true);
-    if(!practice) quizReview.set(key, {                     // how this question looked once answered, for ‹ › later (practice: the first answer stays)
+    quizReview.set(key, {                     // the last answer (a ↻ too) is what the card shows again                     // how this question looked once answered, for ‹ › later (practice: the first answer stays)
       hz: qzHanzi.style.display === 'none' ? null : qzHanzi.textContent, hzHTML: sent ? null : qzHanzi.innerHTML,
       sent: qzSent.hidden ? null : qzSent.innerHTML, sub: qzSub.style.display === 'none' ? null : qzSub.textContent,
       opts: typing ? null : qzOptions.innerHTML,
       typed: typing ? {v: qzInput.value, cls: qzInput.className} : null, ans: qzAnswer.hidden ? null : qzAnswer.innerHTML, tone, ex: sent ? sent.ex : null, kind, blank});
-    if(!practice) saveReviews();
+    saveReviews();
+    if(practice && quizResults.get(key) === false){   // wrong at first: right on this ↻ = a plaster, wrong again = none
+      quizFixed.set(key, ok); saveSession();
+      const el = grid.querySelector('.card[data-key="' + CSS.escape(key) + '"]'); if(el) el.classList.toggle('quiz-fixed', ok);
+    }
   }
 
   if(typing){
@@ -3194,7 +3205,7 @@ function makeCard(r){
   if(isSaved(card.dataset.key)) card.classList.add('isfav');
   if(bookmark && card.dataset.key === bookmark) card.classList.add('isbm');
   if(quizMode && !openedOnce.has(card.dataset.key)) card.classList.add('quiz-pending');
-  if(quizMode && quizResults.get(card.dataset.key) === false) card.classList.add('quiz-wrong');
+  if(quizMode && quizResults.get(card.dataset.key) === false){ card.classList.add('quiz-wrong'); if(quizFixed.get(card.dataset.key)) card.classList.add('quiz-fixed'); }
   card.innerHTML = `
     <div class="card-inner">
       <div class="face front"><span class="lv">${esc(lvLabel(l))}</span>${hidden ? `<div class="hanzi q-hidden" data-w="${escAttr(w)}">${esc(lvLabel(l))}</div>` : `<div class="hanzi ${sc}">${esc(w)}</div>`}<button class="bm-toggle" type="button" aria-label="${tx('Bookmark')}">${lineIcon('bm', 20)}</button><button class="fav-toggle" type="button" aria-label="${tx('Add to group')}">${lineIcon('star', 20)}</button></div>
@@ -3204,7 +3215,7 @@ function makeCard(r){
         <div class="meaning">${esc(meaningOf(r))}</div>
         <button class="play" type="button" aria-label="${tx('Play pronunciation')}">${PLAY_IC}</button>
       </div>
-    </div>`;
+    </div><span class="plaster" aria-hidden="true"></span>`;
   card.addEventListener('click', ()=>{
     if(swallowTap || Date.now() < suppressUntil) return;
     if(quizMode && !openedOnce.has(card.dataset.key)){ openQuiz(r, card); return; }   // never opened before: quiz first
@@ -3669,7 +3680,7 @@ function writeSession(){
     const identity = order.every((v,i) => v === i);
     localStorage.setItem(LS_SESSION, JSON.stringify({
       v:1, n:D.length,
-      quizMode, results:[...quizResults], opts:[...quizWrongs], blanks:[...quizBlank], kinds:[...quizKindMap], seed:quizSeed, opened:[...openedOnce], flipped:[...flippedKeys], only: quizOnly ? [...quizOnly] : null,
+      quizMode, results:[...quizResults], opts:[...quizWrongs], blanks:[...quizBlank], kinds:[...quizKindMap], fixed:[...quizFixed].filter(a => a[1]).map(a => a[0]), seed:quizSeed, opened:[...openedOnce], flipped:[...flippedKeys], only: quizOnly ? [...quizOnly] : null,
       order: identity ? null : order,
       levels:[...active], query, page,
       scrollY: window.scrollY || 0,
@@ -3703,6 +3714,7 @@ function restoreSession(){
   if(Number.isInteger(s.seed)) quizSeed = s.seed;
   quizBlank.clear(); arr(s.blanks).forEach(a => { if(Array.isArray(a) && typeof a[0] === 'string' && Number.isInteger(a[1])) quizBlank.set(a[0], a[1]); });
   quizKindMap.clear(); arr(s.kinds).forEach(a => { if(Array.isArray(a) && typeof a[0] === 'string' && QUIZ_KINDS.includes(a[1])) quizKindMap.set(a[0], a[1]); });
+  quizFixed.clear(); arr(s.fixed).forEach(k => { if(typeof k === 'string') quizFixed.set(k, true); });
   if(s.quizMode) loadReviews();
   openedOnce.clear(); arr(s.opened).forEach(k => openedOnce.add(k));
   flippedKeys.clear(); arr(s.flipped).forEach(k => flippedKeys.add(k));
@@ -4956,7 +4968,7 @@ function importBackup(data){
       if(!ready) bmTouched = true;                        // saved data still loading must not bring the old bookmark back
       pageWish = null;
       quizMode = false; quizOnly = null; document.body.classList.remove('quiz-on'); syncQuizBtn();   // a running quiz belongs to the old data
-      flippedKeys.clear(); openedOnce.clear(); quizResults.clear(); quizWrongs.clear(); quizBlank.clear(); quizKindMap.clear(); quizReview.clear(); saveReviews();
+      flippedKeys.clear(); openedOnce.clear(); quizResults.clear(); quizWrongs.clear(); quizBlank.clear(); quizKindMap.clear(); quizFixed.clear(); quizReview.clear(); saveReviews();
       clearSearch();
       order = order.filter(i => i < BASE_N);              // your old cards are gone; the new ones are appended
       if(!active.size) LEVELS.forEach(l => active.add(l[0]));
