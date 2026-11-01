@@ -13,7 +13,6 @@
 </script>
 <style>
   :root{
-    --tear-fiber:#e2d8c4; --tear-seam:rgba(0,0,0,.28); --tape-clear:rgba(120,105,80,.16); --tape-edge:rgba(90,75,50,.22);
     --bg:#faf7f2; --card-bg:#ffffff; --text:#222; --sub:#777; --border:#e4ddd0; --accent:#e08b2b;
     --t1:#3f7fe0; --t2:#3fa15e; --t3:#e08b2b; --t4:#e0523f; --t0:#9b5de5;
     /* report chart: one fixed colour per group (validated categorical palette, light / dark steps) */
@@ -23,7 +22,6 @@
     padding-bottom:env(safe-area-inset-bottom,0px);
   }
   :root[data-theme="dark"]{
-    --tear-fiber:#5a5447; --tear-seam:rgba(0,0,0,.7); --tape-clear:rgba(255,255,255,.16); --tape-edge:rgba(255,255,255,.18);
     --bg:#1b1a17; --card-bg:#26241f; --text:#eee; --sub:#9a978f; --border:#3a362e;
     --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500; --s5:#d55181; --s6:#008300; --s7:#9085e9; --s8:#e66767;
   }
@@ -622,21 +620,14 @@
   }
   .card.isbm .bm-toggle{ color:var(--accent); }
   .card.quiz-pending .face{ border-color:var(--accent); box-shadow:inset 0 0 0 1px var(--accent); }
-  /* a card answered wrong is torn: a corner is gone (top-left of the open side = top-right of the closed one), with what was written there.
-     Right on its last ↻: the corner is back, a thin line where it tore, and on the open side a piece of clear tape over it */
-  .card.quiz-wrong:not(.quiz-fixed) .front{ clip-path:polygon(calc(100% - 64px) 0,0 0,0 100%,100% 100%,100% 60px,calc(100% - 5.1px) 56.2px,calc(100% - 7.9px) 50.4px,calc(100% - 12.5px) 46.4px,calc(100% - 17.5px) 42.8px,calc(100% - 21.1px) 38.0px,calc(100% - 24.6px) 33.1px,calc(100% - 28.8px) 29.0px,calc(100% - 32.4px) 24.2px,calc(100% - 36.8px) 20.4px,calc(100% - 42.4px) 18.1px,calc(100% - 46.2px) 13.7px,calc(100% - 50.3px) 9.7px,calc(100% - 54.6px) 6.1px,calc(100% - 60.2px) 4.2px); }
-  .card.quiz-wrong:not(.quiz-fixed) .back{ clip-path:polygon(64px 0,100% 0,100% 100%,0 100%,0 60px,5.1px 56.2px,7.9px 50.4px,12.5px 46.4px,17.5px 42.8px,21.1px 38.0px,24.6px 33.1px,28.8px 29.0px,32.4px 24.2px,36.8px 20.4px,42.4px 18.1px,46.2px 13.7px,50.3px 9.7px,54.6px 6.1px,60.2px 4.2px); }
-  .tear{ display:none; position:absolute; top:0; width:70px; height:66px; overflow:visible; pointer-events:none; z-index:1; }
-  .front .tear{ right:0; transform:scaleX(-1); }
-  .back .tear{ left:0; }
-  .card.quiz-wrong .tear{ display:block; }
-  .tear path{ fill:none; stroke-linejoin:round; stroke-linecap:round; }
-  .card.quiz-wrong:not(.quiz-fixed) .tear path{ stroke:var(--tear-fiber); stroke-width:2.6; }   /* torn: a thin pale edge (half the stroke shows) */
-  .card.quiz-fixed .tear path{ stroke:var(--tear-seam); stroke-width:1; }
-  .tape{ display:none; position:absolute; top:20px; left:-2px; width:70px; height:20px; transform:rotate(-42deg); pointer-events:none; z-index:2;
-    clip-path:polygon(0 8%,4% 0,8% 10%,12% 0,88% 0,92% 10%,96% 0,100% 8%,96% 20%,100% 32%,96% 44%,100% 56%,96% 68%,100% 80%,96% 92%,100% 100%,0 100%,4% 90%,0 78%,4% 66%,0 54%,4% 42%,0 30%,4% 18%); }
-  .card.quiz-fixed .tape{ display:block; }
-  .tape{ background:var(--tape-clear); box-shadow:inset 0 0 0 1px var(--tape-edge); }   /* clear tape */
+  /* a card answered wrong, then right on its last ↻: a plaster on the open side, across its top-left corner (over the level label),
+     its ends sticking out. It turns with the card: just behind the card's middle, so from the closed side only those ends show */
+  .plaster{ display:none; position:absolute; top:12px; right:-10px; width:78px; height:22px; border-radius:11px; pointer-events:none;
+    transform:translateZ(-1px) rotateY(180deg) rotate(-38deg);   /* on the open (back) side; seen from there it is top-left */
+    background:#e9c8a2; box-shadow:0 1px 2px rgba(0,0,0,.35); overflow:hidden; }
+  .plaster::before{ content:""; position:absolute; left:26px; top:3px; width:26px; height:16px; border-radius:4px; background:#d9ac80; }
+  .plaster::after{ content:""; position:absolute; inset:0; background:radial-gradient(circle, rgba(120,80,40,.35) 1px, transparent 1.4px) 4px 4px/6px 6px; }
+  .card.quiz-fixed .plaster{ display:block; }
   .card.quiz-wrong .face{ border-color:#d64545; box-shadow:inset 0 0 0 1px #d64545; }   /* wrong quiz answer: red border, front and back; gone when quiz mode is left */
   .card.flash{ animation:bmflash 1.4s ease; }
   @keyframes bmflash{ 0%{transform:scale(1)} 20%{transform:scale(1.07)} 40%{transform:scale(1)} 60%{transform:scale(1.05)} 100%{transform:scale(1)} }
@@ -1397,7 +1388,7 @@ let quizMode = false;
 const quizWrongs  = new Map();   // 'p:' / 'b<sentence>:' / 'm<lang>:' + card key -> indexes (into D) of its wrong options, so reopening a card never reshuffles the wrong answers (only their positions change)
 const quizResults = new Map();   // card key -> true (right) / false (wrong); first answer per card only
 const quizBlank   = new Map();   // card key -> its fill-the-blank sentence (index into its examples), this quiz only
-const quizFixed   = new Map();   // card key -> true when a card answered wrong was then right on its last ↻ (its torn corner taped back; the score stays)
+const quizFixed   = new Map();   // card key -> true when a card answered wrong was then right on its last ↻ (a plaster on the card; the score stays)
 const quizKindMap = new Map();   // card key -> the question type it got when first opened, kept for this quiz (sound back on doesn't turn it into a tone question again)
 const quizReview  = new Map();   // card key -> how its question looked once answered (this quiz only), for ‹ › and tapping the card again
 // kept in this browser apart from the session (it is bigger and only changes when a question is answered), so a reload still shows your mistakes
@@ -1415,8 +1406,6 @@ const quizOverlay = document.getElementById('quizOverlay');
 const qzHanzi = document.getElementById('qzHanzi');
 const qzSub = document.getElementById('qzSub');
 // ⓘ (the meaning of each character), here and in the card preview
-// the torn edge of a card answered wrong (see .tear)
-const TEAR_SVG = '<svg class="tear" viewBox="0 0 70 66" aria-hidden="true"><path d="M64.0 0.0 L60.2 4.2 L54.6 6.1 L50.3 9.7 L46.2 13.7 L42.4 18.1 L36.8 20.4 L32.4 24.2 L28.8 29.0 L24.6 33.1 L21.1 38.0 L17.5 42.8 L12.5 46.4 L7.9 50.4 L5.1 56.2 L0.0 60.0"/></svg>';
 const I_HTML = '<svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.8"/><path d="M12 11v5"/><circle class="dot" cx="12" cy="7.9" r=".9"/></svg>';
 // the row under an answered question: ↻ try it again just for practice (score, report and this answer stay as they are), ⓘ the meaning of each character
 const qzFoot = document.getElementById('qzFoot'), qzRetry = document.getElementById('qzRetry'), qzIBtn = document.getElementById('qzIBtn'), qzSnd = document.getElementById('qzSnd');
@@ -2288,7 +2277,7 @@ function openQuiz(r, card){
       opts: typing ? null : qzOptions.innerHTML,
       typed: typing ? {v: qzInput.value, cls: qzInput.className} : null, ans: qzAnswer.hidden ? null : qzAnswer.innerHTML, tone, ex: sent ? sent.ex : null, kind, blank});
     if(!keepFirst) saveReviews();
-    if(practice && quizResults.get(key) === false){   // wrong at first: right on this ↻ = taped, wrong again = torn again
+    if(practice && quizResults.get(key) === false){   // wrong at first: right on this ↻ = a plaster, wrong again = none
       quizFixed.set(key, ok); saveSession();
       const el = grid.querySelector('.card[data-key="' + CSS.escape(key) + '"]'); if(el) el.classList.toggle('quiz-fixed', ok);
     }
@@ -3222,13 +3211,14 @@ function makeCard(r){
   if(quizMode && quizResults.get(card.dataset.key) === false){ card.classList.add('quiz-wrong'); if(quizFixed.get(card.dataset.key)) card.classList.add('quiz-fixed'); }
   card.innerHTML = `
     <div class="card-inner">
-      <div class="face front">${TEAR_SVG}<span class="lv">${esc(lvLabel(l))}</span>${hidden ? `<div class="hanzi q-hidden" data-w="${escAttr(w)}">${esc(lvLabel(l))}</div>` : `<div class="hanzi ${sc}">${esc(w)}</div>`}<button class="bm-toggle" type="button" aria-label="${tx('Bookmark')}">${lineIcon('bm', 20)}</button><button class="fav-toggle" type="button" aria-label="${tx('Add to group')}">${lineIcon('star', 20)}</button></div>
-      <div class="face back">${TEAR_SVG}<span class="tape" aria-hidden="true"></span>
+      <div class="face front"><span class="lv">${esc(lvLabel(l))}</span>${hidden ? `<div class="hanzi q-hidden" data-w="${escAttr(w)}">${esc(lvLabel(l))}</div>` : `<div class="hanzi ${sc}">${esc(w)}</div>`}<button class="bm-toggle" type="button" aria-label="${tx('Bookmark')}">${lineIcon('bm', 20)}</button><button class="fav-toggle" type="button" aria-label="${tx('Add to group')}">${lineIcon('star', 20)}</button></div>
+      <div class="face back">
         <div class="hz-small ${sc==='l'?'l':''}">${colorHanzi(w,py)}</div>
         <div class="pinyin">${colorPinyin(py)}</div>
         <div class="meaning">${esc(meaningOf(r))}</div>
         <button class="play" type="button" aria-label="${tx('Play pronunciation')}">${PLAY_IC}</button>
       </div>
+      <span class="plaster" aria-hidden="true"></span>
     </div>`;
   card.addEventListener('click', ()=>{
     if(swallowTap || Date.now() < suppressUntil) return;
