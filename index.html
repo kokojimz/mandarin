@@ -620,8 +620,10 @@
   }
   .card.isbm .bm-toggle{ color:var(--accent); }
   .card.quiz-pending .face{ border-color:var(--accent); box-shadow:inset 0 0 0 1px var(--accent); }
-  /* a card answered wrong, then right on its last ↻: a plaster across the top-left corner (over the level label) */
-  .plaster{ display:none; position:absolute; top:12px; left:-10px; width:78px; height:22px; transform:rotate(-38deg); border-radius:11px; z-index:2; pointer-events:none;
+  /* a card answered wrong, then right on its last ↻: a plaster on the open side, across its top-left corner (over the level label),
+     its ends sticking out. It turns with the card: just behind the card's middle, so from the closed side only those ends show */
+  .plaster{ display:none; position:absolute; top:12px; right:-10px; width:78px; height:22px; border-radius:11px; pointer-events:none;
+    transform:translateZ(-1px) rotateY(180deg) rotate(-38deg);   /* on the open (back) side; seen from there it is top-left */
     background:#e9c8a2; box-shadow:0 1px 2px rgba(0,0,0,.35); overflow:hidden; }
   .plaster::before{ content:""; position:absolute; left:26px; top:3px; width:26px; height:16px; border-radius:4px; background:#d9ac80; }
   .plaster::after{ content:""; position:absolute; inset:0; background:radial-gradient(circle, rgba(120,80,40,.35) 1px, transparent 1.4px) 4px 4px/6px 6px; }
@@ -3215,7 +3217,8 @@ function makeCard(r){
         <div class="meaning">${esc(meaningOf(r))}</div>
         <button class="play" type="button" aria-label="${tx('Play pronunciation')}">${PLAY_IC}</button>
       </div>
-    </div><span class="plaster" aria-hidden="true"></span>`;
+      <span class="plaster" aria-hidden="true"></span>
+    </div>`;
   card.addEventListener('click', ()=>{
     if(swallowTap || Date.now() < suppressUntil) return;
     if(quizMode && !openedOnce.has(card.dataset.key)){ openQuiz(r, card); return; }   // never opened before: quiz first
