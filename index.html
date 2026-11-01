@@ -2271,7 +2271,7 @@ function openQuiz(r, card){
     }   // the word, or the whole sentence for fill in the blank (not in the tone quiz: you've heard it already; ▶︎ is there)
     showQzFoot(r, sent && sent.ex, true);
     const keepFirst = practice && quizResults.get(key) !== false;   // answered right at first: a ↻ never replaces that right answer
-    if(!keepFirst) quizReview.set(key, {                     // else the last answer (a ↻ too) is what the card shows again                     // how this question looked once answered, for ‹ › later (practice: the first answer stays)
+    if(!keepFirst) quizReview.set(key, {   // how this question looked once answered, for ‹ › later: the last answer (a ↻ too) unless it was right at first
       hz: qzHanzi.style.display === 'none' ? null : qzHanzi.textContent, hzHTML: sent ? null : qzHanzi.innerHTML,
       sent: qzSent.hidden ? null : qzSent.innerHTML, sub: qzSub.style.display === 'none' ? null : qzSub.textContent,
       opts: typing ? null : qzOptions.innerHTML,
@@ -3835,8 +3835,10 @@ function applyCustomChange(fromRemote){
 function forgetKeys(keys){
   keys.forEach(k => {
     flippedKeys.delete(k); openedOnce.delete(k); quizResults.delete(k);
+    quizBlank.delete(k); quizFixed.delete(k); quizKindMap.delete(k); quizReview.delete(k); qzSigMap.delete(k);
     if(bookmark === k) bookmark = null;
   });
+  saveReviews();
 }
 function deleteCustomCards(ids){
   forgetKeys(ids.map(id => 'cu:' + id));
