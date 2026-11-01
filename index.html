@@ -249,11 +249,11 @@
   .quiz-card .qz-play.playing{ font-size:1.1rem; }
   .quiz-card .qz-play[hidden]{ display:none; }
   .qz-options{ display:flex; flex-direction:column; gap:10px; margin-bottom:6px; }
-  .qz-foot{ display:flex; justify-content:center; align-items:center; gap:6px; margin:12px 0 -10px; padding-top:8px; border-top:1px solid var(--border); }   /* under every question: a thin line, then 🔈 ⓘ ↻ */
+  .qz-foot{ display:flex; justify-content:center; align-items:center; gap:6px; margin:4px 0 -10px; }   /* under every question: 🔈 ⓘ ↻ */
+  .qz-tones:not([hidden]) + .qz-foot{ margin-top:12px; padding-top:8px; border-top:1px solid var(--border); }   /* under the tone key: a thin line between them, as wide as the answers */
   .qz-foot .pk-mark{ height:28px; min-width:40px; }   /* small: the row adds little to the dialog */
   .qz-foot[hidden]{ display:none; }
   .qz-foot .pk-mark:disabled{ opacity:.3; cursor:default; }   /* ↻ and ⓘ wait for the answer */
-  #qzSnd .no{ stroke:#e0523f; }   /* sound off: a red “no” sign over the speaker */
   /* typed, once answered: › on the right like a multiple-choice answer; the whole box opens the card (a disabled input takes no taps,
      so a clear button lies over it) */
   .qz-tapans{ display:none; position:absolute; left:0; top:0; width:100%; height:48px; padding:0; border:0; background:transparent; color:#fff; cursor:pointer; -webkit-tap-highlight-color:transparent; }
@@ -751,7 +751,7 @@
     <div class="qz-foot" id="qzFoot" hidden>
       <button type="button" class="pk-mark" id="qzSnd" data-tx-title="Sound"></button>
       <button type="button" class="pk-mark pk-chars" id="qzIBtn" data-tx-title="Meaning of each character"></button>
-      <button type="button" class="pk-mark" id="qzRetry" data-tx-title="Try again"><svg class="ln" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M19.5 12a7.5 7.5 0 1 1-2.2-5.3"/><path d="M19.5 4.5v3.8h-3.8"/></svg></button>
+      <button type="button" class="pk-mark" id="qzRetry" data-tx-title="Try again"><svg class="ln" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M20 12a8 8 0 1 1-8-8c2.2 0 4.3.9 5.9 2.4L20 8.5"/><path d="M20 4v4.5h-4.5"/></svg></button>
     </div>
   </div>
 </div>
@@ -1397,7 +1397,7 @@ let qzCurKind = null, qzCurCard = null;   // the open question's type and its ca
 const qzSigMap = new Map();   // card key -> the order its answers were last shown in, so ↻ always shows them in a new order
 let quizPractice = false;   // set just before openQuiz: this run is practice only
 const SND_ON_IC = '<svg class="ln" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M3.5 9.5h3.6L11.5 5.6v12.8l-4.4-3.9H3.5z"/><path d="M15 9.2a4 4 0 0 1 0 5.6"/><path d="M17.8 6.6a7.6 7.6 0 0 1 0 10.8"/></svg>';
-const SND_OFF_IC = '<svg class="ln" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M7 10.2h2.6l3.3-2.9v9.4l-3.3-2.9H7z"/><circle class="no" cx="12" cy="12" r="9.2"/><path class="no" d="M5.5 5.5l13 13"/></svg>';
+const SND_OFF_IC = '<svg class="ln" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M3.5 9.5h3.6L11.5 5.6v12.8l-4.4-3.9H3.5z"/><path d="M15 9l6 6"/><path d="M21 9l-6 6"/></svg>';   // sound off: the same speaker, an × instead of the waves
 function syncQzSnd(){ qzSnd.innerHTML = SOUND_ON ? SND_ON_IC : SND_OFF_IC; }
 qzIBtn.innerHTML = I_HTML;
 // the row under every question: ↻ and ⓘ wake up once it is answered; 🔈 is always there
