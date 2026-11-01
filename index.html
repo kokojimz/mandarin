@@ -1507,20 +1507,18 @@ function openQuizKinds(c, back){
     <div class="fm-title">${tx('Question')}</div>
     <div class="fm-sub">${tx('Pick one or more.')}</div>
     <div class="gp-list" id="qkList">${Object.entries(QUIZ_Q).map(([k, l]) => `<button type="button" class="gp-row${pick.includes(k) ? ' on' : ''}" data-v="${k}"><span class="gp-name">${k === 'tone' && !(SOUND_ON && HAS_TTS) ? `<span class="sh-name">${tx(l)}</span><span class="sh-count">${tx('Skipped while the sound is off')}</span>` : tx(l)}</span>${CHECK_ICON}</button>`).join('')}</div>
-    <div class="fm-actions">
-      <button type="button" class="cf-btn" id="fmCancel">${tx('Cancel')}</button>
-      <button type="button" class="cf-btn cf-yes" id="fmOk">${tx('Save')}</button>
-    </div>`, true);
+    <div class="fm-actions"><button type="button" class="cf-btn cf-yes" id="fmOk">${tx('Done')}</button></div>`, true);
   const ok = document.getElementById('fmOk');
-  const syncOk = () => { ok.disabled = !pick.length; ok.classList.toggle('cf-yes', !!pick.length); };   // nothing ticked: Save is plain and off
+  const syncOk = () => { ok.disabled = !pick.length; ok.classList.toggle('cf-yes', !!pick.length); };   // nothing ticked: Done is plain and off
   fmBox.querySelectorAll('#qkList .gp-row').forEach(b => b.onclick = () => {
     const k = b.dataset.v, on = pick.includes(k);
     if(on) pick.splice(pick.indexOf(k), 1); else pick.push(k);
     b.classList.toggle('on', !on);
     syncOk();
   });
-  document.getElementById('fmCancel').onclick = fmBack = () => back(c);
+  // Done takes the types back to the quiz settings (kept only when that dialog's Start is tapped); ✕ / Esc / outside: back unchanged
   ok.onclick = () => { if(!pick.length) return; c.q = QUIZ_KINDS.filter(k => pick.includes(k)); back(c); };
+  fmBack = () => back(c);
 }
 function openQuizSettings(draft){   // draft: the unsaved choices, when coming back from the question-type page
   const wrongKeys = oftenWrong().map(([k]) => k);   // all groups on purpose: the level bar then shows how many of them each level / group has
@@ -3144,8 +3142,8 @@ function playSfx(kind){   // 'right' | 'wrong'; returns how long it plays (ms), 
 
 // ---- choose the voice (from Settings) ----
 const REGION = {'zh-tw':'Taiwan', 'zh-cn':'China', 'zh-sg':'Singapore'};
-function openVoicePicker(back){   // opened from Settings; Save keeps the voice, both buttons return to Settings
-  let cur = chosenVoice;
+function openVoicePicker(back, cur){   // opened from Settings with its draft voice; Done takes the voice back to Settings (saved there), ✕ / Esc / outside goes back unchanged
+  cur = cur || ''; const cur0 = cur;
   const vs = chineseVoices();
   const region = v => { const r = REGION[(v.lang || '').replace('_','-').toLowerCase()]; return r ? tx(r) : v.lang; };
   // iPhone often gives every quality the same name ("Meijia"); the quality is in the voice's id instead
@@ -3170,10 +3168,7 @@ function openVoicePicker(back){   // opened from Settings; Save keeps the voice,
     <div class="fm-title">${tx('Voice')}</div>
     <div class="fm-sub">${tx(vs.length ? 'Tap a voice to hear it.' : 'No Chinese voices were found on this device.')}</div>
     ${list ? `<div class="gp-list vp-list">${list}</div>` : ''}
-    <div class="fm-actions">
-      <button type="button" class="cf-btn" id="fmCancel">${tx('Cancel')}</button>
-      <button type="button" class="cf-btn cf-yes" id="fmOk">${tx('Save')}</button>
-    </div>`, !!back);
+    <div class="fm-actions"><button type="button" class="cf-btn cf-yes" id="fmOk">${tx('Done')}</button></div>`, true);
   fmBox.querySelectorAll('.gp-row[data-v]').forEach(b => b.onclick = () => {
     cur = b.dataset.v;
     fmBox.querySelectorAll('.gp-row[data-v]').forEach(x => x.classList.toggle('on', x === b));
@@ -3185,13 +3180,8 @@ function openVoicePicker(back){   // opened from Settings; Save keeps the voice,
       window.speechSynthesis.speak(u);
     }catch(e){}
   });
-  document.getElementById('fmCancel').onclick = fmBack = () => { stopSpeech(); back(); };
-  document.getElementById('fmOk').onclick = () => {
-    stopSpeech();
-    chosenVoice = cur || '';
-    try{ if(chosenVoice) localStorage.setItem(LS_VOICE, chosenVoice); else localStorage.removeItem(LS_VOICE); }catch(e){}
-    back();
-  };
+  document.getElementById('fmOk').onclick = () => { stopSpeech(); back(cur); };
+  fmBack = () => { stopSpeech(); back(cur0); };
 }
 
 function makeCard(r){
@@ -4965,56 +4955,59 @@ function importBackup(data){
 const importFile = document.getElementById('importFile');
 // ---- settings: theme, voice, export, import in one dialog ----
 // each choice is kept right away; Voice and Export open their own page with Cancel
-function openSettings(){
+// Settings: the choices are a draft until Save (Cancel, ✕ or tapping outside changes nothing); Voice opens its own page
+// and comes back with the voice picked. Export and Import are actions, not settings: they happen at once.
+// The theme shows at once as a preview; leaving without Save puts the saved one back.
+function openSettings(d){
+  if(!d || d.lang == null){ const t = isDark() ? 'dark' : 'light'; d = {lang: LANG, theme: t, theme0: t, fs: FS_ON, sound: SOUND_ON, voice: chosenVoice || '', py: PY_MODE}; }
+  const unpreview = () => document.documentElement.setAttribute('data-theme', d.theme0);
   const go = (id, text) => `<div class="seg"><button type="button" id="${id}" class="st-go"><span class="st-txt">${esc(text)}</span><span class="st-chev" aria-hidden="true">›</span></button></div>`;
+  const seg = (id, val, opts) => `<div class="seg" id="${id}">${opts.map(([v, l]) => `<button type="button" data-v="${v}" class="${v === val ? 'on' : ''}">${l}</button>`).join('')}</div>`;
+  const onOff = v => v ? 'on' : 'off';
   openForm(`
     <div class="fm-title">${tx('Settings')}</div>
     <div class="fm-sub">${tx('Change how the app looks and sounds.')}</div>
-    <div class="qs-row"><div class="qs-label">${tx('Language')}</div><div class="seg" id="stLang">
-      <button type="button" data-v="en" class="${LANG === 'en' ? 'on' : ''}">English</button><button type="button" data-v="id" class="${LANG === 'id' ? 'on' : ''}">Indonesia</button></div></div>
-    <div class="qs-row"><div class="qs-label">${tx('Theme')}</div><div class="seg" id="stTheme">
-      <button type="button" data-v="dark" class="${isDark() ? 'on' : ''}">${tx('Dark')}</button><button type="button" data-v="light" class="${isDark() ? '' : 'on'}">${tx('Light')}</button></div></div>
-    ${FS_OK ? `<div class="qs-row"><div class="qs-label">${tx('Fullscreen')}</div><div class="seg" id="stFs">
-      <button type="button" data-v="on" class="${FS_ON ? 'on' : ''}">${tx('On')}</button><button type="button" data-v="off" class="${FS_ON ? '' : 'on'}">${tx('Off')}</button></div></div>` : ''}
-    ${HAS_TTS ? `<div class="qs-row"><div class="qs-label">${tx('Sound')}</div><div class="seg" id="stSound">
-      <button type="button" data-v="on" class="${SOUND_ON ? 'on' : ''}">${tx('On')}</button><button type="button" data-v="off" class="${SOUND_ON ? '' : 'on'}">${tx('Off')}</button></div></div>` : ''}
-    ${HAS_TTS && SOUND_ON ? `<div class="qs-row"><div class="qs-label">${tx('Voice')}</div>${go('stVoice', tx('Select voice'))}</div>` : ''}
-    <div class="qs-row"><div class="qs-label">${tx('Pinyin tones')}</div><div class="seg" id="stPy">
-      <button type="button" data-v="spoken" class="${PY_MODE === 'spoken' ? 'on' : ''}">${tx('As spoken')}</button><button type="button" data-v="dict" class="${PY_MODE === 'dict' ? 'on' : ''}">${tx('Dictionary')}</button></div></div>
+    <div class="qs-row"><div class="qs-label">${tx('Language')}</div>${seg('stLang', d.lang, [['en', 'English'], ['id', 'Indonesia']])}</div>
+    <div class="qs-row"><div class="qs-label">${tx('Theme')}</div>${seg('stTheme', d.theme, [['dark', tx('Dark')], ['light', tx('Light')]])}</div>
+    ${FS_OK ? `<div class="qs-row"><div class="qs-label">${tx('Fullscreen')}</div>${seg('stFs', onOff(d.fs), [['on', tx('On')], ['off', tx('Off')]])}</div>` : ''}
+    ${HAS_TTS ? `<div class="qs-row"><div class="qs-label">${tx('Sound')}</div>${seg('stSound', onOff(d.sound), [['on', tx('On')], ['off', tx('Off')]])}</div>` : ''}
+    ${HAS_TTS && d.sound ? `<div class="qs-row"><div class="qs-label">${tx('Voice')}</div>${go('stVoice', tx('Select voice'))}</div>` : ''}
+    <div class="qs-row"><div class="qs-label">${tx('Pinyin tones')}</div>${seg('stPy', d.py, [['spoken', tx('As spoken')], ['dict', tx('Dictionary')]])}</div>
     <div class="qs-row"><div class="qs-label">${tx('Backup')}</div><div class="seg">
       <button type="button" id="stExport">${tx('Export')}</button><button type="button" id="stImport">${tx('Import')}</button></div></div>
-    <div class="fm-actions"><button type="button" class="cf-btn cf-yes" id="fmOk">${tx('Done')}</button></div>`);
-  document.getElementById('fmOk').onclick = closeForm;
-  document.getElementById('stLang').addEventListener('click', e => {
-    const b = e.target.closest('button'); if(!b || b.dataset.v === LANG) return;
-    setLang(b.dataset.v);
-    openSettings();                                      // the dialog itself in the new language
-  });
-  document.getElementById('stTheme').addEventListener('click', e => {
+    <div class="fm-actions">
+      <button type="button" class="cf-btn" id="fmCancel">${tx('Cancel')}</button>
+      <button type="button" class="cf-btn cf-yes" id="fmOk" data-st="1">${tx('Save')}</button>
+    </div>`);
+  const pick = (id, f, redraw) => document.getElementById(id).addEventListener('click', e => {
     const b = e.target.closest('button'); if(!b) return;
-    document.documentElement.setAttribute('data-theme', b.dataset.v);
-    try{ localStorage.setItem(LS_THEME, b.dataset.v); }catch(e){}
-    document.querySelectorAll('#stTheme button').forEach(x => x.classList.toggle('on', x === b));
+    f(b.dataset.v);
+    if(redraw) openSettings(d);                          // Sound shows / hides the Voice row
+    else document.querySelectorAll('#' + id + ' button').forEach(x => x.classList.toggle('on', x === b));
   });
-  if(FS_OK) document.getElementById('stFs').addEventListener('click', e => {
-    const b = e.target.closest('button'); if(!b) return;
-    setFullscreen(b.dataset.v === 'on');                 // inside the tap, so the browser allows it (the buttons follow in fsKeep)
-  });
-  if(HAS_TTS) document.getElementById('stSound').addEventListener('click', e => {
-    const b = e.target.closest('button'); if(!b || (b.dataset.v === 'on') === SOUND_ON) return;
-    setSound(b.dataset.v === 'on');
-    openSettings();                                      // shows / hides the Voice row
-  });
-  document.getElementById('stPy').addEventListener('click', e => {
-    const b = e.target.closest('button'); if(!b || b.dataset.v === PY_MODE) return;
-    setPyMode(b.dataset.v);
-    document.querySelectorAll('#stPy button').forEach(x => x.classList.toggle('on', x === b));
-  });
-  if(HAS_TTS && SOUND_ON) document.getElementById('stVoice').onclick = () => { stopSpeech(); openVoicePicker(openSettings); };
-  document.getElementById('stExport').onclick = () => openExportDialog(openSettings);
-  document.getElementById('stImport').onclick = () => { closeForm(); importFile.value = ''; importFile.click(); };
+  pick('stLang', v => { d.lang = v; });
+  pick('stTheme', v => { d.theme = v; document.documentElement.setAttribute('data-theme', v); });   // preview
+  if(FS_OK) pick('stFs', v => { d.fs = v === 'on'; });
+  if(HAS_TTS) pick('stSound', v => { d.sound = v === 'on'; }, true);
+  pick('stPy', v => { d.py = v; });
+  if(HAS_TTS && d.sound) document.getElementById('stVoice').onclick = () => { stopSpeech(); openVoicePicker(v => { d.voice = v; openSettings(d); }, d.voice); };
+  document.getElementById('stExport').onclick = () => openExportDialog(() => openSettings(d));
+  document.getElementById('stImport').onclick = () => { unpreview(); closeForm(); importFile.value = ''; importFile.click(); };
+  document.getElementById('fmCancel').onclick = fmBack = () => { unpreview(); closeForm(); };   // Cancel, ✕, Esc, tapping outside
+  document.getElementById('fmOk').onclick = () => {
+    closeForm();
+    if(FS_OK && d.fs !== FS_ON) setFullscreen(d.fs);     // inside the tap, so the browser allows it
+    if(d.theme !== d.theme0){ document.documentElement.setAttribute('data-theme', d.theme); try{ localStorage.setItem(LS_THEME, d.theme); }catch(e){} }
+    if(d.voice !== (chosenVoice || '')){
+      chosenVoice = d.voice;
+      try{ if(chosenVoice) localStorage.setItem(LS_VOICE, chosenVoice); else localStorage.removeItem(LS_VOICE); }catch(e){}
+    }
+    if(HAS_TTS && d.sound !== SOUND_ON) setSound(d.sound);
+    if(d.py !== PY_MODE) setPyMode(d.py);
+    if(d.lang !== LANG) setLang(d.lang);
+  };
 }
-document.getElementById('settingsBtn').addEventListener('click', openSettings);
+document.getElementById('settingsBtn').addEventListener('click', () => openSettings());
 // ---- fullscreen: only the setting decides. On: full screen now; leaving it any other way (Esc, back gesture, browser
 // button) keeps it On, and the next tap anywhere goes full screen again; opened again / reloaded, the last choice is kept
 // (first tap). Off: leaves full screen. The browser's own full screen (F11 / its menu) is left alone and changes nothing.
@@ -5029,8 +5022,6 @@ function fsCall(fn){ try{ const p = fn(); if(p && p.catch) p.catch(() => {}); }c
 function setFullscreen(on){
   FS_ON = FS_OK && !!on;
   try{ localStorage.setItem(LS_FS, FS_ON ? '1' : '0'); }catch(e){}
-  const seg = document.getElementById('stFs');          // Settings open: its On / Off follows
-  if(seg) seg.querySelectorAll('button').forEach(x => x.classList.toggle('on', (x.dataset.v === 'on') === FS_ON));
   const el = document.documentElement;
   if(FS_ON && !inFullscreen()) fsCall(() => el.requestFullscreen ? el.requestFullscreen({navigationUI: 'hide'}) : el.webkitRequestFullscreen());
   else if(!FS_ON && inFullscreen())
@@ -5040,7 +5031,7 @@ if(FS_OK){
   // On but not full screen (left in any way, or the page opened again): the next tap / key goes full screen again
   const again = e => {
     if(!FS_ON || inFullscreen() || (e.type === 'keydown' && e.key === 'Escape')) return;
-    if(e.target && e.target.closest && e.target.closest('#stFs')) return;   // the On / Off buttons themselves decide
+    if(e.target && e.target.closest && e.target.closest('#stFs, #fmOk[data-st]')) return;   // the Settings choice decides (On / Off, then Save)
     setFullscreen(true);
   };
   ['pointerup', 'keydown'].forEach(ev => document.addEventListener(ev, again, true));
