@@ -249,7 +249,7 @@
   .quiz-card .qz-play.playing{ font-size:1.1rem; }
   .quiz-card .qz-play[hidden]{ display:none; }
   .qz-options{ display:flex; flex-direction:column; gap:10px; margin-bottom:6px; }
-  .qz-foot{ display:flex; justify-content:center; align-items:center; gap:6px; margin:4px 0 -10px; }   /* under every question: 🔈 ⓘ ↻ */
+  .qz-foot{ display:flex; justify-content:center; align-items:center; gap:6px; margin:12px 0 -10px; }   /* under every question: 🔈 ⓘ ↻ */
   .qz-tones:not([hidden]) + .qz-foot{ margin-top:12px; padding-top:8px; border-top:1px solid var(--border); }   /* under the tone key: a thin line between them, as wide as the answers */
   .qz-foot .pk-mark{ height:28px; min-width:40px; }   /* small: the row adds little to the dialog */
   .qz-foot[hidden]{ display:none; }
@@ -1381,7 +1381,14 @@ const quizWrongs  = new Map();   // 'p:' / 'b<sentence>:' / 'm<lang>:' + card ke
 const quizResults = new Map();   // card key -> true (right) / false (wrong); first answer per card only
 const quizBlank   = new Map();   // card key -> its fill-the-blank sentence (index into its examples), this quiz only
 const quizKindMap = new Map();   // card key -> the question type it got when first opened, kept for this quiz (sound back on doesn't turn it into a tone question again)
-const quizReview  = new Map();   // card key -> how its question looked once answered (this quiz only), for ‹ ›
+const quizReview  = new Map();   // card key -> how its question looked once answered (this quiz only), for ‹ › and tapping the card again
+// kept in this browser apart from the session (it is bigger and only changes when a question is answered), so a reload still shows your mistakes
+const LS_QREVIEW = 'tocfl-qreview-v1';
+const saveReviews = () => { try{ if(quizReview.size) localStorage.setItem(LS_QREVIEW, JSON.stringify([...quizReview])); else localStorage.removeItem(LS_QREVIEW); }catch(e){} };
+function loadReviews(){
+  quizReview.clear();
+  try{ (JSON.parse(localStorage.getItem(LS_QREVIEW) || '[]') || []).forEach(a => { if(Array.isArray(a) && typeof a[0] === 'string' && a[1] && typeof a[1] === 'object') quizReview.set(a[0], a[1]); }); }catch(e){}
+}
 const quizBtn = document.getElementById('quizBtn');
 function syncQuizBtn(){
   quizBtn.title = quizBtn.ariaLabel = tx(quizMode ? 'Quiz settings' : 'Start quiz');
@@ -1396,8 +1403,10 @@ const qzFoot = document.getElementById('qzFoot'), qzRetry = document.getElementB
 let qzCurKind = null, qzCurCard = null;   // the open question's type and its card in the grid
 const qzSigMap = new Map();   // card key -> the order its answers were last shown in, so ↻ always shows them in a new order
 let quizPractice = false;   // set just before openQuiz: this run is practice only
-const SND_ON_IC = '<svg class="ln" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M3.5 9.5h3.6L11.5 5.6v12.8l-4.4-3.9H3.5z"/><path d="M15 9.2a4 4 0 0 1 0 5.6"/><path d="M17.8 6.6a7.6 7.6 0 0 1 0 10.8"/></svg>';
-const SND_OFF_IC = '<svg class="ln" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M3.5 9.5h3.6L11.5 5.6v12.8l-4.4-3.9H3.5z"/><path d="M15 9l6 6"/><path d="M21 9l-6 6"/></svg>';   // sound off: the same speaker, an × instead of the waves
+// as tall as ⓘ and ↻ (a little wider): the speaker stays put, only its waves become an × when the sound is off
+const SND_SVG = p => `<svg class="ln" viewBox="0 0 26 24" width="23.8" height="22" aria-hidden="true"><path d="M2.5 8.6h4.6L13 3.5v17l-5.9-5.1H2.5z"/>${p}</svg>`;
+const SND_ON_IC = SND_SVG('<path d="M16.5 8.3a5.2 5.2 0 0 1 0 7.4"/><path d="M19.8 5a9.8 9.8 0 0 1 0 14"/>');
+const SND_OFF_IC = SND_SVG('<path d="M17 8.5l7 7"/><path d="M24 8.5l-7 7"/>');
 function syncQzSnd(){ qzSnd.innerHTML = SOUND_ON ? SND_ON_IC : SND_OFF_IC; }
 qzIBtn.innerHTML = I_HTML;
 // the row under every question: ↻ and ⓘ wake up once it is answered; 🔈 is always there
@@ -1425,7 +1434,7 @@ const qzOptions = document.getElementById('qzOptions');
 function setQuiz(on, keys = null){
   quizMode = on;
   quizOnly = on && keys && keys.length ? new Set(keys) : null;
-  quizResults.clear(); quizWrongs.clear(); openedOnce.clear(); quizReview.clear(); quizBlank.clear(); quizKindMap.clear();
+  quizResults.clear(); quizWrongs.clear(); openedOnce.clear(); quizReview.clear(); quizBlank.clear(); quizKindMap.clear(); saveReviews();
   if(on) quizSeed = Math.floor(Math.random() * 4294967296);   // a new mix of question types for every new quiz
   if(on){                                // shuffle once, and close every card so all of them start face-down
     order = shuffle(order.slice());
@@ -2245,6 +2254,7 @@ function openQuiz(r, card){
       sent: qzSent.hidden ? null : qzSent.innerHTML, sub: qzSub.style.display === 'none' ? null : qzSub.textContent,
       opts: typing ? null : qzOptions.innerHTML,
       typed: typing ? {v: qzInput.value, cls: qzInput.className} : null, ans: qzAnswer.hidden ? null : qzAnswer.innerHTML, tone, ex: sent ? sent.ex : null, kind, blank});
+    if(!practice) saveReviews();
   }
 
   if(typing){
@@ -3194,6 +3204,11 @@ function makeCard(r){
   card.addEventListener('click', ()=>{
     if(swallowTap || Date.now() < suppressUntil) return;
     if(quizMode && !openedOnce.has(card.dataset.key)){ openQuiz(r, card); return; }   // never opened before: quiz first
+    if(quizMode){                                      // quiz: an opened card shows its question again, as answered (see the mistake, ↻ to try again)
+      card.classList.add('flipped'); card.classList.remove('quiz-pending');
+      flippedKeys.add(card.dataset.key); saveSession();
+      openQuizReview(r); return;
+    }
     const isFlipped = card.classList.toggle('flipped');
     if(isFlipped){ flippedKeys.add(card.dataset.key); openedOnce.add(card.dataset.key); card.classList.remove('quiz-pending'); }
     else flippedKeys.delete(card.dataset.key);
@@ -3681,6 +3696,7 @@ function restoreSession(){
   if(Number.isInteger(s.seed)) quizSeed = s.seed;
   quizBlank.clear(); arr(s.blanks).forEach(a => { if(Array.isArray(a) && typeof a[0] === 'string' && Number.isInteger(a[1])) quizBlank.set(a[0], a[1]); });
   quizKindMap.clear(); arr(s.kinds).forEach(a => { if(Array.isArray(a) && typeof a[0] === 'string' && QUIZ_KINDS.includes(a[1])) quizKindMap.set(a[0], a[1]); });
+  if(s.quizMode) loadReviews();
   openedOnce.clear(); arr(s.opened).forEach(k => openedOnce.add(k));
   flippedKeys.clear(); arr(s.flipped).forEach(k => flippedKeys.add(k));
   quizMode = !!s.quizMode;
@@ -4919,7 +4935,7 @@ function importBackup(data){
       if(!ready) bmTouched = true;                        // saved data still loading must not bring the old bookmark back
       pageWish = null;
       quizMode = false; quizOnly = null; document.body.classList.remove('quiz-on'); syncQuizBtn();   // a running quiz belongs to the old data
-      flippedKeys.clear(); openedOnce.clear(); quizResults.clear(); quizWrongs.clear(); quizBlank.clear(); quizKindMap.clear(); quizReview.clear();
+      flippedKeys.clear(); openedOnce.clear(); quizResults.clear(); quizWrongs.clear(); quizBlank.clear(); quizKindMap.clear(); quizReview.clear(); saveReviews();
       clearSearch();
       order = order.filter(i => i < BASE_N);              // your old cards are gone; the new ones are appended
       if(!active.size) LEVELS.forEach(l => active.add(l[0]));
