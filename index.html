@@ -707,7 +707,7 @@
 <p class="sub" id="countSub"></p>
 
 <div class="tools search-row">
-  <input id="q" type="search" placeholder="漢字 / pīnyīn / meaning…" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Search by hanzi, pinyin or meaning">
+  <input id="q" type="search" placeholder="漢字 / pīnyīn / meaning…" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" aria-label="Search by hanzi, pinyin or meaning">
   <div class="quiz-score" id="quizScore" role="status" aria-live="polite" hidden></div>
   <div class="resume" id="resume" role="button" tabindex="0" hidden>
     <span class="rb"></span>
@@ -751,7 +751,7 @@
     <div class="qz-options" id="qzOptions"></div>
     <div class="qz-answer" id="qzAnswer" hidden></div>
     <div class="qz-type" id="qzType" hidden>
-      <input id="qzInput" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="done">
+      <input id="qzInput" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="done">
       <button type="button" class="qz-tapans" id="qzTapAns" tabindex="-1" data-tx-title="Open card" aria-label="Open card"><span class="qz-info" aria-hidden="true">›</span></button>
       <button type="button" class="cf-btn cf-yes" id="qzCheck" data-tx="Check">Check</button>
     </div>
@@ -1210,6 +1210,7 @@ function sidxReady(){ if(!sidxOk){ SIDX.length = 0; D.forEach(r => SIDX.push(sid
 (window.requestIdleCallback || (f => setTimeout(f, 800)))(sidxReady);
 const escRe = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 function prepQuery(q){
+  q = q.replace(/[‘’ʼ`´′]/g, "'");   // iPhone smart quotes etc. = '
   const hasHan = /[㐀-鿿豈-﫿]/.test(q);
   const qq = q.replace(/ü/g, 'v');
   const isPy = !hasHan && /^[a-zāáǎàēéěèīíǐìōóǒòūúǔùǖǘǚǜüv0-5\s'’·-]+$/i.test(q) && /[a-zv]/i.test(qq);
@@ -1872,17 +1873,21 @@ function shortMeaning(r){
   return m;
 }
 // typed pinyin: tone numbers or marks, spaces / apostrophes / "·" ignored, v = ü; with "Ignore" tones are dropped too
+// iPhone keyboards type ‘ ’ (smart quotes) for ', some others ʼ ` ´
 function pyKey(str, tones){
-  let t = normPinyin(String(str).replace(/·/g, ' '), false).toLowerCase().replace(/[\s'’·-]/g, '').replace(/u:/g, 'ü').replace(/v/g, 'ü');
+  let t = normPinyin(String(str).replace(/·/g, ' ').replace(/[‘’ʼ`´′]/g, "'"), false).toLowerCase().replace(/[\s'·-]/g, '').replace(/u:/g, 'ü').replace(/v/g, 'ü');
   if(!tones) t = t.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[0-5]/g, '');
   return t;
 }
 // w (the word): an erhua 兒 at the end, written "ér" on the card, may also be typed the usual way: zhèr / zhe4r for 這兒
+// ü typed as a plain u (nu3 for 女 nǚ, lu4 for 綠 lǜ) counts too: most keyboards have no ü
+const noUmlaut = k => k.replace(/[üǖǘǚǜ]/g, c => 'uūúǔù'['üǖǘǚǜ'.indexOf(c)]);
 function pinyinMatches(typed, py, tones, w){
   const k = pyKey(typed, tones);
   if(!k) return false;
+  const loose = !/[üǖǘǚǜ]/.test(k), key = rd => { const x = pyKey(rd, tones); return loose ? noUmlaut(x) : x; };
   const word = w ? fullWord(w) : '', er = word.length > 1 && word.endsWith('兒') && !ER_CHILD.has(word);
-  return py.split(' / ').some(rd => pyKey(rd, tones) === k || (er && / ér$/.test(rd) && pyKey(rd.replace(/ ér$/, 'r'), tones) === k));
+  return py.split(' / ').some(rd => key(rd) === k || (er && / ér$/.test(rd) && key(rd.replace(/ ér$/, 'r')) === k));
 }
 let quizLowT = null;
 function stopQuizTimer(){ clearTimeout(quizTimerT); clearTimeout(quizLowT); quizTimerT = quizLowT = null; }
