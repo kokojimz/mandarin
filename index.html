@@ -417,6 +417,7 @@
     gap:12px; max-width:960px; margin:16px auto 0;
     align-content:start;
   }
+  @media (min-width:1250px){ .grid, .tools.search-row, .pager{ max-width:1122px; } }   /* PC: a 7th column (not iPad landscape) */
   .card{
     border-radius:14px;   /* the look (background, border) sits on the two faces below, so the whole card turns, not just its writing */
     text-align:center; cursor:pointer; user-select:none; -webkit-user-select:none; -webkit-touch-callout:none;
@@ -869,7 +870,7 @@ const LEVELS = [
   ['N1','準備級一級'],['N2','準備級二級'],['A1','入門級'],['A2','基礎級'],
   ['B1','進階級'],['B2','高階級'],['C1','流利級']
 ];
-function pageSize(){ return window.innerWidth > 600 ? 18 : 12; }
+function pageSize(){ return innerWidth >= 1250 ? 21 : innerWidth > 600 ? 18 : 12; }   // PC: 7 columns × 3 rows
 
 const MARKS = {1:'āēīōūǖ', 2:'áéíóúǘ', 3:'ǎěǐǒǔǚ', 4:'àèìòùǜ'};
 function toneOf(tok){
@@ -3528,7 +3529,7 @@ function renderPager(){
 // iOS Safari can keep stale button sizes after a rotation: force the level bar to re-layout
 function relayoutBar(){ const bar = document.getElementById('levelBar'); if(!bar) return; bar.style.display = 'none'; void bar.offsetHeight; bar.style.display = ''; }
 window.addEventListener('orientationchange', () => { setTimeout(relayoutBar, 50); setTimeout(relayoutBar, 350); });
-// Cards per page change with the screen width (12 on phones, 18 wider): after a rotation, stay on the page
+// Cards per page change with the screen width (12 on phones, 18 wider, 21 on a PC): after a rotation, stay on the page
 // that holds the first card you were looking at, so no card is skipped when you go to the next page.
 let pagerResizeT = null, lastPageSize = pageSize(), lastW = innerWidth;
 window.addEventListener('resize', () => {
