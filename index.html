@@ -314,7 +314,7 @@
   /* arrange the words, answered: the sentence's grammar pattern(s) under it */
   /* in Check's place, framed like it (a plain button): one box, a line per pattern, as tall as needed up to a limit, then it scrolls */
   .qz-gp{ margin-top:-1px; position:relative; box-sizing:border-box; border:1px solid var(--border); border-radius:12px; overflow:hidden; }   /* -1: as far from the pinyin as from the buttons below */
-  .qz-gp-in{ max-height:calc(2 * (.92rem * 1.4 + .75rem * 1.35 + 1px) + 8px + 20px); box-sizing:border-box; margin:0; padding:10px 14px; list-style:none;   /* at most 2 lines of formula + 2 of meaning, the rest scrolls */
+  .qz-gp-in{ max-height:calc(4 * (.92rem * 1.4 + .75rem * 1.35 + 1px) + 3 * 8px + 20px); box-sizing:border-box; margin:0; padding:10px 14px; list-style:none;   /* at most 2 lines of formula + 2 of meaning, the rest scrolls */
     overflow-y:auto; overscroll-behavior:contain; -webkit-overflow-scrolling:touch; text-align:left; }
   .qz-gp.more .qz-gp-in{ -webkit-mask-image:linear-gradient(#000 calc(100% - 26px), transparent); mask-image:linear-gradient(#000 calc(100% - 26px), transparent); }
   .qz-gp-in li{ color:var(--sub); font-size:.85rem; }
@@ -1852,7 +1852,7 @@ const blankOf = (r, pick) => sentPick(r, pick, BLANK0, () => true);
 const GP_PRON = new Set('我 你 妳 他 她 它 我們 你們 妳們 他們 她們 它們 您 自己 大家 誰 別人 人家 咱們'.split(' '));
 const GP_NUM = /^([一二三四五六七八九十百千萬兩幾這那哪每半]|\d+|[一二三四五六七八九十]+)$/;
 const GP_MW = new Set('聲 大早 心 起 夜 瞬間 箭 刹那 會兒 開始 開頭 個 歲 次 天 年 點 下 本 位 張 杯 塊 件 分 隻 條 輛 台 臺 支 枝 把 道 份 部 場 封 套 遍 座 顆 口 串 段 堆 頓 架 節 棵 篇 首 堂 項 種 些 樣 步 眼 陣 趟 群 層 雙 對 片 句 家 間 名 碗 瓶 盒 包 頁 門 所 根 筆 朵 盤 袋 隊 排 班 頭 罐 箱 束 滴 尾 戶 批 副 卷 集 章 幕 類 級 期 代 屆 號 公斤 公里 公尺 斤 元 毛 角 秒 分鐘 小時 星期 週 月 個月 早 直 定 起 般 切 共 向 生 輩子'.split(' '));
-const GP_TIME = /^(今天|明天|昨天|後天|前天|現在|每天|早上|晚上|上午|下午|中午|半夜|今年|明年|去年|前年|這時|那時|剛才|等一下|待會|後來|最近|將來|未來|平常|平時|週末|假日|以前|從前|當時|此時|目前|今晚|昨晚|明早|一早|上個月|下個月|這個月|上星期|下星期|這星期|上週|下週|本週|星期[一二三四五六日天]|週[一二三四五六日]|(兩|三|四|五|六|七|八|九|十|十一|十二)點|[一二三四五六七八九十]+月|[一二三四五六七八九十]+號)$/;
+const GP_TIME = /^(小時候|那時候|這時候|當年|如今|今後|每年|每週|每個月|每晚|傍晚|下個月中旬|今天|明天|昨天|後天|前天|現在|每天|早上|晚上|上午|下午|中午|半夜|今年|明年|去年|前年|這時|那時|剛才|等一下|待會|後來|最近|將來|未來|平常|平時|週末|假日|以前|從前|當時|此時|目前|今晚|昨晚|明早|一早|上個月|下個月|這個月|上星期|下星期|這星期|上週|下週|本週|星期[一二三四五六日天]|週[一二三四五六日]|(兩|三|四|五|六|七|八|九|十|十一|十二)點|[一二三四五六七八九十]+月|[一二三四五六七八九十]+號)$/;
 const GP_FEEL = /^(喜歡|愛|想|討厭|怕|希望|擔心|了解|同意|注意|會|能|需要|習慣|有|像|適合|相信|關心|感謝|羨慕|佩服|欣賞|尊重|重視|後悔|失望|生氣|滿意|願意)$/;
 const gpAt = (t, w, f = 0) => t.indexOf(w, f);
 const gpAny = (arr, re) => arr.some(w => re.test(w));
@@ -1883,7 +1883,7 @@ const GP = [
   [1, '即使 / 就算 + A, 也 + B', 0, 'walaupun A, tetap B', 'even if A, still B', t => gpPair(t, /^(即使|就算|哪怕|即便)$/, /^(也|還是)$/)],
   [1, '除了 + X (以外), S + 還 / 也 / 都 + …', 0, 'selain X … (atau: kecuali X)', 'besides X … (or: except X)', t => gpPair(t, /^除了$/, /^(還|也|都)$/, 2)],
   [1, '先 + V1, 再 / 然後 / 才 + V2', 0, 'V1 dulu, baru V2', 'first V1, then V2', t => gpPair(t, /^先$/, /^(再|然後|才)$/, 2)],
-  [1, '一邊 + V1, 一邊 + V2', 0, 'V1 sambil V2', 'V1 while V2', t => t.filter(w => w === '一邊').length >= 2],
+  [1, '一邊 + V1, 一邊 + V2', 0, 'V1 sambil V2', 'V1 while V2', t => t.filter(w => w === '一邊').length >= 2 || t.filter(w => w === '一面').length >= 2],
   [1, '又 + A + 又 + B', 0, 'A sekaligus B', 'both A and B', t => t.filter(w => w === '又').length >= 2],
   [1, '既 + A + 又 / 也 + B', 0, 'A sekaligus B', 'both A and B', t => gpPair(t, /^既$/, /^(又|也)$/)],
   [1, '越 + A, 越 + B', 0, 'makin A, makin B', 'the more A, the more B', (t, h) => !h.includes('越來越') && t.filter(w => w === '越').length >= 2],
@@ -1894,20 +1894,20 @@ const GP = [
   [2, '是 + (kapan / di mana / bagaimana) + V + 的', '是 + (when / where / how) + V + 的', 'menekankan kapan, di mana, bagaimana, atau oleh siapa sesuatu (sudah) terjadi', 'stresses when, where, how or by whom something happened',
     (t, h) => { const a = gpAt(t, '是'), z = t.length - 1; if(a < 0 || t[z] !== '的' || z - a < 3 || !gpEnd(h, '的')) return false;
       const mid = t.slice(a + 1, z); return gpAny(mid, /^(在|從|跟|和|搭|用|騎|由|昨天|今天|去年|前年|時候|前|怎麼|什麼時候|哪|哪裡|哪兒|幾|誰|一起|自己|剛)$/) || GP_PRON.has(mid[0]) && mid.length >= 2; }],
-  [2, 'A + 比 + B + Adj', 0, 'A lebih Adj daripada B', 'A is more Adj than B', (t, h) => { const i = gpAt(t, '比'); return i > 0 && i < t.length - 2 && !/一.比一/.test(h) && !(GP_NUM.test(t[i - 1]) && GP_NUM.test(t[i + 1])); }],
+  [2, 'A + 比 + B + Adj', 0, 'A lebih Adj daripada B', 'A is more Adj than B', (t, h) => { const i = gpAt(t, '比'); return i > 0 && i < t.length - 2 && !/^(起來|較|賽|例|如|方|喻|分)$/.test(t[i + 1]) && !/一.比一/.test(h) && !(GP_NUM.test(t[i - 1]) && GP_NUM.test(t[i + 1])); }],
   [2, '一天比一天 + Adj', 0, 'makin hari makin Adj', 'more Adj day by day', (t, h) => /一(天|年|次|個)比一\1/.test(h)],
   [2, 'A + 跟 / 和 + B + (不) 一樣 (+ Adj)', 0, 'A sama (Adj-nya) dengan B', 'A is (as Adj) as B', t => { const a = Math.max(gpAt(t, '跟'), gpAt(t, '和')); return a > 0 && gpAt(t, '一樣') > a + 1; }],
   [2, 'A + 沒有 + B + (那麼) + Adj', 0, 'A tidak se-Adj B', 'A is not as Adj as B', t => { const i = gpAt(t, '沒有'); return i > 0 && t.slice(i + 2).some((w, j, r) => (w === '那麼' || w === '這麼') && !(r[j + 1] === '多' && j + 2 < r.length)); }],
   [2, 'A + 不如 + B', 0, 'A kalah dari B; atau: lebih baik … saja', 'A is not as good as B; or: might as well …', t => t.includes('不如') && !t.includes('與其')],
   [2, '像 + X + 一樣 / 似的', 0, 'seperti X', 'like X', t => (t.includes('像') || t.includes('好像')) && (t.includes('一樣') || t.includes('似的'))],
-  [2, '越來越 + Adj', 0, 'makin lama makin Adj', 'more and more Adj', (t, h) => h.includes('越來越')],
+  [2, '越來越 + Adj', 0, 'makin lama makin Adj', 'more and more Adj', (t, h) => /越來越|愈來愈/.test(h)],
   [2, '連 + X + 都 / 也 + V', 0, 'bahkan X pun …', 'even X …', t => gpPair(t, /^連$/, /^(都|也)$/, 2)],
   [2, '一 + MW / 一點 + 也 / 都 + 不 / 沒', 0, 'sama sekali tidak (satu pun tidak)', 'not even one / not at all', (t, h) => /一(點|個|句|次|分|毛|口|步|天|眼|下|分鐘)(兒)?[\u4e00-\u9fff]{0,2}(也|都)(不|沒)(?!錯)/.test(h)],
   [2, 'kata tanya + 都 / 也 (什麼都 …)', 'question word + 都 / 也 (什麼都 …)', 'apa pun / siapa pun / di mana pun …', 'anything / anyone / anywhere …', (t, h) => /(什麼|誰|哪裡|哪兒|怎麼|多少|任何|哪)[一-鿿]{0,3}(都|也)/.test(h)],
   [2, '非 + X + 不可', 0, 'harus X, tidak boleh tidak', 'must X, no way around it', (t, h) => /非.+不可/.test(h)],
   [2, 'V + 來 + V + 去', 0, 'V ke sana kemari, berulang-ulang', 'V back and forth, over and over', (t, h) => /([一-鿿])來\1去/.test(h)],
   [2, 'S + 讓 / 使 / 令 + orang + V', 'S + 讓 / 使 / 令 + sb + V', 'membuat / membiarkan orang V', 'make / let sb V', t => t.some((w, i) => /^(讓|使|令)$/.test(w) && i < t.length - 2 && t[i + 1] !== '給' && t[i + 1] !== '一下')],
-  [2, 'S + 叫 + orang + V', 'S + 叫 + sb + V', 'menyuruh orang V (atau: memanggil orang)', 'tell sb to V (or: call sb)', t => t.some((w, i) => w === '叫' && i > 0 && i < t.length - 2 && (GP_PRON.has(t[i + 1]) || /^(人|孩子|學生|大家)$/.test(t[i + 1])))],
+  [2, 'S + 叫 + orang + V', 'S + 叫 + sb + V', 'menyuruh orang V (atau: memanggil orang)', 'tell sb to V (or: call sb)', t => t.some((w, i) => w === '叫' && i > 0 && i < t.length - 2 && (GP_PRON.has(t[i + 1]) || /^(人|孩子|學生|大家)$/.test(t[i + 1])) && t[i + 2] !== '的')],
   [2, '請 + orang + V', '請 + sb + V', 'meminta / mengundang orang V (sopan)', 'ask / invite sb to V (polite)', t => { const i = gpAt(t, '請'); return i >= 0 && i + 2 < t.length && (GP_PRON.has(t[i + 1]) || t[i + 1] === '大家'); }],
   [2, '有 + orang / benda + V', '有 + sb / sth + V', 'ada (orang) yang V', 'there is sb / sth that V', t => { const i = gpAt(t, '有'); return i >= 0 && i + 2 < t.length && /^(人|些人|一些人|時候|機會|空|辦法|事|時間)$/.test(t[i + 1]); }],
   [2, 'tempat + 有 + benda', 'place + 有 + thing', 'di tempat itu ada benda', 'there is a thing at the place', (t, h) => /(裡|上|下|旁邊|附近|前面|後面|外面|對面|中)有/.test(h)],
@@ -1929,18 +1929,18 @@ const GP = [
       return m && !(kin.test(m[1]) || kin.test(m[2])) || t.some((w, i) => w.length === 2 && t[i + 1] === w && h.includes(w + w)); }],
   // 3 · complements and aspect
   [3, 'V + 得 + keterangan', 'V + 得 + how', 'bagaimana suatu tindakan dilakukan (cepat, bagus, …)', 'how an action is done (fast, well, …)', (t, h, py) => { const i = gpAt(t, '得'); return i > 0 && i < t.length - 1 && !/děi|dé/i.test(py) && !/^(了|到|獎|分|病)$/.test(t[i + 1]); }],
-  [3, 'V + 得 / 不 + pelengkap', 'V + 得 / 不 + complement', 'bisa / tidak bisa V (看得懂 = bisa paham, 買不到 = tidak bisa dapat)', 'can / can\'t V (看得懂 = can understand, 買不到 = can\'t get)', (t, h, py) => t.some((w, i) => /^[\u4e00-\u9fff]{1,2}[不得](完|懂|到|了|動|起|見|清楚|下|出|開|住|慣|著|上|來|去|起來|下來|出來|下去|過)$/.test(w) && !/^(不得了|了不起|得到|看不起|對不起|來不及|不得不)$/.test(w))
-      || t.some((w, i) => (w === '不' || w === '得' && !/dé/i.test(py)) && i > 0 && /^(完|懂|到|了|動|起|見|清楚|下|出|開|住|慣|著|上|起來|下來|出來|下去|過|來|去)$/.test(t[i + 1] || '')
+  [3, 'V + 得 / 不 + pelengkap', 'V + 得 / 不 + complement', 'bisa / tidak bisa V (看得懂 = bisa paham, 買不到 = tidak bisa dapat)', 'can / can\'t V (看得懂 = can understand, 買不到 = can\'t get)', (t, h, py) => t.some((w, i) => /^[\u4e00-\u9fff]{1,2}[不得](完|懂|到|了|動|起|見|清楚|下|出|開|住|慣|著|上|來|去|起來|下來|出來|下去|過|掉|走|醒|飽|贏|好)$/.test(w) && !/^(不得了|了不起|得到|看不起|對不起|來不及|不得不)$/.test(w))
+      || t.some((w, i) => (w === '不' || w === '得' && !/dé/i.test(py)) && i > 0 && /^(完|懂|到|了|動|起|見|清楚|下|出|開|住|慣|著|上|起來|下來|出來|下去|過|來|去|掉|走|醒|飽|贏)$/.test(t[i + 1] || '')
         && t[i + 1] !== t[i - 1] && !(w === '不' && t[i + 1] === '見' && /^(年|天|久|好久|月|多年)$/.test(t[i - 1].slice(-2)) ) && !(w === '不' && t[i + 1] === '下' && GP_NUM.test((t[i + 2] || '')[0] || '')) && !GP_PRON.has(t[i - 1]) && !/^(還|也|都|很|就|才|並|再|又|最|真|太|從來|一直|永遠|絕對|根本|可能|會|能|要|想|當然|已經|不|沒|是|的|在|說|我|你|他|吃|捨|價值|因為|所以|而|如果|也許|恐怕|千萬)$/.test(t[i - 1]) && !GP_TIME.test(t[i - 1]))],
   [3, 'V + (上 / 下 / 進 / 出 / 回 / 過) + 來 / 去', 0, 'arah gerakan: 來 mendekat, 去 menjauh dari pembicara', 'direction of movement: 來 towards, 去 away from the speaker',
     t => !t.some(w => w.includes('起來')) && !/(於|的|在|和|段|這|那)過去|過去(的|了解|成)/.test(t.join('')) && t.some((w, i) => i > 0 && w !== '下去' && !(w === '去' && t[i - 1] === '下') && !(w === '過去' && (t[i - 1].length !== 1 || /^(的|在|於|和|這|那|段|了|已)$/.test(t[i - 1]))) && (/^(來|去)$/.test(w) && /^(上|下|進|出|回|過|起|開)$/.test(t[i - 1]) || /^.?(上|下|進|出|回|過|起)(來|去)$/.test(w) && (w.length >= 3 || i > 0 && !/^(的|是|在|有|不|沒|要|會|想)$/.test(t[i - 1]))))],
   [3, 'V + pelengkap hasil (完 / 懂 / 見 / 錯 / 掉 …)', 'V + result (完 / 懂 / 見 / 錯 / 掉 …)', 'hasil dari tindakan: 看完 selesai baca, 聽懂 paham, 寫錯 salah tulis', 'the result of the action: 看完 finish reading, 聽懂 understand, 寫錯 write wrong',
     t => t.some((w, i) => (/^[\u4e00-\u9fff]{1,2}(完|懂|錯|掉|飽|清楚|乾淨)$/.test(w) || /^(看見|聽見|遇見|夢見|碰見|瞧見|撞見|望見|弄壞|摔壞|打壞|吃壞|用壞|搞壞|累壞|嚇壞|氣壞|壓壞|寵壞|餓壞|樂壞|花光|吃光|用光|賣光|搶光|喝光|濕透|熟透|看透|吵醒|叫醒|驚醒|喚醒|搖醒)$/.test(w)) && !/^(意見|少見|常見|罕見|再見|可見|偏見|成見|觀光|陽光|月光|燈光|風光|時光|目光|眼光|曝光|發光|光光|透透|不錯|過錯|差錯|出錯|認錯|鑄錯|清清楚楚|不清楚|提醒|清醒|甦醒|覺醒|犯錯|精光|錯錯|交錯|對錯|不懂|聽不懂|看不懂|錯錯落落)$/.test(w)
       || /^(完|錯|掉|飽|清楚|懂)$/.test(w) && i > 0 && !GP_PRON.has(t[i - 1]) && !GP_NUM.test(t[i - 1]) && !/^(不|沒|很|太|少|真|最|也|都|還|就|才|的|是|在|有|可|罕|常|把|患難|了|做|犯)$/.test(t[i - 1]))],
-  [3, 'V + 起來', 0, 'mulai V / kalau di-V (看起來 = kelihatannya)', 'start to V / when V-ed (看起來 = looks)', t => t.includes('起來')],
+  [3, 'V + 起來', 0, 'mulai V / kalau di-V (看起來 = kelihatannya)', 'start to V / when V-ed (看起來 = looks)', t => t.some((w, i) => w === '起來' && i > 0 && !/^(早|晚|很早|快|趕快|就|才|都|還|已經|沒|不|該|要|會|想|站|站立|爬)$/.test(t[i - 1])) || t.some(w => w !== '起來' && /^[\u4e00-\u9fff]{1,2}起來$/.test(w) && !/^(站起來|爬起來|早起來)$/.test(w))],
   [3, 'V + 下去', 0, 'terus V (忍下去); atau gerak ke bawah (跳下去)', 'keep on V-ing (忍下去); or downwards (跳下去)', t => t.includes('下去')],
   [3, 'V + 著', 0, 'keadaan yang sedang berlangsung (sambil / dalam keadaan V)', 'an ongoing state (V-ing / while V-ing)', t => t.some((w, i) => w === '著' && i > 0 && !/^(睡|不|接|隨|為|向|照|朝|沿|順|本|憑|趁|衝|靠|對)$/.test(t[i - 1])) || t.some(w => /^[\u4e00-\u9fff]著$/.test(w) && !/^(顯著|沉著|衣著|執著|土著|名著|原著|睡著|接著|隨著|為著|向著|照著|朝著|沿著|順著|本著|憑著|趁著|衝著|靠著|對著)$/.test(w))],
-  [3, '(正) 在 + V (+ 呢)', 0, 'sedang V', 'in the middle of V-ing', t => t.includes('正在') || t.some((w, i) => w === '在' && /^(看|吃|做|寫|睡覺|上課|開會|工作|準備|討論|忙|打|玩|聽|說|學|洗|煮|找|等|下雨|跑|唱|跳|練習|考慮)$/.test(t[i + 1] || ''))],
+  [3, '(正) 在 + V (+ 呢)', 0, 'sedang V: tindakan atau keadaan yang sedang berlangsung (在讀高中 = sedang SMA)', 'V-ing: an action or situation going on now (在讀高中 = is in high school)', t => t.includes('正在') || t.some((w, i) => w === '在' && /^(看|吃|做|寫|睡覺|上課|開會|工作|準備|討論|忙|打|玩|聽|說|學|洗|煮|找|等|下雨|跑|唱|跳|練習|考慮)$/.test(t[i + 1] || ''))],
   [3, 'V + 過', 0, 'pernah V (pengalaman)', 'have V-ed before (experience)', t => { const i = gpAt(t, '過'); return i > 0 && (t[i - 1].length === 1 || /^(發生|出現|參加|工作|經歷|研究|學習|考慮|討論|遇到|聽說|嘗試|使用|擔任|見面|旅行|生活|住院|出國|交涉|修訂|看到|拜訪|訪問|提過|說明|處理|檢查|洗澡|吃飯|結婚|戀愛|打工|贏|輸)$/.test(t[i - 1])) && !/^(不|沒|難|太|很|好|經|通|超|錯|度|走|跑|飛|穿|越|跨|渡|路|想|要|會|已|能|傷|爬|閃|劃|吹|飄|游|跳|跨|翻|穿|經|度|熬|撐|渡|混|流|改|錯|放|看不)$/.test(t[i - 1]) && !/^(年|日子|馬路|生日|節|來|去|分|頭|河|街|橋|關|後|得|程|去式|人|幾|一|兩|著|生活|日子)$/.test(t[i + 1] || ''); }],
   [3, '已經 + V + 了', 0, 'sudah V', 'already V-ed', t => t.includes('已經') && t.includes('了')],
   [3, '(快 / 就) 要 + V + 了', 0, 'sebentar lagi akan V', 'about to V', (t, h) => /(快要|就要|快.{1,4}了)/.test(h) && gpEnd(h, '了') && /(快要|就要)/.test(h)],
@@ -1954,7 +1954,7 @@ const GP = [
   [4, 'A + 還是 + B？', 0, 'pertanyaan pilihan: A atau B?', 'a choice question: A or B?', (t, h) => /[？?]/.test(h) && t.some((w, i) => w === '還是' && i > 0 && i < t.length - 1 && !/^(不|沒|很|會|在|要|一樣)$/.test(t[i + 1]))],
   [4, '… + 呢？', 0, 'pertanyaan lanjutan / yang lebih lembut', 'a follow-up / softer question', (t, h) => t.includes('呢') && /[？?]/.test(h)],
   [4, 'kata tanya di tempat jawabannya', 'question word where the answer goes', 'kata tanya (什麼 / 誰 / 哪 / 怎麼 / 幾 …) ditaruh di tempat jawabannya, tanpa dipindah', 'the question word (什麼 / 誰 / 哪 / 怎麼 / 幾 …) sits where the answer would, nothing moves',
-    (t, h) => /[？?]/.test(h) && /(什麼|誰|哪|怎麼|為什麼|幾|多少|多久|多大|多遠|多高|何)/.test(h)],
+    (t, h) => /[？?]/.test(h) && /(什麼|誰|哪|怎麼|為什麼|幾|多少|多久|多大|多遠|多高|何(?!況))/.test(h)],
   // 5 · one-word connectors
   [5, '因為 + sebab, …', '因為 + cause, …', 'karena …', 'because …', t => t.includes('因為') && !t.includes('所以') && !t.includes('之所以')],
   [5, '…, 所以 + akibat', '…, 所以 + result', 'jadi / maka', 'so', t => t.includes('所以')],
@@ -1974,14 +1974,14 @@ const GP = [
   [5, '總之 + …', 0, 'pokoknya / singkatnya', 'in short', t => t.includes('總之')],
   [5, 'S + 並 + 不 / 沒 + …', 0, 'sama sekali tidak (membantah dugaan)', 'not at all (contrary to what one might think)', (t, h) => /並(不|沒)/.test(h)],
   // 6 · the basics: always at least one of these
-  [6, 'A + 是 + B', 0, 'A adalah B (是 menghubungkan dua kata benda)', 'A is B (是 links two nouns)', (t, h) => (t.includes('是') || t.includes('不是')) && !/是因為|不是.+(而是|就是)/.test(h)],
+  [6, 'A + 是 + B', 0, 'A adalah B (是 menghubungkan dua kata benda)', 'A is B (是 links two nouns)', (t, h) => t.some((w, i) => (w === '是' || w === '不是') && i + 1 < t.length && !/^(嗎|吧|呢|啊|在|正在|呀|啦|喔)$/.test(t[i + 1]) && !(w === '是' && t[i + 1] === '不' && t[i + 2] === '是') && !(t[i - 2] === '是' && t[i - 1] === '不') && !/^(只|真|像|算|總|可|若|哪怕|即使|就算|要不是|不管|無論)$/.test(t[i - 1] || '') && !(t[i - 1] === '還' && (GP_NOV.test(t[i + 1] || '') || /^(要|會|想|不|沒|很)$/.test(t[i + 1] || '')))) && !/是因為|不是.+(而是|就是)/.test(h)],
   [6, 'S + 很 / 太 / 非常 + Adj', 0, 'kata sifat langsung jadi predikat, tanpa 是', 'an adjective is the predicate itself, no 是',
     t => t.some((w, i) => /^(很|非常|真|太|比較|挺|蠻|特別|十分|相當|超|更|最|那麼|這麼)$/.test(w) && i + 1 < t.length && !GP_FEEL.test(t[i + 1]) && !/^(多|少|做|說|想|樣|辦|久)$/.test(t[i + 1]))],
   [6, 'S + 有 / 沒有 + O', 0, 'punya / ada (沒有 untuk tidak punya)', 'have / there is (沒有: not)', t => t.includes('有') || t.includes('沒有')],
   [6, 'S + 會 / 能 / 可以 / 要 / 想 + V', 0, 'kata kerja bantu selalu di depan kata kerja utama', 'a helping verb always comes before the main verb',
     (t, h, py) => t.some((w, i) => /^(會|能|可以|要|想|應該|必須|需要|願意|敢|打算|不能|不會|不可以|不要|不想|不用|可能|能夠)$/.test(w) && i + 1 < t.length && !GP_NUM.test(t[i + 1]) && !/^(哪|哪個|哪一|什麼|這|那|這個|那個|多少|很|多|一些|點|一點|一|兩|錢)$/.test(t[i + 1])) || t.includes('得') && /děi/i.test(py)],
   [6, '不 / 沒 + V', 0, '不: tidak (sekarang / kebiasaan / mau); 沒: belum / tidak (sudah terjadi)', '不: not (now / habit / will); 沒: did not / have not', t => gpAny(t, /^(不|沒|沒有|別|不要)$/)],
-  [6, 'S + keterangan (也 / 都 / 還 / 就 / 常常 …) + V', 'S + adverb (也 / 都 / 還 / 就 / 常常 …) + V', 'kata keterangan seperti 也 / 都 / 還 / 一直 / 已經 selalu tepat sebelum kata kerja', 'adverbs like 也 / 都 / 還 / 一直 / 已經 go right before the verb', t => gpAny(t, /^(也|都|還|就|才|再|又|常常|一直|總是|已經|馬上|一定|只)$/)],
+  [6, 'S + keterangan (也 / 都 / 還 / 就 / 常常 …) + V', 'S + adverb (也 / 都 / 還 / 就 / 常常 …) + V', 'kata keterangan seperti 也 / 都 / 還 / 一直 / 已經 selalu tepat sebelum kata kerja', 'adverbs like 也 / 都 / 還 / 一直 / 已經 go right before the verb', (t, h) => t.some((w, i) => /^(也|都|還|就|才|再|又|常常|一直|總是|已經|馬上|一定|只)$/.test(w) && !(w === '都' && (t[i - 1] === '之' || t[i + 1] === '的' || /^(首|古|國|帝|故|成)$/.test(t[i - 1] || ''))) && !(w === '就' && i === 0 && /而言|來說|來看/.test(String(h))) && !(w === '又' && t[i + 1] === '一' && t[i - 2] === '一') && !(w === '只' && t[i + 1] === '是' && i + 2 >= t.length))],
   [6, 'S + waktu + tempat + V', 'S + time + place + V', 'keterangan waktu dan tempat ditaruh sebelum kata kerja', 'time and place come before the verb', t => t.some((w, i) => GP_TIME.test(w) && t[i + 1] !== '的') && t.some((w, i) => w === '在' && i + 2 < t.length)],
   [6, 'S + 在 + tempat + V', 'S + 在 + place + V', 'tempat (在 …) ditaruh sebelum kata kerja, bukan di akhir', 'the place (在 …) comes before the verb, not at the end', t => t.some((w, i) => { if(w !== '在' || i === 0) return false; const rest = t.slice(i + 1); while(rest.length && /^(裡|裏|上|中|下|旁邊|附近|這裡|那裡|那兒|這兒|外面|裡面|前面|後面|對面|中間|嗎|呢|吧|了)$/.test(rest[rest.length - 1])) rest.pop(); while(rest.length && /^(底下|盡頭|門口|旁|外|內|後方|前方|上面|下面|樓上|樓下|隔壁|角落|中央|名下|這|那)$/.test(rest[rest.length - 1])) rest.pop(); return rest.length >= 2; })],
   [6, 'waktu + S + V / S + waktu + V', 'time + S + V / S + time + V', 'keterangan waktu di depan, sebelum kata kerja (bukan di akhir seperti bahasa Indonesia)', 'the time comes early, before the verb (not at the end as in English)', t => t.some((w, i) => GP_TIME.test(w) && t[i + 1] !== '的')],
@@ -1991,7 +1991,7 @@ const GP = [
   [6, 'S + 去 / 來 + (tempat) + V', 'S + 去 / 來 + (place) + V', 'pergi / datang (ke suatu tempat) untuk V, tanpa kata "untuk"', 'go / come (somewhere) to V, no word for "to"', t => t.some((w, i) => (w === '去' || w === '來') && i + 2 < t.length && (i === 0 || GP_PRON.has(t[i - 1]) || GP_TIME.test(t[i - 1]) || /^(要|想|會|也|都|就|先|再|還|常常|一起|可以|打算|準備|又|才|順便|馬上|快)$/.test(t[i - 1])) && !/^(得|的|了|過|說|不|沒)$/.test(t[i + 1]))],
   [6, 'S + 喜歡 / 希望 / 決定 … + V', 0, 'kata kerja seperti 喜歡 / 希望 / 決定 langsung diikuti kata kerja lain', 'verbs like 喜歡 / 希望 / 決定 take another verb straight after',
     t => t.some((w, i) => /^(喜歡|愛|希望|決定|打算|開始|繼續|試圖|準備|記得|忘了|喜愛|討厭|怕)$/.test(w) && i > 0 && t[i - 1] !== '做'
-      && /^(吃|喝|穿|看|聽|去|來|玩|做|學|買|寫|唱|跳|跑|打|說|讀|念|唸|畫|開|坐|住|睡|游泳|旅行|運動|唱歌|跳舞|看書|工作|學習|參加|競選|結婚|離開|回家|出國|說話|上網|爬山|散步|逛街|照相|拍照|煮|洗|休息|抽菸|吸菸|騎|搭|用|找|等|幫|教|帶|送|搬|留|改|逛|聊天|喝酒|跟|和|放棄|努力|當|成為|嘗試|試|研究|練習|準備|考|申請|下雨)$/.test(t[i + 1] || ''))],
+      && /^(吃|喝|穿|看|聽|去|來|玩|做|學|買|寫|唱|跳|跑|打|說|讀|念|唸|畫|開|坐|住|睡|游泳|旅行|運動|唱歌|跳舞|看書|工作|學習|參加|競選|結婚|離開|回家|出國|說話|上網|爬山|散步|逛街|照相|拍照|煮|洗|休息|抽菸|吸菸|騎|搭|用|找|等|幫|教|帶|送|搬|留|改|逛|聊天|喝酒|跟|和|放棄|努力|當|成為|嘗試|試|研究|練習|準備|考|申請|下雨|下|踢|開車|騎車|爬|游|釣|彈|拉|吹|種|養|蓋|做菜|煮飯|畫畫|看電影|聽音樂|喝茶|喝咖啡|吃飯|親近|收集|攝影|露營|旅遊|購物|寫作|閱讀|彈琴|下棋|打球|泡|觀察|看電視|睡覺|起床|上課|上班|聽歌|跑步|游戲|玩遊戲|打電動|戴|吃東西|做飯)$/.test(t[i + 1] || ''))],
   [6, '祝 / 恭喜 + …', 0, 'ucapan selamat / harapan', 'a wish or congratulations', t => t[0] === '祝' || t.includes('恭喜')],
   [6, 'angka + kata penggolong + benda', 'number + measure word + noun', 'di antara angka (atau 這 / 那 / 幾) dan benda harus ada kata penggolong', 'a measure word goes between a number (or 這 / 那 / 幾) and the noun', t => t.some((w, i) => GP_NUM.test(w) && GP_MW.has(t[i + 1] || ''))],
   [6, 'keterangan + 的 + benda', 'modifier + 的 + noun', 'yang menerangkan selalu di depan: 我的書 bukuku, 紅色的車 mobil merah', 'the modifier comes first: 我的書 my book, 紅色的車 a red car', t => t.some((w, i) => w === '的' && i > 0 && i < t.length - 1)],
@@ -2008,20 +2008,44 @@ const GP_POT = /^(懂|下|出來|出去|出|飽|慣|完|動|到|了|起|起來|�
 const GP_MOVE = /^(走|跑|飛|游|爬|跳|跨|穿|越|經|渡|流|飄|吹|劃|閃|擠|衝|鑽|翻|繞|滑|掠|開|掃|躲|壓|轉|帶|搬|傳|送|寄|拿|遞|過|路|通|超|度|熬|撐|混|再|又|借|就|地|的|無|已|不|沒|難|太|很|好|想|要|會|能|傷)$/;
 const GP_CLAUSE_END = /^(是|的|一樣|常常|很|也|都|就|還|曾|沒|再|不|有|曾經|從來)/;   // what comes after 以前 / 以後 when it means "in the past / later"
 const GP_CL = new Set([...GP_MW].filter(w => !/^(年|天|歲|分|分鐘|小時|星期|週|月|個月|點|秒|次|遍|趟|下|生|早|直|定|起|般|切|共|向|心|夜|瞬間|箭|刹那|會兒|開始|開頭|大早|聲|輩子|公斤|公里|公尺|斤|元|毛|角)$/.test(w)));
+const GP_NOV = /^(感到|覺得|看見|聽見|想過|注意到|意識到|交|做|來|去|看|說|吃|喝|買|寫|聽|找|帶|到|想|回|放|關|開|洗|睡|走|用|拿|哭|笑|跑|等|問|回答|發現|注意|想到|告訴|收到|聽到|看到|準備|通知|參加|完成|結束|造成|出現|遲到|答應|改變|離開|回來|回家|下雨|生氣|成功|放棄|道歉|搞|弄|打|算|聯絡|考|讀|學|上班|上課|下班|變|贏|輸|死|醒|忘記|記得|反應|表示|提到|說話|理|管|聽說|見過|找到|想過|吃飯|睡覺|發生|看過|去過|來過|受傷|帶傘|帶|錯|用過|辦法)$/;
+// a time word, also when the pinyin splits it (十 點, 下 個 月); returns how many tiles it takes, 0 if none
+function gpTimeAt(t, i){ for(const n of [1, 2, 3]){ if(i + n <= t.length && GP_TIME.test(t.slice(i, i + n).join(''))) return n; } return 0; }
+// a word the dictionary gives as a verb ("to …") and not as a place: after 在 it means "in the middle of"
+let GP_GLOSS = null;
+function gpVerb(w){
+  if(!GP_GLOSS){ GP_GLOSS = new Map(); try{ for(const r of D) if(r && r[0] && !GP_GLOSS.has(r[0])) GP_GLOSS.set(r[0], String(r[2] || '')); }catch(e){} }
+  const g = GP_GLOSS.get(w); if(!g) return false;
+  return /^to [a-z]/.test(g) && !/(^|; )(the )?(home|house|place|room|hall|school|office|park|street|city|country|abroad|area|station|market|shop|store|world|internet|network|class|classroom|side|front|back|outside|inside|corner|top|bottom|middle|center|centre|kitchen|bed|field|village|town|mountain|sea|river|island|airport|hospital|company|factory|library|restaurant|church|temple)\b/i.test(g);
+}
+// after 沒有: a verb ("did not V") rather than a thing you have (工作, 耐心, 希望 … are both)
+function gpVerbObj(t, k){
+  return gpVerb(t[k] || '') && t[k + 1] !== '的' && !/^(工作|耐心|煩惱|希望|保障|處分|記載|牽連|進展|准許|許可|創新|訂位|爭論|商量|關係|興趣|信心|經驗|意見|計畫|計劃|把握|機會|感覺|印象|消息|回應|反應|變化|改變|聯絡|聯繫|幫助|影響|作用|效果|進步|成就|收穫|收入|保險|規定|限制|選擇|理由|藉口|用|辦法|區別|差別|不同|需要|必要|意思|味道|動靜|聲音|自信|目標|規劃|安排|準備|約會|預約|空)$/.test(t[k]);
+}
+// …and here it is used as one: not a place name like 旅行中, 畢業典禮, 通信公司
+function gpVerbAt(t, k){
+  return gpVerb(t[k] || '') && !t.slice(k + 1, k + 3).some(x => /^(中|上|裡|裏|下|之中|期間|開始|結束|以前|以後|之前|之後|前|後)$/.test(x)) && !/^(中|上|裡|裏|下|後|前|前後|以前|以後|之前|之後|之中|期間|時|時間|時候|典禮|現場|的|方面)$/.test(t[k + 1] || '')
+    && !/(公司|學校|大學|中心|局|部|門|廠|店|館|院|所|場|室|處|站|行|社|界|比賽|期)$/.test(t[k + 1] || '');
+}
 const GP_FIX = {
-  'S + 有 / 沒有 + O': t => t.some((w, i) => (w === '有' || w === '沒有') && !(t[i - 1] === '還' && w === '沒有') && !/^(一點|點|點兒|一些|些)$/.test(t[i + 1] || '') && i + 1 < t.length && !/^(了|嗎|呢|吧)$/.test(t[i + 1])),
-  'waktu + S + V / S + waktu + V': t => t.some((w, i) => GP_TIME.test(w) && t[i + 1] !== '的' && i + 1 < t.length && !/^(了|嗎|呢|吧)$/.test(t[i + 1]) && !/^(跟|和|比|到|從|是|的|個|在|像|如|自|於)$/.test(t[i - 1] || '')),
+  '在 + X + 下 / 中 / 方面': (t, h) => /(^|，)在[^，。]{1,10}(之下|下，|中，|方面)/.test(h) || /在[^，。在]{1,8}(之下|方面)/.test(h),
+  '不 / 沒 + V': t => t.some((w, i) => /^(不|沒|別|不要|不用|甭|從不|從沒|決不|絕不|毫不|並不)$/.test(w) && i + 1 < t.length && !(w === '不' && /^(少|久|止|但|僅|過|然|如)$/.test(t[i + 1]))) || t.some((w, i) => w === '沒有' && (i + 1 >= t.length || /^(了|呢|嗎|啊)$/.test(t[i + 1]) || GP_NOV.test(t[i + 1]) || gpVerbObj(t, i + 1) || GP_PRON.has(t[i + 2] || '') && (t[i + 1] || '').length === 2 || /^(開|到|過|完|好|走|掉|下|上|來|去|出|起|著|懂|見|清楚|下來|起來|出來|回來|過來)$/.test(t[i + 2] || ''))),
+  'V + 了 + O': (t, h) => { if(!/[一-鿿]了(?![解不得嗎吧呢啊啦]|[，。！？；、」]|$)/.test(String(h).replace(/了解|為了|除了|罷了|算了|好了嗎|受不了|不得了|免不了|少不了|忘不了|得了/g, ''))) return false;
+    const ks = t.map((w, i) => w === '了' ? i : -1).filter(i => i > 0 && i + 1 < t.length && t[i + 1] !== t[i - 1]); if(!t.includes('了')) return true;
+    return ks.some(i => !/^(下來|起來|出來|過來|過去|下去|上來|回來|嗎|吧|呢|啊|啦|嘛|喔|哦|囉|呀|就|才|也|還|都|可是|但是|然後|所以|結果|以後|之後|以前|後|再|又|沒|不|是|快|趕快|別|不要|怎麼|怎麼辦|怎麼樣|為什麼)$/.test(t[i + 1]) && !(GP_PRON.has(t[i + 1]) && /^(再|就|才|也|都|還|又|要|會|就要|已經|只好|馬上)$/.test(t[i + 2] || '')) && !((GP_NUM.test(t[i + 1]) || /^[一二兩三四五六七八九十百千萬幾半]+$/.test(t[i + 1])) && (/^(年|天|個月|月|小時|鐘頭|分鐘|週|星期|禮拜|秒|輩子|陣子|會兒|成|倍|次|遍|趟|回)$/.test(t[i + 2] || '') || /^[年天月週秒]/.test(t[i + 2] || '') || t[i + 2] === '個' && /^(月|小時|鐘頭|星期|禮拜|晚上|早上|下午|多月)$/.test(t[i + 3] || ''))) && !/^(好久|很久|半天|一會兒|一陣子|一下|一輩子|一生|一整天|一整晚|一整年|整天|整晚)$/.test(t[i + 1]) && !(GP_NUM.test(t[i + 1]) && t[i + 2] === '整') && !(/^(一點|一點兒|一些|點|些)$/.test(t[i + 1]) && i + 2 >= t.length) && !/^(很|好)?(多|幾|久)?(個)?(年|天|月|小時|鐘頭|星期|禮拜|次|遍|趟|回|分鐘|倍|成)/.test(t.slice(i + 1, i + 5).join('')) && !/^(很|好|太)久/.test(t.slice(i + 1, i + 3).join('')) && !/^(很|好)?(多|幾)?(個)?(年|天|月|小時|星期|次|遍)$/.test(t.slice(i + 1).join('')) && !(/^(很|不少|許多)$/.test(t[i + 1]) && (t[i + 1] !== '很' || t[i + 2] === '多') && i + (t[i + 1] === '很' ? 3 : 2) >= t.length)); },
+  'waktu + S + V / S + waktu + V': t => t.some((w, i, _, n = gpTimeAt(t, i)) => n && t[i + n] !== '的' && i + n < t.length && !/^(了|嗎|呢|吧|點)$/.test(t[i + n]) && !/^(跟|和|比|到|從|是|的|個|在|像|如|自|於|對|向|為|面對|展望)$/.test(t[i - 1] || '') && !(/^(以前|以後)$/.test(w) && i > 0 && !GP_PRON.has(t[i - 1]))),
+  'S + 有 / 沒有 + O': t => t.some((w, i) => (w === '有' || w === '沒有') && !(t[i - 1] === '還' && w === '沒有') && !(w === '沒有' && (GP_NOV.test(t[i + 1] || '') || gpVerbObj(t, i + 1) || GP_PRON.has(t[i + 2] || '') && (t[i + 1] || '').length === 2 || /^(開|到|過|完|好|走|掉|下|上|來|去|出|起|著|懂|見|清楚|下來|起來|出來|回來|過來)$/.test(t[i + 2] || ''))) && !(w === '有' && (/^(賣|在|用|點|提供|去|來|看|吃|做|說|聽|參加|上課|上班|準備|收到|看到)$/.test(t[i + 1] || ''))) && !/^(一點|點|點兒|一點兒|一些|些)$/.test(t[i + 1] || '') && i + 1 < t.length && !/^(了|嗎|呢|吧)$/.test(t[i + 1])),
   'angka + kata penggolong + benda': t => t.some((w, i) => GP_NUM.test(w) && GP_CL.has(t[i + 1] || '') && i + 2 < t.length && !/^(小時|鐘頭|月|星期|禮拜|年|天|晚上|早上|下午)$/.test(t[i + 2])),
   'keterangan + 的 + benda': t => t.some((w, i) => w === '的' && i > 0 && i < t.length - 1 && !/^(時候|話)$/.test(t[i + 1])),
-  'S + 很 / 太 / 非常 + Adj': t => t.some((w, i) => /^(很|非常|真|太|比較|挺|蠻|特別|十分|相當|超|更|最|那麼|這麼)$/.test(w) && i + 1 < t.length && !GP_FEEL.test(t[i + 1]) && !/^(多|少|做|說|想|樣|辦|久)$/.test(t[i + 1])
+  'S + 很 / 太 / 非常 + Adj': t => t.some((w, i) => !(w === '真' && (t[i - 1] === '亦' || t[i + 1] === '假')) && !(w === '最' && /^(疼愛|喜歡|愛|討厭|怕|重視|擅長|懂|了解|關心|需要|會|能|想|恨)$/.test(t[i + 1] || '')) && !(w === '最' && /^(前面|後面|上面|下面|裡面|外面|前|後|先|初|早|近|遠|好|多|少)$/.test(t[i + 1] || '') && !(t[i + 1] === '好' && i + 2 >= t.length)) && !(w === '挺' && (GP_PRON.has(t[i + 1] || '') || i + 1 >= t.length)) && !/^(敬愛|尊敬|愛戴|疼惜|擅長|吸引|消耗|思念|浪費|影響|佩服|羨慕|嫉妒|崇拜|期待|盼望|珍惜|適應|依戀|迷戀|著迷|講究|重視|在意|理解|體諒|諒解|同情|懂得|曉得|知道|明白|看重|重用|照顧|疼|寵|愛護|依賴|想念|喜歡|愛|討厭|怕|擔心|關心|信任|欣賞|重視|注重|希望|想|佩服|尊重|尊敬|感謝|懂|了解|需要|支持|同意|反對|相信|在乎|在意|會|能)$/.test(t[i + 1] || '') && !(/^(少|難|容易)$/.test(t[i + 1] || '') && i + 3 < t.length && !/^(了|的|啊|吧|嗎)$/.test(t[i + 2])) && !(t[i + 2] === '的' && i + 3 < t.length && t[i + 3] !== '時候') && !(w === '真' && t[i + 1] === '的') && !(w === '特別' && !/^(好|多|大|小|熱|冷|累|忙|快|慢|高|低|貴|便宜|漂亮|喜歡|重要|有趣|好吃|好看|難|容易|美|強|嚴格|安靜|注意|小心|感謝|適合|明顯|擅長|愛|怕|討厭|清楚|響|亮|暗|香|甜|辣|鹹|長|短|遠|近|深|淺|多|有名|熱鬧|開心|高興|難過|感動|突出|努力|認真)$/.test(t[i + 1] || '')) && !(w === '最' && t[i - 1] === '的') && !(/^(特別|超)$/.test(w) && i > 0 && (GP_MW.has(t[i - 1]) || GP_NUM.test(t[i - 1]) || t[i - 1] === '的')) && !(w === '特別' && /^(為|給|跟|對|地|是|要|請|來|去)$/.test(t[i + 1] || '')) && !(/^(那麼|這麼)$/.test(w) && (i === 0 || GP_PRON.has(t[i + 1] || ''))) && /^(很|非常|真|太|比較|挺|蠻|特別|十分|相當|超|更|最|那麼|這麼)$/.test(w) && i + 1 < t.length && !GP_FEEL.test(t[i + 1]) && !/^(多|少|做|說|想|樣|辦|久)$/.test(t[i + 1])
     && !(w === '最' && t[i + 2] === '的') && !(t[i + 1] === '快' && t[i + 2] === '就')),
-  'S + 會 / 能 / 可以 / 要 / 想 + V': (t, h, py) => t.some((w, i) => /^(會|能|可以|要|想|應該|必須|願意|敢|打算|不能|不會|不可以|不要|不想|不用|可能|能夠)$/.test(w) && i + 1 < t.length && !GP_NUM.test(t[i + 1]) && !/^(哪|哪個|哪一|什麼|這|那|這個|那個|多少|很|多|一些|點|一點|一|兩|錢)$/.test(t[i + 1]) && !(w === '想' && (GP_PRON.has(t[i + 1]) || /^(起|起來|到|法|念)$/.test(t[i + 1])))) || t.includes('得') && /děi/i.test(py),
-  'S + 在 + tempat + V': t => t.some((w, i) => { if(w !== '在' || i === 0) return false; if(/^(陳列|住|放|坐|站|躺|掉|停|寫|擺|掛|生|出生|發生|藏|留|貼|落|倒|跪|蹲|睡|印|刻|記|定|排|夾|鎖|關|停留|集中|建立)$/.test(t[i - 1])) return false; if(/^(此刻|此時|年底|月底|當時|那時|這時|同時|未來|過去|期間|尋找|找尋|戒|吵架|觀察|等待|思索|猶豫|想念|抱怨|嘀咕|偷看|發呆|睡覺|休息)$/.test(t[i + 1] || '') || [1, 2, 3].some(k => t[i + k] === '的' && k > 1)) return false; if(GP_NUM.test(t[i + 1] || '') || /^(一起|名下|身邊|心裡|手上)$/.test(t[i + 1] || t[i + 2] || '')) return false; if(/^(談論|討論|聊天|進行|努力|忙著|擔心|發展|成長|改變|變化|下降|上升|增加|減少|聊|寫|讀|想|說|做|等|找|看|吃|玩|學|練|忙|打|跑|唱|跳|哭|笑|睡|適應|了解|研究|沉思|思考|爭奪|討論|準備|開會|工作|生氣|考慮|處理|調查|下雨|上課|睡覺)$/.test(t[i + 1] || '')) return false;
-    const rest = t.slice(i + 1); while(rest.length && /^(裡|裏|上|中|下|旁邊|附近|這裡|那裡|那兒|這兒|外面|裡面|前面|後面|對面|中間|嗎|呢|吧|了)$/.test(rest[rest.length - 1])) rest.pop(); while(rest.length && /^(底下|盡頭|門口|旁|外|內|後方|前方|上面|下面|樓上|樓下|隔壁|角落|中央|名下|階段|時期|狀態|之中|當中|這|那)$/.test(rest[rest.length - 1])) rest.pop(); return rest.length >= 2; }),
+  'S + 會 / 能 / 可以 / 要 / 想 + V': (t, h, py) => t.some((w, i) => /^(會|能|可以|要|想|應該|必須|願意|敢|打算|不能|不會|不可以|不要|不想|可能|能夠)$/.test(w) && i + 1 < t.length && !(w === '不用' && (i === 0 || /^(請|你|您|你們|大家|千萬|萬萬|就|也)$/.test(t[i - 1]))) && !(w === '不要' && !/^(我|他|她|我們|他們|她們|人家|孩子)$/.test(t[i - 1] || '') && !(/^(也|都|還)$/.test(t[i - 1] || '') && /^(我|他|她|我們|他們|她們|人家|孩子)$/.test(t[i - 2] || ''))) && !(w === '要' && t[i - 1] === '不' && !/^(我|他|她|我們|他們|她們|人家|孩子)$/.test(t[i - 2] || '') && !(/^(也|都|還)$/.test(t[i - 2] || '') && /^(我|他|她|我們|他們|她們|人家|孩子)$/.test(t[i - 3] || ''))) && !GP_NUM.test(t[i + 1]) && !/^(哪|哪個|哪一|什麼|這|那|這個|那個|多少|很|多|一些|點|一點|一|兩|錢|的|了|過|得|嗎|呢|吧)$/.test(t[i + 1]) && !(w === '想' && (GP_PRON.has(t[i + 1]) || /^(起|起來|到|法|念)$/.test(t[i + 1])))) || t.includes('得') && /děi/i.test(py),
+  'S + 在 + tempat + V': t => t.some((w, i) => { if(w !== '在' || i === 0) return false; if(/^(第|零|幾|不)/.test(t[i + 1] || '') || gpVerbAt(t, i + 1) || t[i + 1] === '下' && /^(大)?(雨|雪|棋)$/.test((t[i + 2] || '') + (t[i + 3] && t[i + 2] === '大' ? t[i + 3] : '')) || t.slice(i + 1, i + 4).some(x => /^(方面|過程|情況|期間|之下|開始|結束|時|時候|以前|以後|之前|之後)$/.test(x)) || GP_FIX['(正) 在 + V (+ 呢)'](t.slice(i - 1, i + 3))) return false; { const k = t.findIndex((x, j) => j > i + 1 && j <= i + 4 && /^(很|太|非常|最|比較|十分|特別|挺|蠻|超|不太|更|越來越|越|愈來愈|有點|有一點)$/.test(x)); if(k > 0 && t.length - k <= 3) return false; } if(/^(不|沒|沒有|都不|也不)$/.test(t[i - 1]) && (GP_PRON.has(t[i + 1] || '') || /^(家|這裡|那裡|這兒|那兒)$/.test(t[i + 1] || '') && !/^(工作|等|吃|看|住|休息|睡|玩)$/.test(t[i + 2] || ''))) return false; if(/^(溶|泡|困|擠|聚集|集合|散佈|躲避|分布|分佈|靠|趴|跪|蹲|躺|坐|站|住|卡|夾|陷|埋|泡|浸|待|活|死|走|跑|跳|落|堆|插|躲|停放|擺放|陳列|住|放|坐|站|躺|掉|停|寫|擺|掛|生|出生|發生|藏|留|貼|落|倒|跪|蹲|睡|印|刻|記|定|排|夾|鎖|關|停留|集中|建立)$/.test(t[i - 1])) return false; if(/^(此刻|此時|年底|月底|當時|那時|這時|同時|未來|過去|期間|尋找|找尋|減肥|戒菸|戒酒|節食|不停|上半場|下半場|中場|不停|諷刺|批評|開玩笑|要|偷|騙|利用|縱容|欺負|蓋|建|拍|教|賣|買|騎|叫|罵|追求|追|爭取|奮鬥|摸索|浪費|煮飯|做飯|洗碗|寫作業|看書|看電視|打球|吃飯|洗衣服|唱歌|跳舞|讀書|念書|上網|打電話|開車|聊天|做菜|打掃|下棋|彈琴|畫畫|散步|跑步|游泳|運動|洗澡|化妝|排隊|搬家|裝修|施工|搶修|復健|不斷|持續|逐漸|打架|吵|鬧|跟|和|給|為|對|向|替|幫|專心|認真|拼命|偷偷|努力|慢慢|踢|拉|彈|畫|織|搬|修|洗|煮|打掃|跳舞|唱歌|戒|吵架|觀察|等待|思索|猶豫|想念|抱怨|嘀咕|偷看|發呆|睡覺|休息)$/.test(t[i + 1] || '') || [1, 2, 3].some(k => t[i + k] === '的' && k > 1)) return false; if(GP_TIME.test(t[i + 1] || '') || /^(上|下|這|那|本)$/.test(t[i + 1] || '') && /^(個|週|星期|禮拜|次|學期|季)$/.test(t[i + 2] || '') || /^(休假|度假|放假|上班|吃飯|洗澡|排隊|開玩笑|說謊|騙|做夢|下棋|彈琴|打電話)$/.test(t[i + 1] || '')) return false; if(GP_NUM.test(t[i + 1] || '') && !(/^(家|所|場|間|個|座|條|輛|艘|棟|樓|層)$/.test(t[i + 2] || '') && i + 3 < t.length && !/^(月|小時|鐘頭|星期|禮拜)$/.test(t[i + 3])) || /^(一起|名下|身邊|心裡|手上)$/.test(t[i + 1] || t[i + 2] || '')) return false; if(/^(談論|討論|聊天|進行|努力|忙著|擔心|發展|成長|改變|變化|下降|上升|增加|減少|聊|寫|讀|想|說|做|等|找|看|吃|玩|學|練|忙|打|跑|唱|跳|哭|笑|睡|適應|了解|研究|沉思|思考|爭奪|討論|準備|開會|工作|生氣|考慮|處理|調查|下雨|上課|睡覺)$/.test(t[i + 1] || '')) return false;
+    const rest = t.slice(i + 1); while(rest.length && /^(嗎|呢|吧|了|啊|的)$/.test(rest[rest.length - 1])) rest.pop(); if(/^(裡|裏|上|中|下|旁邊|附近|這裡|那裡|那兒|這兒|外面|裡面|前面|後面|對面|中間|底下|盡頭|門口|旁|外|內|後方|前方|上面|下面|樓上|樓下|隔壁|角落|中央|名下|面前|眼前|身上|身邊|手裡|心中|階段|時期|狀態|之中|當中|之間|前後|左右|以前|以後|之前|之後|期間|樓|號|層|這|那)$/.test(rest[rest.length - 1] || '')) return false; if(rest.length === 2 && GP_PRON.has(rest[1])) return false; if(rest.length && (rest.length <= 2 || rest.length === 3 && GP_NUM.test(rest[0])) && rest[rest.length - 1].length >= 2 && /(樓|層|室|館|院|站|處|校|園|區|市|國|場)$/.test(rest[rest.length - 1]) && !gpVerb(rest[rest.length - 1])) return false; if(GP_NUM.test(rest[0] || '') && rest.length > 2) rest.splice(0, 2); return rest.length >= 3 || rest.length === 2 && !/(心|區|裡|上|下|邊|面|頭|口|處|方|站|館|部|室|廳|家|國|市|路|街|樓|院|場|店|校|園|中|內|外|旁|島|村|鎮|司)$/.test(rest[1]); }),
   'V + 得 + keterangan': (t, h, py) => t.some((w, i) => w === '得' && i > 0 && i < t.length - 1 && !GP_POT.test(t[i + 1]) && !/^(了|到|獎|分|病)$/.test(t[i + 1])) && !/děi|dé/i.test(py),
-  'V + 著': t => t.some((w, i) => w === '著' && i > 0 && !/^(睡|不|接|隨|為|向|照|朝|沿|順|本|憑|趁|衝|靠|對|當)$/.test(t[i - 1]))
+  'V + 著': t => t.some((w, i) => w === '著' && i > 0 && !/^(睡|不|接|隨|為|向|照|朝|沿|順|本|憑|趁|衝|靠|對|當)$/.test(t[i - 1])) || t.some(w => /^[\u4e00-\u9fff]{1,2}著$/.test(w) && !/^(顯著|沉著|衣著|執著|土著|名著|原著|睡著|接著|隨著|為著|向著|照著|朝著|沿著|順著|本著|憑著|趁著|衝著|靠著|對著|當著|昭著)$/.test(w) && !/^.?(不|得)著$/.test(w))
     || t.some((w, i) => /^[一-鿿]著$/.test(w) && !/^(顯著|沉著|衣著|執著|土著|名著|原著|睡著|接著|隨著|為著|向著|照著|朝著|沿著|順著|本著|憑著|趁著|衝著|靠著|對著|當著)$/.test(w) && !(w === '穿著' && t[i - 1] === '的')),
-  'V + 過': t => t.some((w, i) => w === '過' && i > 0 && (t[i - 1].length === 1 || /^(發生|出現|參加|工作|經歷|研究|學習|考慮|討論|遇到|聽說|嘗試|使用|擔任|見面|旅行|生活|住院|出國|交涉|修訂|看到|拜訪|訪問|說明|處理|檢查|吃飯|結婚|戀愛|打工|聽|說|看)$/.test(t[i - 1]))
+  'V + 過': t => t.some((w, i) => w === '過' && i > 0 && !/^(站|頭|期|時|河|馬路|街|來|去|節|年|日子|生日|夜|癮|關|目)$/.test(t[i + 1] || '') && (t[i - 1].length === 1 || /^(發生|出現|參加|工作|經歷|研究|學習|考慮|討論|遇到|聽說|嘗試|使用|擔任|見面|旅行|生活|住院|出國|交涉|修訂|看到|拜訪|訪問|說明|處理|檢查|吃飯|結婚|戀愛|打工|聽|說|看)$/.test(t[i - 1]))
     && !GP_MOVE.test(t[i - 1]) && !/(年|日子|馬路|生日|節|一生|日)$/.test(t[i + 1] || '') && !/^(來|去|分|頭|河|街|橋|關|後|得|程|人|幾|一|兩|著|海峽|海關|身子|身)$/.test(t[i + 1] || '')),
   'V + pelengkap hasil (完 / 懂 / 見 / 錯 / 掉 …)': t => t.some((w, i) =>
       (/^[一-鿿]{1,2}(完|懂|錯|掉|飽|清楚|乾淨)$/.test(w) || /^(看見|聽見|遇見|夢見|碰見|瞧見|撞見|望見|弄壞|摔壞|打壞|吃壞|用壞|搞壞|累壞|嚇壞|氣壞|壓壞|寵壞|餓壞|樂壞|花光|吃光|用光|賣光|搶光|喝光|濕透|熟透|看透|吵醒|叫醒|驚醒|喚醒|搖醒)$/.test(w))
@@ -2029,9 +2053,9 @@ const GP_FIX = {
     || /^(錯|掉|懂|飽)$/.test(w) && i > 0 && t[i - 1].length === 1 && !GP_PRON.has(t[i - 1]) && !GP_ADV.test(t[i - 1]) && !/^(把|做|犯|你|我|他|好|難|易|容易)$/.test(t[i - 1])
     || /^(完|清楚)$/.test(w) && i > 0 && t[i - 1].length <= 2 && !GP_PRON.has(t[i - 1]) && !GP_NUM.test(t[i - 1]) && !GP_ADV.test(t[i - 1]) && !/^(把|患難|做|犯|說話|頭腦|論點|更|很|最|太|比較|非常|十分|版本|也|還|是|都|蠻|挺|夠|不太|沒有|簡單|得)$/.test(t[i - 1])),
   'V + 得 / 不 + pelengkap': (t, h, py) =>
-    t.some(w => /^[一-鿿]{1,2}[不得](完|懂|到|了|動|起|見|清楚|下|出|開|住|慣|著|上|來|去|起來|下來|出來|下去|過)$/.test(w) && w[0] !== w[w.length - 1] && !/^(不得了|了不起|得到|看不起|對不起|來不及|不得不|動不動)$/.test(w))
-    || t.some((w, i) => (w === '不' || w === '得' && !/dé/i.test(py)) && i > 0 && t[i - 1].length === 1 && /^(完|懂|到|了|動|起|見|清楚|下|出|開|住|慣|著|上|起來|下來|出來|下去|過|來|去)$/.test(t[i + 1] || '')
-      && t[i + 1] !== t[i - 1] && !GP_PRON.has(t[i - 1]) && !GP_ADV.test(t[i - 1]) && !/^(人|家|說|吃|捨|地)$/.test(t[i - 1])
+    t.some(w => /^[一-鿿]{1,2}[不得](完|懂|到|了|動|起|見|清楚|下|出|開|住|慣|著|上|來|去|起來|下來|出來|下去|過|掉|走|醒|飽|贏|好)$/.test(w) && w[0] !== w[w.length - 1] && !/^(不得了|了不起|得到|看不起|對不起|來不及|不得不|動不動)$/.test(w))
+    || t.some((w, i) => (w === '不' || w === '得' && !/dé/i.test(py)) && i > 0 && t[i - 1].length === 1 && /^(完|懂|到|了|動|起|見|清楚|下|出|開|住|慣|著|上|起來|下來|出來|下去|過|來|去|掉|走|醒|飽|贏)$/.test(t[i + 1] || '')
+      && t[i + 1] !== t[i - 1] && !GP_PRON.has(t[i - 1]) && !GP_ADV.test(t[i - 1]) && !/^(人|家|說|吃|捨|地|若|如|假如|倘若|要是|如果|就|也|都|還|又|才|再|並|可)$/.test(t[i - 1])
       && !(t[i + 1] === '到' && GP_NUM.test((t[i + 2] || '')[0] || '')) && !(t[i + 1] === '下' && GP_NUM.test((t[i + 2] || '')[0] || ''))),
   'V + (上 / 下 / 進 / 出 / 回 / 過) + 來 / 去': t => !t.some(w => w.includes('起來')) && !/(於|的|在|和|段|這|那)過去|過去(的|了解|成)/.test(t.join(''))
     && t.some((w, i) => i > 0 && w !== '下去' && !(w === '去' && t[i - 1] === '下')
@@ -2039,39 +2063,41 @@ const GP_FIX = {
       && (/^(來|去)$/.test(w) && /^(上|下|進|出|回|過|起|開)$/.test(t[i - 1]) || /^.?(上|下|進|出|回|過|起)(來|去)$/.test(w) && (w.length >= 3 || !/^(的|是|在|有|不|沒|要|會|想)$/.test(t[i - 1])))),
   'V + 在 / 到 / 給 + …': t => t.some((w, i) => /^(在|到|給)$/.test(w) && i > 0 && /^(住|坐|站|放|躺|寫|停|掛|留|送|交|寄|借|搬|走|跑|開|拿|帶|傳|丟|倒|擺|藏|貼|掉|落|摔|照|灑)$/.test(t[i - 1])
     && !(t[i - 1] === '站' && /(運|車|鐵|油|機)$/.test(t[i - 2] || ''))),
-  'V + 一下 / VV (看看)': (t, h) => !/問問題/.test(h) && !/一下.+一下/.test(h) && (
+  'V + 一下 / VV (看看)': (t, h) => !/問問題/.test(h) && !/一下.+一下/.test(h) && (t.some((w, i) => w === '了' && i > 0 && t[i + 1] === t[i - 1] && t[i - 1].length === 1) || 
     t.some((w, i) => w === '一下' && !/^(就|子)/.test(t[i + 1] || '')) || /([一-鿿])一\1/.test(h.replace(/一([一-鿿])一\1/g, '')) && !/([個步點片滴代桌塊圈粒件張])一\1/.test(h)
     || t.some((w, i) => /^([幫看試想聽問嚐走等說談聊玩坐洗摸拍敲搖動找逛])\1$/.test(w) && !(w === '等等' && i === t.length - 1))
     || /(看看|試試|想想|聽聽|問問|嚐嚐|走走|休息休息)/.test(h)),
-  '(正) 在 + V (+ 呢)': t => t.some((w, i) => (w === '正在' || w === '在' && /^(看|吃|做|寫|睡覺|上課|開會|工作|準備|討論|忙|打|玩|聽|說|學|洗|煮|找|等|下雨|跑|唱|跳|練習|考慮|聊|讀|想|哭|笑|適應|了解|研究|沉思|思考|爭奪|談|談論|聊天|進行|努力|發展|成長|改變|尋找|找尋|觀察|等待|擔心|抱怨|嘀咕|發呆|休息|戒|生氣|處理|調查|吵架|睡|討論|適應|練)$/.test(t[i + 1] || ''))
-    && i > 0 && !/^(上|中|裡|方面|時|時候|階段|過程)$/.test(t[i + 2] || '') && !/^(浸|浪費|運用|用|放|花|投入|集中|專注|都)$/.test(t[i - 1]) && !(w === '正在' && /^(裡|上|中)$/.test(t[i + 2] || '') && i + 3 >= t.length)),
+  '(正) 在 + V (+ 呢)': t => t.some((w, i) => w === '在' && t[i + 1] === '不' && /^(停|斷)$/.test(t[i + 2] || '')) || t.some((w, i) => w === '在' && t[i + 1] === '下' && /^大?[雨雪]/.test(t.slice(i + 2, i + 4).join(''))) || t.some((w, i) => (w === '正在' || w === '在' && /^(看|吃|做|寫|睡覺|上課|開會|工作|準備|討論|忙|打|玩|聽|說|學|洗|煮|找|等|下雨|跑|唱|跳|練習|考慮|減肥|戒菸|戒酒|節食|不停|報導|播報|直播|報告|宣傳|推廣|調整|改善|惡化|好轉|擴大|縮小|萎縮|修|補|釘|縫|擦|幫|替|畫|請假|飛|唱|游|說話|笑|寫字|看書|切|炒|爬|彈|吹|拉|講|聊|洗碗|收拾|整理|打電動|玩遊戲|滑手機|看電視|拜票|上漲|下降|成長|變動|流血|發燒|咳嗽|偷|騙|利用|縱容|欺負|響|哭|叫|蓋|建|拍|教|賣|騎|罵|追求|爭取|奮鬥|摸索|浪費|煮飯|做飯|洗碗|寫作業|看書|看電視|打球|吃飯|洗衣服|唱歌|跳舞|讀書|念書|上網|打電話|開車|聊天|做菜|打掃|下棋|彈琴|畫畫|散步|跑步|游泳|運動|洗澡|化妝|排隊|搬家|裝修|施工|搶修|復健|打架|不斷|持續|逐漸|聊|讀|想|哭|笑|適應|了解|研究|沉思|思考|爭奪|談|談論|聊天|進行|努力|發展|成長|改變|尋找|找尋|觀察|等待|擔心|抱怨|嘀咕|發呆|休息|戒|生氣|處理|調查|吵架|睡|討論|適應|練)$/.test(t[i + 1] || '') || w === '在' && gpVerbAt(t, i + 1))
+    && i > 0 && !/^(上|中|裡|方面|時|時候|階段|過程)$/.test(t[i + 2] || '') && !/^(浸|浪費|運用|用|放|花|投入|集中|專注|關|住|坐|站|躺|生活|擺|藏|埋|困|落|陷|停|留|躲|活|著重|重點|集中)$/.test(t[i - 1]) && !(t[i - 1] === '都' && (t[i + 1] || '').length < 2) && !(w === '正在' && /^(裡|上|中)$/.test(t[i + 2] || '') && i + 3 >= t.length)),
   'V + lama waktu': (t, h) => { const x = h.replace(/(超|經|再|不)過/g, ''); return /(了|過)(好)?(一|兩|三|四|五|六|七|八|九|十|幾|半|多)+(個)?(小時|天|年|分鐘|星期|月|輩子|鐘頭)/.test(x) || /[一兩三四五六七八九十幾半]+(個)?(小時|天|年|分鐘|星期|月|鐘頭)了/.test(x); },
   '是 + (kapan / di mana / bagaimana) + V + 的': (t, h) => { const a = t.indexOf('是'), z = t.length - 1; if(a < 0 || t[z] !== '的' || z - a < 3 || !gpEnd(h, '的')) return false;
     const mid = t.slice(a + 1, z); if(mid.includes('最') || mid[mid.length - 1] === '用' || mid[mid.length - 1] === '幾點') return false;
     if(mid.length === 2 && GP_PRON.has(mid[0]) && /^(爸爸|媽媽|哥哥|姐姐|姊姊|弟弟|妹妹|爺爺|奶奶|朋友|老師|同學|家|公司|學校|班)$/.test(mid[1])) return false;
-    return gpAny(mid, /^(在|從|跟|和|搭|用|騎|由|昨天|今天|去年|前年|時候|前|怎麼|什麼時候|哪|哪裡|哪兒|幾|誰|一起|自己|剛|親手|親口)$/) || GP_PRON.has(mid[0]) && mid.length >= 2; },
-  'V + berapa kali (次 / 遍 / 趟)': (t, h) => { const re = /[一兩三四五六七八九十幾](次|遍|趟)/g; let m; while((m = re.exec(h))){ const b = h[m.index - 1] || ''; if(m.index > 0 && !/[第是有每，。、]/.test(b) && h[m.index + 2] !== '的') return true; } return false; },
+    return gpAny(mid, /^(在|從|跟|和|搭|用|騎|由|昨天|今天|去年|前年|時候|前|怎麼|什麼時候|哪|哪裡|哪兒|幾|誰|一起|自己|剛|親手|親口|才|特地|專程|特別|故意|偷偷|為)$/) || mid.some(w => GP_TIME.test(w) || /.(末|初|月|年)$/.test(w)) || GP_PRON.has(mid[0]) && mid.length >= 2; },
+  'V + berapa kali (次 / 遍 / 趟)': (t, h) => { const re = /[一兩三四五六七八九十幾](次|遍|趟)/g; let m; while((m = re.exec(h))){ const b = h[m.index - 1] || ''; if(m.index > 0 && !/[第是有每後這那，。、]/.test(b) && h[m.index + 2] !== '的' && !/^(機會|經驗|旅行|會議|比賽|考試|活動|約會|課|事件|意外|地震|颱風)/.test(h.slice(m.index + 2))) return true; } return false; },
   '有 + orang / benda + V': t => t.some((w, i) => w === '有' && i + 2 < t.length && /^(人|些人|一些人|機會|空|辦法|事|時間)$/.test(t[i + 1]) && !/^(嗎|了|吧|呢)$/.test(t[i + 2])),
   '對 / 對於 + X + …': (t, h) => { const x = h.replace(/派對|反對|面對|相對|絕對|針對|一對|對方|對面|對手|對象|對話|對不起|對了|不對|對照|對峙|對抗|對策/g, ''); return x.includes('對於') || /對[^，。]{1,6}(有興趣|感興趣|很好|不好|好|有幫助|有害|有益|負責|好奇)/.test(x); },
   'S + waktu + tempat + V': (t, h, py) => GP_FIX['waktu + S + V / S + waktu + V'](t, h, py) && GP_FIX['S + 在 + tempat + V'](t, h, py),
-  '有點(兒) + Adj': (t, h) => h.includes('有點') && !/有點(兒)?(事|錢|時間|東西|問題|空|交情|毛病)/.test(h),
+  '有點(兒) + Adj': (t, h) => h.includes('有點') && !/有一?點(兒)?(事|錢|時間|東西|問題|空|交情|毛病|關係|道理|意思)/.test(h) || t.some((w, i, _, k = w === '有一點' ? i + 1 : i + 2) => (w === '有' && /^一點兒?$/.test(t[i + 1] || '') || w === '有一點') && k < t.length && t.length - k <= 2 && !/^(事|錢|時間|東西|問題|空|交情|毛病|關係|道理)$/.test(t[k]) && !/^.(心|子|題|事|錢|西|間|係|理|思|物|人|驗|識|法)$/.test(t[k])),
   '一 + V1, 就 + V2': t => gpPair(t, /^一$/, /^就$/, 2, (t, i) => i + 1 >= t.length || GP_MW.has(t[i + 1]) || GP_NUM.test(t[i + 1]) || /^(覺|整天|炮|生|輩子|直|定|大|早)$/.test(t[i + 1])),
   '…, 但是 / 可是 / 然而 + …': (t, h) => !gpAny(t, /^(雖然|雖)$/) && (t.some((w, i) => /^(但是|可是|然而)$/.test(w) && i > 0 && !(w === '可是' && GP_PRON.has(t[i - 1]))) || /(^|，)不過(?!是|就|罷了)/.test(h)),
   '一 + MW / 一點 + 也 / 都 + 不 / 沒': (t, h) => /一(點|個|句|次|分|毛|口|步|天|眼|下|分鐘)(兒)?[一-鿿]{0,2}(也|都)(不|沒)(?!錯|關係)/.test(h),
   '… + 的時候 / 以前 / 以後 / 之後, …': (t, h) => /的時候(?![。！？]*$)/.test(h)
-    || t.some((w, i) => /^(以前|以後|之前|之後)$/.test(w) && i > 0 && !GP_PRON.has(t[i - 1]) && !/^(比|跟|和|像|與|是|在|以便|很久|不久|他爺爺|爺爺|奶奶|外公|外婆|爸爸|媽媽)$/.test(t[i - 1]) && !GP_CLAUSE_END.test(t[i + 1] || '') && i < t.length - 1),
+    || t.some((w, i) => /^(以前|以後|之前|之後)$/.test(w) && i > 0 && !GP_PRON.has(t[i - 1]) && !/^(比|跟|和|像|與|是|在|以便|很久|不久|他爺爺|爺爺|奶奶|外公|外婆|爸爸|媽媽)$/.test(t[i - 1]) && !GP_CLAUSE_END.test(t[i + 1] || '') && i < t.length - 1
+      && !(w === '以前' && (/^(這|那)$/.test(t[i - 3] || '') && GP_MW.has(t[i - 2]) || /^(是|有|曾|曾經|常常|很|叫|住|出產|由|被|都|也|一直|只|就是)$/.test(t[i + 1] || '') || /^(這個|那個|這裡|那裡|這兒|那兒)$/.test(t[i - 2] || '')))),
   'tempat + 有 + benda': (t, h) => /(裡|上|下|旁邊|附近|前面|後面|外面|對面|中)有(?!(一點|點|效|名|用|趣|意思|關))/.test(h.replace(/(晚上|早上|馬上|一下|以上|以下|天下|地下)有/g, '')),
   'S + 讓 / 使 / 令 + orang + V': t => t.some((w, i) => /^(讓|使|令)$/.test(w) && i < t.length - 2 && t[i + 1] !== '給' && t[i + 1] !== '一下' && !(w === '使' && /^(勁|勁兒|用|得)/.test(t[i + 1]))),
-  'S + 坐 / 搭 / 騎 / 開 + kendaraan + 去 / 到 + tempat': t => t.some((w, i) => /^(坐|搭|騎|開)$/.test(w) && !GP_PRON.has(t[i + 1] || '') && /^(去|到|來)$/.test(t[i + 2] || '') && t[i + 3] !== '得' || w === '走路' && /^(去|到)$/.test(t[i + 1] || '')),
+  'S + 坐 / 搭 / 騎 / 開 + kendaraan + 去 / 到 + tempat': t => t.some((w, i) => /^(坐|搭|騎|開)$/.test(w) && !GP_PRON.has(t[i + 1] || '') && /^(去|到|來)$/.test(t[i + 2] || '') && t[i + 3] !== '得' || w === '走路' && /^(去|到)$/.test(t[i + 1] || '') && i + 2 < t.length && !/^(吧|了|嗎|呢)$/.test(t[i + 2])),
   'S + 去 / 來 + (tempat) + V': t => t.some((w, i) => (w === '去' || w === '來') && i + 1 < t.length
-    && (i === 0 || GP_PRON.has(t[i - 1]) || GP_TIME.test(t[i - 1]) || /^(要|想|會|也|都|就|先|再|還|常常|一起|可以|打算|準備|又|才|順便|馬上|快)$/.test(t[i - 1]))
+    && (i === 0 || GP_PRON.has(t[i - 1]) || GP_TIME.test(t[i - 1]) || /^(要|想|會|也|都|就|先|再|還|常常|一起|可以|打算|準備|又|才|順便|馬上|快|特地|專程|親自|每天|經常|偶爾|總是)$/.test(t[i - 1]))
     && !/^(得|的|了|過|說|不|沒|晚|早|一|再|吧|嗎|可是|但是|也|還是|而是|而|只是|只|又|後來|況且|就|至於|一下|我|你|他|她)$/.test(t[i + 1])
+    && !GP_NUM.test(t[i + 1]) && !/^(後來|可是|但是|然後|所以|結果|就|才|也|還|了|過|比如|例如|至於|因為|如果|而且|或是|或者|還是|想|要|只好|可是)$/.test(t[i + 2 + (/^(很|好|幾)$/.test(t[i + 1]) ? 2 : 0)] || '')
     && !(w === '來' && GP_VOL.test(t[i + 1]))
     && (() => { const r = t.slice(i + 1); while(r.length && /^(了|吧|嗎|呢|啊)$/.test(r[r.length - 1])) r.pop(); return r.length >= 2 && !(r.length === 2 && /(堂|館|場|站|店|園|校|家|院|裡|國|區|室|房|廳|處|所|市|鎮|村|部|行|樓|廟|寺|港|機場)$/.test(r[1])); })()),
 };
 const GP_SVO = GP[GP.length - 1];
 // when one applies, these say less and are left out (the place / time ones say the same thing; 是…的 and the 不是 pairs are not A 是 B)
-const GP_COVERS = {'S + waktu + tempat + V': ['S + 在 + tempat + V', 'waktu + S + V / S + waktu + V'],
+const GP_COVERS = {'V 不 V / 有沒有 …？': ['不 / 沒 + V'], '從來 + 不 / 沒 + V': ['不 / 沒 + V'], 'A + 沒有 + B + (那麼) + Adj': ['S + 有 / 沒有 + O', 'S + 很 / 太 / 非常 + Adj'], '又 + A + 又 + B': ['S + keterangan (也 / 都 / 還 / 就 / 常常 …) + V'], '請 + orang + V': ['請 + V'], 'S + waktu + tempat + V': ['S + 在 + tempat + V', 'waktu + S + V / S + waktu + V'],
   '是 + (kapan / di mana / bagaimana) + V + 的': ['A + 是 + B'], '不是 + A, 就是 + B': ['A + 是 + B'], '不是 + A, 而是 + B': ['A + 是 + B'],
   '之所以 + A, 是因為 + B': ['A + 是 + B'], '越來越 + Adj': ['S + 很 / 太 / 非常 + Adj'], '太 + Adj + 了': ['S + 很 / 太 / 非常 + Adj']};
 // every pattern the sentence has, the most telling first (S + V + O only when there's nothing else)
@@ -2082,11 +2108,83 @@ function grammarOf(e, t){
   return out.filter(g => !drop.has(g[1])).sort((a, b) => a[0] - b[0]);
 }
 // shown under an answered sentence, in Check's place: one box (scrolls when they don't fit), a line per pattern
+// a formula that names two word orders shows the one this sentence uses
+const GP_PRECISE = new Set(['S + 會 / 能 / 可以 / 要 / 想 + V', 'S + 很 / 太 / 非常 + Adj', '不 / 沒 + V']);
+const GP_EXAMPLES = {
+  '一邊 + V1, 一邊 + V2': /^(一邊|一面)$/,
+  '即使 / 就算 + A, 也 + B': /^(即使|就算|哪怕|縱使|即便)$/,
+  '雖然 + A, 但是 / 可是 / 卻 + B': /^(但是|可是|但|卻|還是|也)$/,
+  '…, 而且 / 並且 / 何況 + …': /^(而且|並且|況且|何況)$/,
+  'S + 會 / 能 / 可以 / 要 / 想 + V': /^((?:不|沒)?(?:會|能|可以|要|想|應該|必須|願意|敢|打算|能夠|可能)|不用)$/,
+  '不 / 沒 + V': /^(毫不|從不|從沒|決不|絕不|並不|不要|不用|不|沒|別|甭)/,
+  'S + 很 / 太 / 非常 + Adj': /^(很|非常|真|太|比較|挺|蠻|特別|十分|相當|超|更|最|那麼|這麼)$/,
+  'S + keterangan (也 / 都 / 還 / 就 / 常常 …) + V': /^(也|都|還|就|才|再|又|常常|一直|總是|已經|馬上|一定|只)$/,
+  'S + 喜歡 / 希望 / 決定 … + V': /^(喜歡|愛|希望|決定|打算|開始|繼續|試圖|準備|記得|忘了|喜愛|討厭|怕)$/,
+  'V + pelengkap hasil (完 / 懂 / 見 / 錯 / 掉 …)': /^[\u4e00-\u9fff]{0,2}?(完|懂|錯|掉|飽|清楚|乾淨|見|壞|光|透|醒)$/,
+};
+function gpVariant(g, t, h){
+  if(g[1] === '(正) 在 + V (+ 呢)'){
+    const f = (t.includes('正在') || t.includes('正') ? '正在' : '在') + ' + V' + (t[t.length - 1] === '呢' ? ' + 呢' : '');
+    return [g[0], 'S + ' + f, 'S + ' + f, g[3], g[4], g[5]];
+  }
+  if(g[1] !== 'waktu + S + V / S + waktu + V'){
+    // a list of words to pick from (但是 / 可是 / 卻) shows only the ones this sentence has; a list of examples (… at the end) stays as it is
+    if(/^V \+ \(上/.test(g[1])) return g;
+    const pick = f => f && String(f).replace(/[\u4e00-\u9fff]+(?: \/ [\u4e00-\u9fff]+)+(?: …)?/g, (run, at, s) => {
+      if(run.endsWith(' …')){   // a list of examples: name the ones this sentence uses instead
+        const re = GP_EXAMPLES[g[1]], found = re ? [...new Set(t.map(x => (x.match(re) || [])[1]).filter(Boolean))] : [];
+        return found.length ? found.join(' / ') : run; }
+      const ws = run.split(' / '), has = ws.filter(w => t.some((x, j) => x === w && (j < t.length - 1 || !/\+ V/.test(s.slice(at))) || !ws.includes(x) && x.length <= 3 && (/^[不沒別]/.test(x) && x.endsWith(w) || /^[不沒]$/.test(w) && x.startsWith(w))) || w.length > 1 && h.includes(w))
+        .map(w => t.includes(w) ? w : t.find(x => !ws.includes(x) && x.length <= 3 && /^[不沒別]/.test(x) && x.endsWith(w) && x !== w) || w);
+      if(!has.length && GP_EXAMPLES[g[1]]){ const re = GP_EXAMPLES[g[1]], found = [...new Set(t.map(x => (x.match(re) || [])[1]).filter(Boolean))]; if(found.length) return found.join(' / '); }
+      return has.length ? has.join(' / ') : run; });
+    // for these, name only the words that really make the pattern here (test each one on its own)
+    let f;
+    if(GP_PRECISE.has(g[1])){
+      const re = GP_EXAMPLES[g[1]], test = GP_FIX[g[1]] || g[5];
+      const found = [...new Set(t.map((x, j) => { const m = x.match(re); if(!m) return '';
+        try{ return test(t.map((y, k) => k === j || !re.test(y) ? y : '□'), h, '') ? (g[1] === '不 / 沒 + V' ? m[1] : x) : ''; }catch(e){ return ''; } }).filter(Boolean))];
+      if(found.length) f = g[1].replace(/[\u4e00-\u9fff]+(?: \/ [\u4e00-\u9fff]+)+/, found.join(' / '));
+    }
+    f = f || pick(g[1]);
+    if(t.includes('一面') && !t.includes('一邊')) f = f.replace(/一邊/g, '一面');
+    if(/kendaraan/.test(f) && t.includes('走路')) return [g[0], 'S + 走路 + 去 / 到 + tempat', 'S + 走路 + 去 / 到 + place', 'jalan kaki ke suatu tempat: cara pergi disebut sebelum 去 / 到', 'walk somewhere: how you go comes before 去 / 到', g[5]];
+    // a meaning in parts (不: …; 沒: …) keeps the part for the word the sentence has
+    const part = m => { const ps = String(m).split('; '), on = ps.filter(p => { const k = (p.match(/^([\u4e00-\u9fff]+): /) || [])[1]; return k && f.includes(k); });
+      return ps.length > 1 && on.length === 1 && ps.every(p => /^[\u4e00-\u9fff]+: /.test(p)) ? on[0].replace(/^[\u4e00-\u9fff]+: /, '') : m; };
+    if(g[1] === '不 / 沒 + V'){   // 別 / 甭 / 毫不 … have meanings of their own
+      const NEG = { '別': ['jangan V (larangan)', "don't V (telling someone not to)"], '甭': ['tidak usah V', 'no need to V'],
+        '毫不': ['sama sekali tidak V', 'not V at all'], '從不': ['tidak pernah V', 'never V'], '從沒': ['belum pernah V', 'have never V'],
+        '決不': ['sama sekali tidak akan V', 'will never V'], '絕不': ['sama sekali tidak akan V', 'will never V'], '並不': ['sebenarnya tidak V (membantah dugaan)', 'not V at all (contrary to what you might think)'] };
+      NEG['不要'] = ['jangan V (larangan)', "don't V (telling someone not to)"]; NEG['不用'] = ['tidak perlu V', 'no need to V'];
+      let k = f.replace(/ \+ V$/, '');
+      if(k === '不' && t.every((w, j) => w !== '不' || t[j + 1] === '用') && t.some((w, j) => w === '不' && t[j + 1] === '用')) k = '不用';
+      if(k === '不' && t.every((w, j) => w !== '不' || t[j + 1] === '要') && t.some((w, j) => w === '不' && t[j + 1] === '要' && t[j - 1] !== '要' && !/^(我|他|她|我們|他們|她們|人家|孩子)$/.test(t[j - 1] || ''))) k = '不要';
+      if(k === '不' && !t.includes('不')){ const x = t.findIndex(w => w === '不要' || w === '不用'); if(x >= 0) k = t[x]; }
+      if(k === '不要'){   // 不要 is "don't" unless someone says what they don't want (我不要去)
+        let x = t.indexOf('不要'); if(x < 0) x = t.findIndex((w, j) => w === '不' && t[j + 1] === '要');
+        if(/^(我|他|她|我們|他們|她們|人家|孩子|我也|他也)$/.test(t[x - 1] || '') || t.slice(0, 2).some(w => /^(我|他|她|我們|他們|她們)$/.test(w)) && !t.slice(0, x).some(w => /^(請|你|您|你們|別)$/.test(w))) NEG['不要'] = ['tidak mau V', "don't want to V"];
+      }
+      if(NEG[k]) return [g[0], k + ' + V', k + ' + V', NEG[k][0], NEG[k][1], g[5]];
+      const ks = k.split(' / ');
+      if(ks.length > 1){   // several: say what each one means
+        const base = (m, w) => (String(m).split('; ').find(p => p.startsWith(w + ': ')) || '').slice(w.length + 2);
+        const say = (L, w) => NEG[w] ? NEG[w][L] : base(L ? g[4] : g[3], w);
+        if(ks.every(w => say(0, w))) return [g[0], f, f, ks.map(w => w + ': ' + say(0, w)).join('; '), ks.map(w => w + ': ' + say(1, w)).join('; '), g[5]];
+      }
+    }
+    return [g[0], f, g[2] ? (GP_PRECISE.has(g[1]) ? f : pick(g[2])) : 0, part(g[3]), part(g[4]), g[5]];
+  }
+  const i = t.findIndex((w, k) => gpTimeAt(t, k) && t[k + gpTimeAt(t, k)] !== '的');
+  return i === 0
+    ? [g[0], 'waktu + S + V', 'time + S + V', 'keterangan waktu di awal kalimat, sebelum subjek dan kata kerja (tidak di akhir seperti bahasa Indonesia)', 'the time comes first, before the subject and verb (not at the end as in English)', g[5]]
+    : [g[0], 'S + waktu + V', 'S + time + V', 'keterangan waktu sesudah subjek, sebelum kata kerja (boleh juga di awal kalimat, tapi tidak di akhir)', 'the time comes after the subject, before the verb (it may also open the sentence, but never ends it)', g[5]];
+}
 function grammarHTML(e, t){
   const gs = grammarOf(e, t);
   if(!gs.length) return '';
   const id = LANG === 'id';
-  return `<div class="qz-gp"><ul class="qz-gp-in">${gs.map(g => `<li><div class="qz-gp-f">${esc(id ? g[1] : (g[2] || g[1])).replace(/[㐀-鿿]+/g, m => `<span lang="zh-TW">${m}</span>`)}</div><div class="qz-gp-m">${esc(id ? g[3] : g[4])}</div></li>`).join('')}</ul></div>`;
+  return `<div class="qz-gp"><ul class="qz-gp-in">${gs.map(g => gpVariant(g, t, String(e.hz || ''))).filter((g, k, all) => all.findIndex(x => x[1] === g[1]) === k).map(g => `<li><div class="qz-gp-f">${esc(id ? g[1] : (g[2] || g[1])).replace(/[㐀-鿿]+/g, m => `<span lang="zh-TW">${m}</span>`)}</div><div class="qz-gp-m">${esc(id ? g[3] : g[4])}</div></li>`).join('')}</ul></div>`;
 }
 // a fade at the bottom while there's more to scroll to
 function syncGp(){ qzOptions.querySelectorAll('.qz-gp-in').forEach(x => x.parentNode.classList.toggle('more', x.scrollTop + x.clientHeight < x.scrollHeight - 2)); }
