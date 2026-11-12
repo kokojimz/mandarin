@@ -1888,7 +1888,7 @@ const GP = [
   [1, '既 + A + 又 / 也 + B', 0, 'A sekaligus B', 'both A and B', t => gpPair(t, /^既$/, /^(又|也)$/)],
   [1, '越 + A, 越 + B', 0, 'makin A, makin B', 'the more A, the more B', (t, h) => !h.includes('越來越') && t.filter(w => w === '越').length >= 2],
   // 2 · special constructions
-  [2, 'S + 把 + O + V + …', 0, 'melakukan V pada O sampai ada hasilnya: O dipindah / diubah / dibereskan (把門關上 = menutup pintunya)', 'do V to O with a result: O gets moved / changed / dealt with (把門關上 = shut the door)',
+  [2, 'S + 把 + O + V + …', 0, 'S melakukan V pada O, lalu O-nya jadi pindah / berubah / selesai (把門關上 = menutup pintunya, 把美金換成臺幣 = menukar dolar jadi NT)', 'S does V to O, and O ends up moved / changed / done (把門關上 = shut the door, 把美金換成臺幣 = change US dollars into NT)',
     t => t.some((w, i) => w === '把' && !(i && GP_NUM.test(t[i - 1])) && i < t.length - 2)],
   [2, 'S + 被 + (pelaku) + V + …', 'S + 被 + (doer) + V + …', 'kalimat pasif: S dikenai V (sering hal yang tidak enak)', 'passive: S has V done to it (often something bad)', t => t.includes('被')],
   [2, '是 + (kapan / di mana / bagaimana) + V + 的', '是 + (when / where / how) + V + 的', 'menekankan kapan, di mana, bagaimana, atau oleh siapa sesuatu (sudah) terjadi', 'stresses when, where, how or by whom something happened',
