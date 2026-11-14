@@ -691,7 +691,7 @@
 <body>
 <!-- loading screen: shown while the data downloads and unpacks, removed when the app is ready -->
 <style>
-  #ldScreen{position:fixed;inset:0;z-index:9999;background:var(--bg);display:flex;align-items:center;justify-content:center;transition:opacity .3s}
+  #ldScreen{position:fixed;inset:0;z-index:9999;background:var(--bg);display:flex;align-items:center;justify-content:center;padding-bottom:12vh;transition:opacity .3s}   /* a little above the middle: dead centre looks low on a phone */
   #ldRing{position:relative;width:96px;height:96px;opacity:0;animation:ldIn .25s .6s forwards}   /* only shows when loading takes longer than 0.6 s */
   @keyframes ldIn{to{opacity:1}}
   #ldRing svg{width:100%;height:100%;transform:rotate(-90deg)}
