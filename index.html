@@ -2669,6 +2669,7 @@ function openQuiz(r, card){
     quizAnswered = true; document.body.classList.add('qz-can-close'); quizAnsweredAt = Date.now();
     freezeQuizTimer();
     if(!practice && !quizResults.has(key)){ quizResults.set(key, ok); recordAnswer(r, ok, kind); }   // only the first answer per card counts (score and report); practice never counts
+    if(!tone) unlockSpeech();           // the answer is read out after the sound: let iPhone speak from this tap
     const sfxMs = playSfx(ok ? 'right' : 'wrong');   // right / wrong sound (every question type, also when the timer runs out)
     if(!practice && card && quizResults.get(key) === false) card.classList.add('quiz-wrong');
     updateCountSub();
@@ -2768,7 +2769,8 @@ function openQuiz(r, card){
   document.body.classList.toggle('qz-can-close', !quizCfg.timer || practice);
   quizOverlay.classList.add('on');
   quizOverlay.setAttribute('aria-hidden', 'false');
-  unlockSpeech(); sfxWake();           // inside the tap: lets iPhone speak / play the sounds a moment later too (after the right / wrong sound, the timer)
+  if(tone) unlockSpeech();             // the tone quiz says its word a moment after this tap (other questions unlock it when answered: an early unlock pauses music)
+  sfxWake();                           // inside the tap: the right / wrong sound can play a moment later too (the timer)
   if(tone){                            // the word, once the dialog has finished opening; ▶︎ plays it again
     clearTimeout(tonePlayT);
     tonePlayT = setTimeout(() => {
@@ -3545,7 +3547,8 @@ function learnSyl(text, ms){
 function stopSpeech(){
   if(!HAS_TTS) return;
   speakSeq++;
-  try{ window.speechSynthesis.cancel(); }catch(e){}
+  // only when something is being said: on iPhone even an idle cancel() takes the sound over and pauses Spotify & co.
+  try{ const s = window.speechSynthesis; if(s.speaking || s.pending) s.cancel(); }catch(e){}
   if(playingBtn){ setIdle(playingBtn); playingBtn = null; }
 }
 // iPhone only lets a page speak from inside a tap; one silent utterance in the tap unlocks the later (delayed) ones
