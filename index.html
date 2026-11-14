@@ -3562,6 +3562,11 @@ function speak(text, btn, after){   // after: once the speech has ended (or fail
 
 // ---- right / wrong sounds in the quiz: short tones made with Web Audio (no audio files); they follow Settings › Sound ----
 let sfxCtx = null, sfxOut = null, sfxUsed = false;
+// Music from another app (Spotify …): by default iPhone pauses it for good when this page makes a sound. "transient"
+// asks for a short sound instead: the music goes quieter for a moment and carries on by itself (Safari 16.4+; elsewhere nothing changes).
+function setAudioSession(){ try{ if(navigator.audioSession && navigator.audioSession.type !== 'transient') navigator.audioSession.type = 'transient'; }catch(e){} }
+setAudioSession();
+document.addEventListener('visibilitychange', () => { if(!document.hidden) setAudioSession(); });
 function sfxCtxGet(fresh){   // fresh: drop the old one and start again (see sfxReady)
   if(sfxCtx && !fresh) return sfxCtx;
   if(sfxCtx){ try{ sfxCtx.close(); }catch(e){} sfxCtx = null; sfxOut = null; }   // iPhone allows only a few at a time
