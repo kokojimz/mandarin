@@ -723,6 +723,41 @@
   .az-x{ align-self:center; font-size:1.3rem; line-height:1; color:var(--sub); padding:0 1px; }
   .az-note{ font-size:.75rem; color:var(--sub); line-height:1.5; margin-top:14px; text-align:center; }
   .empty .az-empty{ display:inline-block; flex:none; margin-top:16px; padding:10px 18px; }
+  /* photo translation */
+  .ph-wrap{ text-align:center; margin-top:4px; }
+  .ph-img{ position:relative; display:inline-block; max-width:100%; vertical-align:top; border-radius:10px; overflow:hidden; cursor:zoom-in; -webkit-tap-highlight-color:transparent; }
+  .ph-img img{ display:block; max-width:100%; max-height:58vh; width:auto; height:auto; }
+  .ph-ov{ position:absolute; inset:0; pointer-events:none; }
+  .ph-t{ position:absolute; box-sizing:border-box; display:flex; align-items:center; justify-content:center; text-align:center; overflow:hidden;
+    padding:0 3px; border-radius:3px; background:rgba(245,245,245,.95); color:#111; line-height:1.2; font-weight:600; word-break:break-word; }
+  .ph-img.orig .ph-ov{ display:none; }
+  .ph-busy{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,.45); color:#fff; font-size:.9rem; font-weight:600; }
+  .ph-busy span{ padding:8px 16px; border-radius:999px; background:rgba(0,0,0,.72); animation:phpulse 1.2s ease-in-out infinite; }
+  @keyframes phpulse{ 50%{ opacity:.4; } }
+  .ph-foot2{ margin:10px 0 0; }
+  .ph-foot2 .pk-mark:disabled{ opacity:.3; cursor:default; }
+  #phFullView{ position:fixed; inset:0; z-index:95; background:#000; display:flex; align-items:center; justify-content:center; cursor:zoom-out; }
+  .ph-fullbox{ border-radius:0; flex:none; }
+  .ph-fullbox img{ width:100%; height:100%; max-height:none; }
+  .ph-fullbox.orig .ph-ov{ display:none; }
+  .ph-dtop{ display:flex; align-items:center; gap:4px; }
+  .ph-play{ position:static; transform:none; flex:none; min-width:40px; height:36px; font-size:1.2rem; }
+  .ph-play.loading{ animation:phpulse 1s ease-in-out infinite; }
+  .ph-vh{ margin:18px 0 8px; font-size:.8rem; font-weight:600; color:var(--sub); }
+  .ph-words{ display:flex; flex-wrap:wrap; gap:6px; }
+  .ph-w{ padding:6px 10px; border:1px solid var(--border); border-radius:10px; background:transparent; color:var(--text); font:inherit; font-size:1.15rem; line-height:1.3; cursor:pointer; -webkit-tap-highlight-color:transparent; }
+  .ph-w.on{ border-color:var(--accent); box-shadow:inset 0 0 0 1px var(--accent); }
+  .ph-det{ flex-basis:100%; box-sizing:border-box; padding:12px 14px; border:1px solid var(--border); border-radius:12px; background:var(--bg); }
+  .ph-det[hidden]{ display:none; }
+  .ph-dh{ font-size:2rem; line-height:1.25; }
+  .ph-dp{ font-size:1rem; margin-top:2px; }
+  .ph-dm{ font-size:.9rem; line-height:1.45; margin-top:6px; }
+  .ph-card{ margin-top:8px; padding:4px 0; border:0; background:none; color:var(--accent); font:inherit; font-size:.85rem; font-weight:600; cursor:pointer; }
+  .ph-note{ text-align:center; color:var(--sub); font-size:.85rem; margin-top:16px; }
+  .ph-foot{ display:flex; margin-top:18px; }
+  .ph-keyline{ text-align:center; margin-top:8px; }
+  .ph-link{ border:0; background:none; padding:4px; color:var(--sub); font:inherit; font-size:.75rem; text-decoration:underline; cursor:pointer; }
+  .ph-klink{ color:var(--accent); }
 </style>
 </head>
 <body>
@@ -756,7 +791,7 @@
 
 <div class="tools search-row">
   <input id="q" type="search" placeholder="漢字 / pīnyīn / meaning…" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" aria-label="Search by hanzi, pinyin or meaning">
-  <button type="button" id="azBtn" class="az-btn" title="Analyze a sentence" aria-label="Analyze a sentence" data-tx-title="Analyze a sentence"><svg class="tb-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8V5.5A1.5 1.5 0 0 1 5.5 4H8M16 4h2.5A1.5 1.5 0 0 1 20 5.5V8M20 16v2.5a1.5 1.5 0 0 1-1.5 1.5H16M8 20H5.5A1.5 1.5 0 0 1 4 18.5V16"/><path d="M8 9h8M8 12h8M8 15h5"/></svg></button>
+  <button type="button" id="phBtn" class="az-btn" title="Photo translation" aria-label="Photo translation" data-tx-title="Photo translation"><svg class="tb-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8.5A1.5 1.5 0 0 1 5.5 7h2l1.5-2h6l1.5 2h2A1.5 1.5 0 0 1 20 8.5v9a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 17.5z"/><circle cx="12" cy="13" r="3.5"/></svg></button>
   <div class="quiz-score" id="quizScore" role="status" aria-live="polite" hidden></div>
   <div class="resume" id="resume" role="button" tabindex="0" hidden>
     <span class="rb"></span>
@@ -945,7 +980,7 @@ const LS_LANG = 'tocfl-lang-v1';
 let LANG = 'en';
 try{ if(localStorage.getItem(LS_LANG) === 'id') LANG = 'id'; }catch(e){}
 MEAN_ID.forEach((m, i) => { D[i].mi = m; });
-const ID_TEXT = {"Analyze a sentence": "Analisis kalimat", "Take a photo, hold the text and tap Copy (Live Text), then paste it here.": "Foto teksnya, tahan teksnya lalu ketuk Salin (Teks Langsung), lalu tempel di sini.", "Paste Chinese text here…": "Tempel teks Mandarin di sini…", "Paste": "Tempel", "Clear": "Hapus", "No Chinese text found.": "Tidak ada teks Mandarin.", "A greyed-out word is not one of the cards: its meaning is put together from its parts, a guess.": "Kata yang redup tidak ada di kartu: artinya gabungan arti per bagian, hanya perkiraan.", "Only the first 1500 characters are shown.": "Hanya 1500 karakter pertama yang ditampilkan.", "Hold the box and tap Paste.": "Tahan kotaknya lalu ketuk Tempel.", "Analyze this sentence": "Analisis kalimat ini","The cards are shuffled, choose how to sort them again.": "Kartu sedang acak, pilih cara mengurutkannya lagi.", "Sort (cards are shuffled)": "Urutkan (kartu sedang diacak)", "Read aloud": "Bacakan", "Read aloud automatically": "Bacakan otomatis", "Give up": "Menyerah", "Try again": "Coba lagi", "Skipped while the sound is off": "Dilewati selama suara mati", "Arrange the words": "Merangkai kata", "Tap the words in the right order.": "Ketuk kata-katanya sesuai urutan yang benar.", "Listen and type the pinyin.": "Dengarkan lalu ketik pinyinnya.", "Group order": "Urutan grup", "Tap your groups in the order you want them.": "Ketuk grupmu sesuai urutan yang kamu mau.", "Each tab becomes a group named after it. The columns, from left to right:": "Setiap tab jadi satu grup dengan nama tab itu. Urutan kolom dari kiri ke kanan:", "* Required. Pinyin: yìn ní rén or yin4 ni2 ren2.": "* Wajib. Pinyin: yìn ní rén atau yin4 ni2 ren2.", "More sentences: repeat the row, change only the sentence.": "Lebih dari satu kalimat: ulangi barisnya, ganti kalimatnya saja.", "A sentence needs the word, its pinyin and an English translation.": "Kalimat harus memuat kata dan pinyinnya, serta terjemahan Inggris.", "Make an empty group, a synced group, or star many cards at once.": "Buat grup kosong, grup sinkron, atau beri bintang ke banyak kartu sekaligus.", "Synced": "Sinkron", "Starred": "Berbintang", "Group 1": "Grup 1", "Your synced groups": "Grup sinkronmu", "Upload an Excel file or paste a Google Sheets link.": "Upload file Excel atau tempel link Google Sheets.", "File format": "Format file", "For Excel and Google Sheets. Every tab is read. The columns, from left to right:": "Untuk Excel dan Google Sheets. Semua tab dibaca. Urutan kolom dari kiri ke kanan:", "* An empty group cell uses the group above. Each group in the file becomes a new group.": "* Sel grup yang kosong ikut grup di atasnya. Setiap grup di file jadi grup baru.", "Fullscreen": "Layar penuh", "Excel file": "File Excel", "Upload Excel": "Upload Excel", "Create new": "Buat baru", "Choose the groups to add.": "Pilih grup yang mau ditambahkan.", "This group will be added.": "Grup ini akan ditambahkan.", "Not found: {0}": "Tidak ditemukan: {0}", "Choose at least one group.": "Pilih minimal satu grup.", "No hanzi were found in this sheet.": "Tidak ada hanzi di sheet ini.", "Google Sheets link": "Link Google Sheets", "Show groups": "Tampilkan grup", "Hide groups": "Sembunyikan grup", "Pinyin tones": "Nada pinyin", "As spoken": "Sesuai ucapan", "Dictionary": "Kamus", "Open card": "Buka kartu", "All quizzes": "Semua kuis", "Previous quiz": "Kuis sebelumnya", "Next quiz": "Kuis berikutnya", "No results for this quiz yet.": "Belum ada hasil untuk kuis ini.", "Settings": "Pengaturan", "Shuffle": "Acak", "Reveal / hide all": "Buka / tutup semua", "Start quiz": "Mulai kuis", "Start": "Mulai", "漢字 / pīnyīn / meaning…": "漢字 / pīnyīn / arti…", "Search by hanzi, pinyin or meaning": "Cari berdasarkan hanzi, pinyin, atau arti", "Found a bug?": "Nemu bug?", "Cancel": "Batal", "Check": "Periksa", "OK": "OK", "{0} — hold to rename or delete": "{0} — tahan untuk ganti nama atau hapus", "All": "Semua", "New group": "Grup baru", "Pinyin of the word": "Pinyin kata", "Fill in the blank": "Isi bagian kosong", "Meaning of the word": "Arti kata", "Which meaning matches this word?": "Arti mana yang sesuai dengan kata ini?", "Multiple choice": "Pilihan ganda", "Type it": "Ketik", "Quiz": "Kuis", "Choose how you want to be quizzed.": "Atur cara kuis yang kamu inginkan.", "Question": "Soal", "Card display": "Tampilan kartu", "Show the word": "Tampilkan kata", "Hide the word": "Sembunyikan kata", "Answer": "Jawaban", "Choices": "Jumlah pilihan", "Tones in typed pinyin": "Nada pada pinyin yang diketik", "Must match": "Harus tepat", "Ignore": "Abaikan", "Time per card": "Waktu per kartu", "Off": "Mati", "{0}s": "{0} dtk", "Save": "Simpan", "Exit quiz mode?": "Keluar dari mode kuis?", "Exiting quiz mode will reset your quiz score.": "Keluar dari mode kuis akan mengatur ulang skormu.", "Exit": "Keluar", "Type the missing word.": "Ketik kata yang hilang.", "Which word fills the blank?": "Kata mana yang mengisi bagian kosong?", "Type the pinyin of this word.": "Ketik pinyin kata ini.", "Which pinyin matches this word?": "Pinyin mana yang sesuai dengan kata ini?", "Delete": "Hapus", "Edit": "Ubah", "Bookmark": "Penanda", "Add to group": "Tambahkan ke grup", "Play pronunciation": "Putar pelafalan", "Stop": "Berhenti", "Delete card?": "Hapus kartu?", "The card \"{0}\" will be deleted from \"{1}\". This cannot be undone.": "Kartu \"{0}\" akan dihapus dari \"{1}\". Tindakan ini tidak bisa dibatalkan.", "Continue from {0}": "Lanjutkan dari {0}", "Remove bookmark?": "Hapus penanda?", "The card \"{0}\" will no longer be marked as your bookmark.": "Kartu \"{0}\" tidak akan ditandai lagi sebagai penandamu.", "Remove": "Hapus", "Change bookmark?": "Ganti penanda?", "Your current bookmark on \"{0}\" will be replaced with this card.": "Penandamu saat ini di \"{0}\" akan diganti dengan kartu ini.", "Your current bookmark will be replaced with this card.": "Penandamu saat ini akan diganti dengan kartu ini.", "Change": "Ganti", "Set bookmark?": "Pasang penanda?", "This card will be marked as your bookmark so you can jump back to it later.": "Kartu ini akan ditandai sebagai penanda supaya kamu bisa kembali ke sini nanti.", "Set": "Pasang", "Taiwan": "Taiwan", "China": "Tiongkok", "Singapore": "Singapura", "Automatic": "Otomatis", "Voice": "Jenis suara", "Tap a voice to hear it.": "Ketuk suara untuk mendengarnya.", "No Chinese voices were found on this device.": "Tidak ada suara bahasa Mandarin di perangkat ini.", "Cards": "Kartu", "Tap and hold a card for details": "Ketuk dan tahan kartu untuk lihat detail", "Prev": "Kembali", "Next": "Lanjut", "Jump to page {0}-{1}": "Lompat ke halaman {0}-{1}", "Jump to a page between {0} and {1}": "Lompat ke halaman antara {0} dan {1}", "Page number {0} to {1}": "Nomor halaman {0} sampai {1}", "Add a card to {0}": "Tambahkan kartu ke {0}", "Add card": "Tambah kartu", "Give your new group a name.": "Beri nama untuk grup barumu.", "Group name": "Nama grup", "Create": "Buat", "Saved to \"{0}\"": "Disimpan ke \"{0}\"", "Please type a name.": "Silakan ketik nama.", "That name is reserved.": "Nama itu tidak bisa dipakai.", "A group with this name already exists.": "Grup dengan nama ini sudah ada.", "Create new group": "Buat grup baru", "Done": "Selesai", "Cards you made stay in their own group": "Kartu buatanmu tetap berada di grupnya sendiri", "Edit group": "Ubah grup", "This group has 1 card.": "Grup ini berisi 1 kartu.", "This group has {0} cards.": "Grup ini berisi {0} kartu.", "Delete group?": "Hapus grup?", "The group \"{0}\" will be deleted": "Grup \"{0}\" akan dihapus", ", together with the 1 card you made in it": ", beserta 1 kartu yang kamu buat di dalamnya", ", together with the {0} cards you made in it": ", beserta {0} kartu yang kamu buat di dalamnya", ". Saved TOCFL cards stay in TOCFL. This cannot be undone": ". Kartu TOCFL yang disimpan tetap ada di TOCFL. Tindakan ini tidak bisa dibatalkan", "Edit card": "Ubah kartu", "New card": "Kartu baru", "Card in \"{0}\".": "Kartu di \"{0}\".", "Add a card to \"{0}\".": "Tambahkan kartu ke \"{0}\".", "yìn ní rén  or  yin4 ni2 ren2": "yìn ní rén  atau  yin4 ni2 ren2", "Example sentences (optional)": "Contoh kalimat (opsional)", "Add sentence": "Tambah kalimat", "Sentence {0}: please type the sentence.": "Kalimat {0}: silakan ketik kalimatnya.", "Sentence {0} must contain the word \"{1}\".": "Kalimat {0} harus memuat kata \"{1}\".", "Sentence {0}: please type the pinyin.": "Kalimat {0}: silakan ketik pinyinnya.", "Sentence {0}: the pinyin must contain \"{1}\".": "Kalimat {0}: pinyinnya harus memuat \"{1}\".", "Sentence {0}: please type the English translation.": "Kalimat {0}: silakan ketik terjemahan bahasa Inggrisnya.", "1 sentence left out": "1 kalimat tidak dipakai", "{0} sentences left out": "{0} kalimat tidak dipakai", "Sentence {0}": "Kalimat {0}", "Sentence": "Kalimat", "Add": "Tambah", "\"{0}\" is already in your group \"{1}\".": "\"{0}\" sudah ada di grupmu \"{1}\".", "\"{0}\" is already a TOCFL card ({1}). TOCFL cards can't be added or edited.": "\"{0}\" sudah menjadi kartu TOCFL ({1}). Kartu TOCFL tidak bisa ditambahkan atau diubah.", "Pinyin suggested per character, please check the tones.": "Pinyin disarankan per karakter, mohon periksa nadanya.", "Please type the hanzi.": "Silakan ketik hanzinya.", "Hanzi must contain Chinese characters.": "Hanzi harus berisi karakter Mandarin.", "\"{0}\" is already a TOCFL card ({1}) and can't be added or edited.": "\"{0}\" sudah menjadi kartu TOCFL ({1}) dan tidak bisa ditambahkan atau diubah.", "Please type the pinyin.": "Silakan ketik pinyinnya.", "The card \"{0}\" will be deleted. This cannot be undone.": "Kartu \"{0}\" akan dihapus. Tindakan ini tidak bisa dibatalkan.", "Export backup": "Ekspor cadangan", "Your groups, saved cards, bookmark, quiz report and settings will be saved in this file.": "Grup, kartu tersimpan, penanda, rapor kuis, dan pengaturanmu akan disimpan di file ini.", "File name": "Nama file", "Export": "Ekspor", "Import": "Impor", "Backup exported": "Cadangan berhasil diekspor", "Backup exported: {0}": "Cadangan diekspor: {0}", "Export failed on this device": "Ekspor gagal di perangkat ini", "This is not a TOCFL flashcards backup": "Ini bukan file cadangan TOCFL flashcards", "Import backup?": "Impor cadangan?", "Your groups, saved cards, bookmark, quiz report and settings will be replaced with the ones in this file ({0}, {1})": "Grup, kartu tersimpan, penanda, rapor kuis, dan pengaturanmu akan diganti dengan isi file ini ({0}, {1})", "Imported {0}, {1}": "Berhasil mengimpor {0}, {1}", " ({0} skipped)": " ({0} dilewati)", "Could not read this file": "File ini tidak bisa dibaca", "1 group": "1 grup", "{0} groups": "{0} grup", "1 card": "1 kartu", "{0} cards": "{0} kartu", "Change how the app looks and sounds.": "Atur tampilan, suara, dan bahasa aplikasi.", "Theme": "Tema", "Dark": "Gelap", "Light": "Terang", "Backup": "Cadangan", "Language": "Bahasa", "Meaning (English)": "Arti (Inggris)", "Meaning (Indonesian)": "Arti (Indonesia)", "Translation (English)": "Terjemahan (Inggris)", "Translation (Indonesian)": "Terjemahan (Indonesia)", "Please type the English meaning.": "Silakan ketik arti dalam bahasa Inggris.", "Reading the sheet…": "Membaca sheet…", "Choose the sheets to add.": "Pilih sheet yang mau ditambahkan.", "This sheet will be added.": "Sheet ini akan ditambahkan.", "No cards found": "Tidak ada kartu", "Choose at least one sheet.": "Pilih minimal satu sheet.", "This is not a Google Sheets link.": "Ini bukan link Google Sheets.", "Couldn't read this sheet. Make sure it's shared with \"Anyone with the link\" and you're online.": "Sheet ini tidak bisa dibaca. Pastikan aksesnya \"Siapa saja yang memiliki link\" dan kamu sedang online.", "Sheet": "Sheet", "Sync": "Sinkron", "Syncing…": "Menyinkronkan…", "Synced: {0}": "Tersinkron: {0}", "Last synced {0}": "Terakhir disinkron {0}", "1 row skipped": "1 baris dilewati", "{0} rows skipped": "{0} baris dilewati", "This sheet was not found in the spreadsheet.": "Sheet ini tidak ditemukan di spreadsheet.", "Added {0}": "Ditambahkan {0}", "This viewer doesn't let the app go online. Open the file in a browser (Safari, Chrome) to use sheet links.": "Penampil ini tidak mengizinkan aplikasi terhubung ke internet. Buka file ini di browser (Safari, Chrome) untuk memakai link sheet.", "Cards of this group come from its Google Sheet": "Kartu grup ini berasal dari Google Sheet-nya", "The group \"{0}\" and its cards will be deleted. Your Google Sheet stays as it is.": "Grup \"{0}\" beserta kartunya akan dihapus. Google Sheet-mu tetap seperti semula.", "Sheet format": "Format sheet", "Hanzi": "Hanzi", "Pinyin": "Pinyin", "Pinyin (sentence)": "Pinyin (kalimat)", "Think too long and Saber will take you airborne.": "Kebanyakan mikir keburu diangkat Saber.", "Report": "Rapor", "Your quiz results, day by day.": "Hasil kuismu dari hari ke hari.", "Cards quizzed": "Kartu dikuis", "Correct": "Benar", "Day streak": "Hari beruntun", "Correct answers per day": "Jawaban benar per hari", "Tap the chart to see the numbers of a day.": "Ketuk grafik untuk melihat angka di hari itu.", "Often wrong": "Sering salah", "Often wrong ({0})": "Sering salah ({0})", "All selected cards": "Semua kartu terpilih", "Wrong {0}× of {1}": "Salah {0}× dari {1}", "No wrong answers yet.": "Belum ada jawaban salah.", "Right {0} of {1} times in a row": "Benar {0} dari {1} kali berturut-turut", "A card leaves this list after {0} right answers in a row.": "Kartu hilang dari daftar ini setelah {0} kali benar berturut-turut.", "End": "Akhiri", "Quiz settings": "Pengaturan kuis", "Restart quiz?": "Mulai ulang kuis?", "The quiz starts again and your quiz score is reset.": "Kuis dimulai lagi dari awal dan skormu diatur ulang.", "Restart": "Mulai ulang", "Clear history": "Hapus riwayat", "Clear quiz history?": "Hapus riwayat kuis?", "All quiz results in the report will be deleted. This cannot be undone.": "Semua hasil kuis di rapor akan dihapus. Tindakan ini tidak bisa dibatalkan.", "Clear": "Hapus", "No quiz results yet. Answer a few cards in quiz mode, then come back here.": "Belum ada hasil kuis. Jawab beberapa kartu di mode kuis, lalu kembali ke sini.", "Meaning of each character": "Arti tiap karakter", "No meaning yet": "Belum ada arti", "Sound": "Suara", "On": "Nyala", "Close": "Tutup", "1 more example": "1 contoh lainnya", "{0} more examples": "{0} contoh lainnya", "Previous card": "Kartu sebelumnya", "Next card": "Kartu berikutnya", "Pick one or more.": "Pilih satu atau lebih.", "Select question": "Pilih soal", "Select voice": "Pilih suara", "Mixed ({0})": "Campuran ({0})", "Tone of the word": "Nada kata", "Listen and pick the tones.": "Dengarkan lalu pilih nadanya.", "Tone:": "Nada:", "1st": "1", "2nd": "2", "3rd": "3", "4th": "4", "Neutral": "Netral", "Sort": "Urutkan", "Order": "Urutan", "Group": "Grup", "Choose how the cards are ordered.": "Pilih cara mengurutkan kartu."};
+const ID_TEXT = {"Full screen": "Layar penuh", "Save picture": "Simpan gambar", "Share": "Bagikan", "Original (tap for the translation)": "Asli (ketuk untuk terjemahan)", "Translation (tap for the original)": "Terjemahan (ketuk untuk yang asli)", "Gemini\u2019s voice is not available right now.": "Suara Gemini sedang tidak tersedia.", "Copied.": "Disalin.","Photo translation": "Terjemahan foto", "Translation": "Terjemahan", "Original": "Asli", "New photo": "Foto lagi", "Words": "Kosakata", "Open card": "Buka kartu", "Gemini API key": "Kunci API Gemini", "Free from Google AI Studio. The photo is sent to Google to be read; the key stays in this browser.": "Gratis dari Google AI Studio. Foto dikirim ke Google untuk dibaca; kuncinya hanya tersimpan di browser ini.", "Remove": "Hapus", "Save": "Simpan", "That doesn\u2019t look like an API key.": "Itu sepertinya bukan kunci API.", "Reading the photo…": "Membaca foto…", "No internet connection.": "Tidak ada internet.", "The free quota is used up for now. Try again later.": "Kuota gratis sedang habis. Coba lagi nanti.", "The API key doesn\u2019t work.": "Kunci API tidak bisa dipakai.", "The photo couldn\u2019t be read. Try again.": "Foto tidak bisa dibaca. Coba lagi.","Analyze a sentence": "Analisis kalimat", "Take a photo, hold the text and tap Copy (Live Text), then paste it here.": "Foto teksnya, tahan teksnya lalu ketuk Salin (Teks Langsung), lalu tempel di sini.", "Paste Chinese text here…": "Tempel teks Mandarin di sini…", "Paste": "Tempel", "Clear": "Hapus", "No Chinese text found.": "Tidak ada teks Mandarin.", "A greyed-out word is not one of the cards: its meaning is put together from its parts, a guess.": "Kata yang redup tidak ada di kartu: artinya gabungan arti per bagian, hanya perkiraan.", "Only the first 1500 characters are shown.": "Hanya 1500 karakter pertama yang ditampilkan.", "Hold the box and tap Paste.": "Tahan kotaknya lalu ketuk Tempel.", "Analyze this sentence": "Analisis kalimat ini","The cards are shuffled, choose how to sort them again.": "Kartu sedang acak, pilih cara mengurutkannya lagi.", "Sort (cards are shuffled)": "Urutkan (kartu sedang diacak)", "Read aloud": "Bacakan", "Read aloud automatically": "Bacakan otomatis", "Give up": "Menyerah", "Try again": "Coba lagi", "Skipped while the sound is off": "Dilewati selama suara mati", "Arrange the words": "Merangkai kata", "Tap the words in the right order.": "Ketuk kata-katanya sesuai urutan yang benar.", "Listen and type the pinyin.": "Dengarkan lalu ketik pinyinnya.", "Group order": "Urutan grup", "Tap your groups in the order you want them.": "Ketuk grupmu sesuai urutan yang kamu mau.", "Each tab becomes a group named after it. The columns, from left to right:": "Setiap tab jadi satu grup dengan nama tab itu. Urutan kolom dari kiri ke kanan:", "* Required. Pinyin: yìn ní rén or yin4 ni2 ren2.": "* Wajib. Pinyin: yìn ní rén atau yin4 ni2 ren2.", "More sentences: repeat the row, change only the sentence.": "Lebih dari satu kalimat: ulangi barisnya, ganti kalimatnya saja.", "A sentence needs the word, its pinyin and an English translation.": "Kalimat harus memuat kata dan pinyinnya, serta terjemahan Inggris.", "Make an empty group, a synced group, or star many cards at once.": "Buat grup kosong, grup sinkron, atau beri bintang ke banyak kartu sekaligus.", "Synced": "Sinkron", "Starred": "Berbintang", "Group 1": "Grup 1", "Your synced groups": "Grup sinkronmu", "Upload an Excel file or paste a Google Sheets link.": "Upload file Excel atau tempel link Google Sheets.", "File format": "Format file", "For Excel and Google Sheets. Every tab is read. The columns, from left to right:": "Untuk Excel dan Google Sheets. Semua tab dibaca. Urutan kolom dari kiri ke kanan:", "* An empty group cell uses the group above. Each group in the file becomes a new group.": "* Sel grup yang kosong ikut grup di atasnya. Setiap grup di file jadi grup baru.", "Fullscreen": "Layar penuh", "Excel file": "File Excel", "Upload Excel": "Upload Excel", "Create new": "Buat baru", "Choose the groups to add.": "Pilih grup yang mau ditambahkan.", "This group will be added.": "Grup ini akan ditambahkan.", "Not found: {0}": "Tidak ditemukan: {0}", "Choose at least one group.": "Pilih minimal satu grup.", "No hanzi were found in this sheet.": "Tidak ada hanzi di sheet ini.", "Google Sheets link": "Link Google Sheets", "Show groups": "Tampilkan grup", "Hide groups": "Sembunyikan grup", "Pinyin tones": "Nada pinyin", "As spoken": "Sesuai ucapan", "Dictionary": "Kamus", "Open card": "Buka kartu", "All quizzes": "Semua kuis", "Previous quiz": "Kuis sebelumnya", "Next quiz": "Kuis berikutnya", "No results for this quiz yet.": "Belum ada hasil untuk kuis ini.", "Settings": "Pengaturan", "Shuffle": "Acak", "Reveal / hide all": "Buka / tutup semua", "Start quiz": "Mulai kuis", "Start": "Mulai", "漢字 / pīnyīn / meaning…": "漢字 / pīnyīn / arti…", "Search by hanzi, pinyin or meaning": "Cari berdasarkan hanzi, pinyin, atau arti", "Found a bug?": "Nemu bug?", "Cancel": "Batal", "Check": "Periksa", "OK": "OK", "{0} — hold to rename or delete": "{0} — tahan untuk ganti nama atau hapus", "All": "Semua", "New group": "Grup baru", "Pinyin of the word": "Pinyin kata", "Fill in the blank": "Isi bagian kosong", "Meaning of the word": "Arti kata", "Which meaning matches this word?": "Arti mana yang sesuai dengan kata ini?", "Multiple choice": "Pilihan ganda", "Type it": "Ketik", "Quiz": "Kuis", "Choose how you want to be quizzed.": "Atur cara kuis yang kamu inginkan.", "Question": "Soal", "Card display": "Tampilan kartu", "Show the word": "Tampilkan kata", "Hide the word": "Sembunyikan kata", "Answer": "Jawaban", "Choices": "Jumlah pilihan", "Tones in typed pinyin": "Nada pada pinyin yang diketik", "Must match": "Harus tepat", "Ignore": "Abaikan", "Time per card": "Waktu per kartu", "Off": "Mati", "{0}s": "{0} dtk", "Save": "Simpan", "Exit quiz mode?": "Keluar dari mode kuis?", "Exiting quiz mode will reset your quiz score.": "Keluar dari mode kuis akan mengatur ulang skormu.", "Exit": "Keluar", "Type the missing word.": "Ketik kata yang hilang.", "Which word fills the blank?": "Kata mana yang mengisi bagian kosong?", "Type the pinyin of this word.": "Ketik pinyin kata ini.", "Which pinyin matches this word?": "Pinyin mana yang sesuai dengan kata ini?", "Delete": "Hapus", "Edit": "Ubah", "Bookmark": "Penanda", "Add to group": "Tambahkan ke grup", "Play pronunciation": "Putar pelafalan", "Stop": "Berhenti", "Delete card?": "Hapus kartu?", "The card \"{0}\" will be deleted from \"{1}\". This cannot be undone.": "Kartu \"{0}\" akan dihapus dari \"{1}\". Tindakan ini tidak bisa dibatalkan.", "Continue from {0}": "Lanjutkan dari {0}", "Remove bookmark?": "Hapus penanda?", "The card \"{0}\" will no longer be marked as your bookmark.": "Kartu \"{0}\" tidak akan ditandai lagi sebagai penandamu.", "Remove": "Hapus", "Change bookmark?": "Ganti penanda?", "Your current bookmark on \"{0}\" will be replaced with this card.": "Penandamu saat ini di \"{0}\" akan diganti dengan kartu ini.", "Your current bookmark will be replaced with this card.": "Penandamu saat ini akan diganti dengan kartu ini.", "Change": "Ganti", "Set bookmark?": "Pasang penanda?", "This card will be marked as your bookmark so you can jump back to it later.": "Kartu ini akan ditandai sebagai penanda supaya kamu bisa kembali ke sini nanti.", "Set": "Pasang", "Taiwan": "Taiwan", "China": "Tiongkok", "Singapore": "Singapura", "Automatic": "Otomatis", "Voice": "Jenis suara", "Tap a voice to hear it.": "Ketuk suara untuk mendengarnya.", "No Chinese voices were found on this device.": "Tidak ada suara bahasa Mandarin di perangkat ini.", "Cards": "Kartu", "Tap and hold a card for details": "Ketuk dan tahan kartu untuk lihat detail", "Prev": "Kembali", "Next": "Lanjut", "Jump to page {0}-{1}": "Lompat ke halaman {0}-{1}", "Jump to a page between {0} and {1}": "Lompat ke halaman antara {0} dan {1}", "Page number {0} to {1}": "Nomor halaman {0} sampai {1}", "Add a card to {0}": "Tambahkan kartu ke {0}", "Add card": "Tambah kartu", "Give your new group a name.": "Beri nama untuk grup barumu.", "Group name": "Nama grup", "Create": "Buat", "Saved to \"{0}\"": "Disimpan ke \"{0}\"", "Please type a name.": "Silakan ketik nama.", "That name is reserved.": "Nama itu tidak bisa dipakai.", "A group with this name already exists.": "Grup dengan nama ini sudah ada.", "Create new group": "Buat grup baru", "Done": "Selesai", "Cards you made stay in their own group": "Kartu buatanmu tetap berada di grupnya sendiri", "Edit group": "Ubah grup", "This group has 1 card.": "Grup ini berisi 1 kartu.", "This group has {0} cards.": "Grup ini berisi {0} kartu.", "Delete group?": "Hapus grup?", "The group \"{0}\" will be deleted": "Grup \"{0}\" akan dihapus", ", together with the 1 card you made in it": ", beserta 1 kartu yang kamu buat di dalamnya", ", together with the {0} cards you made in it": ", beserta {0} kartu yang kamu buat di dalamnya", ". Saved TOCFL cards stay in TOCFL. This cannot be undone": ". Kartu TOCFL yang disimpan tetap ada di TOCFL. Tindakan ini tidak bisa dibatalkan", "Edit card": "Ubah kartu", "New card": "Kartu baru", "Card in \"{0}\".": "Kartu di \"{0}\".", "Add a card to \"{0}\".": "Tambahkan kartu ke \"{0}\".", "yìn ní rén  or  yin4 ni2 ren2": "yìn ní rén  atau  yin4 ni2 ren2", "Example sentences (optional)": "Contoh kalimat (opsional)", "Add sentence": "Tambah kalimat", "Sentence {0}: please type the sentence.": "Kalimat {0}: silakan ketik kalimatnya.", "Sentence {0} must contain the word \"{1}\".": "Kalimat {0} harus memuat kata \"{1}\".", "Sentence {0}: please type the pinyin.": "Kalimat {0}: silakan ketik pinyinnya.", "Sentence {0}: the pinyin must contain \"{1}\".": "Kalimat {0}: pinyinnya harus memuat \"{1}\".", "Sentence {0}: please type the English translation.": "Kalimat {0}: silakan ketik terjemahan bahasa Inggrisnya.", "1 sentence left out": "1 kalimat tidak dipakai", "{0} sentences left out": "{0} kalimat tidak dipakai", "Sentence {0}": "Kalimat {0}", "Sentence": "Kalimat", "Add": "Tambah", "\"{0}\" is already in your group \"{1}\".": "\"{0}\" sudah ada di grupmu \"{1}\".", "\"{0}\" is already a TOCFL card ({1}). TOCFL cards can't be added or edited.": "\"{0}\" sudah menjadi kartu TOCFL ({1}). Kartu TOCFL tidak bisa ditambahkan atau diubah.", "Pinyin suggested per character, please check the tones.": "Pinyin disarankan per karakter, mohon periksa nadanya.", "Please type the hanzi.": "Silakan ketik hanzinya.", "Hanzi must contain Chinese characters.": "Hanzi harus berisi karakter Mandarin.", "\"{0}\" is already a TOCFL card ({1}) and can't be added or edited.": "\"{0}\" sudah menjadi kartu TOCFL ({1}) dan tidak bisa ditambahkan atau diubah.", "Please type the pinyin.": "Silakan ketik pinyinnya.", "The card \"{0}\" will be deleted. This cannot be undone.": "Kartu \"{0}\" akan dihapus. Tindakan ini tidak bisa dibatalkan.", "Export backup": "Ekspor cadangan", "Your groups, saved cards, bookmark, quiz report and settings will be saved in this file.": "Grup, kartu tersimpan, penanda, rapor kuis, dan pengaturanmu akan disimpan di file ini.", "File name": "Nama file", "Export": "Ekspor", "Import": "Impor", "Backup exported": "Cadangan berhasil diekspor", "Backup exported: {0}": "Cadangan diekspor: {0}", "Export failed on this device": "Ekspor gagal di perangkat ini", "This is not a TOCFL flashcards backup": "Ini bukan file cadangan TOCFL flashcards", "Import backup?": "Impor cadangan?", "Your groups, saved cards, bookmark, quiz report and settings will be replaced with the ones in this file ({0}, {1})": "Grup, kartu tersimpan, penanda, rapor kuis, dan pengaturanmu akan diganti dengan isi file ini ({0}, {1})", "Imported {0}, {1}": "Berhasil mengimpor {0}, {1}", " ({0} skipped)": " ({0} dilewati)", "Could not read this file": "File ini tidak bisa dibaca", "1 group": "1 grup", "{0} groups": "{0} grup", "1 card": "1 kartu", "{0} cards": "{0} kartu", "Change how the app looks and sounds.": "Atur tampilan, suara, dan bahasa aplikasi.", "Theme": "Tema", "Dark": "Gelap", "Light": "Terang", "Backup": "Cadangan", "Language": "Bahasa", "Meaning (English)": "Arti (Inggris)", "Meaning (Indonesian)": "Arti (Indonesia)", "Translation (English)": "Terjemahan (Inggris)", "Translation (Indonesian)": "Terjemahan (Indonesia)", "Please type the English meaning.": "Silakan ketik arti dalam bahasa Inggris.", "Reading the sheet…": "Membaca sheet…", "Choose the sheets to add.": "Pilih sheet yang mau ditambahkan.", "This sheet will be added.": "Sheet ini akan ditambahkan.", "No cards found": "Tidak ada kartu", "Choose at least one sheet.": "Pilih minimal satu sheet.", "This is not a Google Sheets link.": "Ini bukan link Google Sheets.", "Couldn't read this sheet. Make sure it's shared with \"Anyone with the link\" and you're online.": "Sheet ini tidak bisa dibaca. Pastikan aksesnya \"Siapa saja yang memiliki link\" dan kamu sedang online.", "Sheet": "Sheet", "Sync": "Sinkron", "Syncing…": "Menyinkronkan…", "Synced: {0}": "Tersinkron: {0}", "Last synced {0}": "Terakhir disinkron {0}", "1 row skipped": "1 baris dilewati", "{0} rows skipped": "{0} baris dilewati", "This sheet was not found in the spreadsheet.": "Sheet ini tidak ditemukan di spreadsheet.", "Added {0}": "Ditambahkan {0}", "This viewer doesn't let the app go online. Open the file in a browser (Safari, Chrome) to use sheet links.": "Penampil ini tidak mengizinkan aplikasi terhubung ke internet. Buka file ini di browser (Safari, Chrome) untuk memakai link sheet.", "Cards of this group come from its Google Sheet": "Kartu grup ini berasal dari Google Sheet-nya", "The group \"{0}\" and its cards will be deleted. Your Google Sheet stays as it is.": "Grup \"{0}\" beserta kartunya akan dihapus. Google Sheet-mu tetap seperti semula.", "Sheet format": "Format sheet", "Hanzi": "Hanzi", "Pinyin": "Pinyin", "Pinyin (sentence)": "Pinyin (kalimat)", "Think too long and Saber will take you airborne.": "Kebanyakan mikir keburu diangkat Saber.", "Report": "Rapor", "Your quiz results, day by day.": "Hasil kuismu dari hari ke hari.", "Cards quizzed": "Kartu dikuis", "Correct": "Benar", "Day streak": "Hari beruntun", "Correct answers per day": "Jawaban benar per hari", "Tap the chart to see the numbers of a day.": "Ketuk grafik untuk melihat angka di hari itu.", "Often wrong": "Sering salah", "Often wrong ({0})": "Sering salah ({0})", "All selected cards": "Semua kartu terpilih", "Wrong {0}× of {1}": "Salah {0}× dari {1}", "No wrong answers yet.": "Belum ada jawaban salah.", "Right {0} of {1} times in a row": "Benar {0} dari {1} kali berturut-turut", "A card leaves this list after {0} right answers in a row.": "Kartu hilang dari daftar ini setelah {0} kali benar berturut-turut.", "End": "Akhiri", "Quiz settings": "Pengaturan kuis", "Restart quiz?": "Mulai ulang kuis?", "The quiz starts again and your quiz score is reset.": "Kuis dimulai lagi dari awal dan skormu diatur ulang.", "Restart": "Mulai ulang", "Clear history": "Hapus riwayat", "Clear quiz history?": "Hapus riwayat kuis?", "All quiz results in the report will be deleted. This cannot be undone.": "Semua hasil kuis di rapor akan dihapus. Tindakan ini tidak bisa dibatalkan.", "Clear": "Hapus", "No quiz results yet. Answer a few cards in quiz mode, then come back here.": "Belum ada hasil kuis. Jawab beberapa kartu di mode kuis, lalu kembali ke sini.", "Meaning of each character": "Arti tiap karakter", "No meaning yet": "Belum ada arti", "Sound": "Suara", "On": "Nyala", "Close": "Tutup", "1 more example": "1 contoh lainnya", "{0} more examples": "{0} contoh lainnya", "Previous card": "Kartu sebelumnya", "Next card": "Kartu berikutnya", "Pick one or more.": "Pilih satu atau lebih.", "Select question": "Pilih soal", "Select voice": "Pilih suara", "Mixed ({0})": "Campuran ({0})", "Tone of the word": "Nada kata", "Listen and pick the tones.": "Dengarkan lalu pilih nadanya.", "Tone:": "Nada:", "1st": "1", "2nd": "2", "3rd": "3", "4th": "4", "Neutral": "Netral", "Sort": "Urutkan", "Order": "Urutan", "Group": "Grup", "Choose how the cards are ordered.": "Pilih cara mengurutkan kartu."};
 // tx('Saved to "{0}"', name): the text in the chosen language, with {0}, {1}… filled in
 function tx(s, ...a){
   let r = (LANG === 'id' && ID_TEXT[s] != null) ? ID_TEXT[s] : s;
@@ -4440,7 +4475,7 @@ function openForm(html, stack = false){
   fmBox.onkeydown = null;                   // a dialog's own key handler never outlives it
   fmGuard = pressDown; fmGuardReleased = false;
   fmBox.innerHTML = X_HTML() + html;
-  fmBox.classList.remove('narrow', 'ch-dlg', 'az-dlg');   // a dialog that wants the confirm width (or its own layout) adds it back after opening
+  fmBox.classList.remove('narrow', 'ch-dlg', 'az-dlg', 'ph-dlg');   // a dialog that wants the confirm width (or its own layout) adds it back after opening
   fmOverlay.classList.add('on');
   fmOverlay.setAttribute('aria-hidden', 'false');
   fmBox.scrollTop = 0;
@@ -4595,10 +4630,350 @@ function openAnalyzer(text){
   });
   azRender();
 }
-document.getElementById('azBtn').addEventListener('click', () => openAnalyzer());
+// ---------- Photo translate: take a photo, Gemini (Google) reads it. Everything here comes from Gemini, not from the cards:
+// the translation laid over the text in the photo (like Google Translate's camera), and every word in it once, as buttons;
+// a word shows its hanzi, pinyin, meaning and Gemini's voice. Your own free API key, kept in this browser only.
+// Closing the dialog forgets everything (photo, results, sounds): next time starts from nothing; only the key stays.
+const LS_GEM = 'tocfl-gemini-key-v1', LS_GEM_M = 'tocfl-gemini-model-v1';
+// the key built into the app (scrambled, so it isn't sitting here as plain text); one saved in this browser goes first
+const GEM_IN = 'QWdqRW1HenZObHVnamh4THppSEpkWVJZQUdLQjFfUUM4a2RZSHBVTHFwa0k2TlI4YkEuUUE=';
+const gemOwn = () => { try{ return localStorage.getItem(LS_GEM) || ''; }catch(e){ return ''; } };
+const gemKey = () => gemOwn() || (GEM_IN ? atob(GEM_IN).split('').reverse().join('') : '');
+const phFile = document.createElement('input');
+phFile.type = 'file'; phFile.accept = 'image/*'; phFile.setAttribute('capture', 'environment'); phFile.hidden = true;
+document.body.appendChild(phFile);
+const phShoot = () => { if(gemKey()) phFile.click(); else openGemKey(true); };
+let phData = null, phCanvas = null, phAudio = null;   // phAudio: {ctx, cache: Map(word -> AudioBuffer), src, btn}
+function openGemKey(shoot, back){
+  const has = !!gemOwn(), done = () => { if(back) back(); else closeForm(); };
+  openForm(`<div class="cf-title">${tx('Gemini API key')}</div>
+    <div class="fm-sub">${tx('Free from Google AI Studio. The photo is sent to Google to be read; the key stays in this browser.')}<br><a class="ph-klink" href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com/apikey</a></div>
+    <div class="fm-field"><input id="gemKey" type="text" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="AIza…" value="${escAttr(gemOwn())}"></div>
+    <div class="fm-err" id="gemErr"></div>
+    <div class="cf-actions">${has ? `<button type="button" class="cf-btn" id="gemDel">${tx('Remove')}</button>` : `<button type="button" class="cf-btn" id="gemNo">${tx('Cancel')}</button>`}<button type="button" class="cf-btn cf-yes" id="gemOk">${tx('Save')}</button></div>`);
+  fmBox.classList.add('narrow');
+  const inp = document.getElementById('gemKey');
+  document.getElementById('gemOk').onclick = () => {
+    const k = inp.value.trim();
+    if(!/^[A-Za-z0-9_.\-]{20,}$/.test(k)){ document.getElementById('gemErr').textContent = tx('That doesn’t look like an API key.'); return; }
+    try{ localStorage.setItem(LS_GEM, k); localStorage.removeItem(LS_GEM_M); }catch(e){}
+    done();
+    if(shoot) phFile.click();               // still this tap: the camera opens
+  };
+  const no = document.getElementById('gemNo'); if(no) no.onclick = done;
+  const del = document.getElementById('gemDel'); if(del) del.onclick = () => { try{ localStorage.removeItem(LS_GEM); localStorage.removeItem(LS_GEM_M); }catch(e){} done(); };
+}
+// the photo, smaller (long side 1600px), as a JPEG data URL: sent to Gemini and shown, so the boxes fit it exactly
+function phShrink(file){
+  return new Promise((ok, bad) => {
+    const url = URL.createObjectURL(file), img = new Image();
+    img.onload = () => {
+      const s = Math.min(1, 1600 / Math.max(img.naturalWidth, img.naturalHeight)), c = document.createElement('canvas');
+      c.width = Math.round(img.naturalWidth * s); c.height = Math.round(img.naturalHeight * s);
+      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+      URL.revokeObjectURL(url);
+      phCanvas = c;                         // kept while the dialog is open: colours for the boxes, and the picture to save
+      ok(c.toDataURL('image/jpeg', .85));
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); bad(new Error('img')); };
+    img.src = url;
+  });
+}
+async function gemCall(model, body){
+  const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
+    method: 'POST', headers: {'Content-Type': 'application/json', 'x-goog-api-key': gemKey()}, body: JSON.stringify(body)});
+  const j = await r.json().catch(() => ({}));
+  return {status: r.status, j};
+}
+// Google's current models of one kind (Flash for reading, TTS for the voice), when the default name is gone
+async function gemModels(tts){
+  const r = await fetch('https://generativelanguage.googleapis.com/v1beta/models?pageSize=200', {headers: {'x-goog-api-key': gemKey()}});
+  const j = await r.json().catch(() => ({}));
+  return (j.models || []).filter(m => (m.supportedGenerationMethods || []).includes('generateContent') && /flash/.test(m.name) && (tts ? /tts/.test(m.name) : !/image|tts|audio|live|embed|thinking|exp/.test(m.name)))
+    .map(m => m.name.replace(/^models\//, '')).sort((a, b) => (/lite/.test(a) - /lite/.test(b)) || b.localeCompare(a, 'en', {numeric: true}));
+}
+const gemErrKind = res => { const e = JSON.stringify(res.j.error || ''); return res.status === 429 ? 'quota' : (res.status === 400 || res.status === 403) && /API key|API_KEY|permission/i.test(e) ? 'key' : 'other'; };
+const gemGone = res => { const e = JSON.stringify(res.j.error || ''); return res.status === 404 || (res.status === 400 && /model/i.test(e) && !/API key/i.test(e)); };
+async function gemAsk(body){
+  let model = ''; try{ model = localStorage.getItem(LS_GEM_M) || ''; }catch(e){}
+  let res = await gemCall(model || 'gemini-3.8-flash', body);
+  if(gemGone(res)){ for(const m of (await gemModels(false)).slice(0, 4)){ res = await gemCall(m, body); if(res.status === 200){ model = m; break; } } }
+  else if(res.status === 200 && !model) model = 'gemini-3.8-flash';
+  if(res.status !== 200) throw new Error(gemErrKind(res));
+  try{ localStorage.setItem(LS_GEM_M, model); }catch(e){}
+  return JSON.parse(((((res.j.candidates || [])[0] || {}).content || {}).parts || []).map(p => p.text || '').join(''));
+}
+async function gemPhoto(dataUrl){
+  const tr = LANG === 'id' ? 'Indonesian' : 'English';
+  const body = {
+    contents: [{parts: [{inline_data: {mime_type: 'image/jpeg', data: dataUrl.split(',')[1]}}, {text:
+      `This photo contains Chinese text. 1) blocks: every block of Chinese text (a line, a sign, a label, a menu item, a short paragraph that belongs together), in reading order. ` +
+      `For each: box_2d = its bounding box [ymin, xmin, ymax, xmax] normalized to 0-1000; zh = the text in Traditional Chinese as used in Taiwan (convert only if the photo uses Simplified); ` +
+      `tr = a natural, short ${tr} translation. ` +
+      `2) words: the Chinese text split into words the way a dictionary would, each distinct word once (no duplicates), in order of first appearance, leaving out punctuation. ` +
+      `For each: hz = the word in Traditional characters; py = its pinyin with tone marks, following the Taiwan Ministry of Education standard (教育部), syllables separated by spaces; ` +
+      `m = a short ${tr} meaning as used in this photo. Leave out text that is not Chinese. If there is no Chinese text, return empty lists.`}]}],
+    generationConfig: {temperature: 0, responseMimeType: 'application/json', responseSchema: {type: 'OBJECT', properties: {
+      blocks: {type: 'ARRAY', items: {type: 'OBJECT', properties: {box_2d: {type: 'ARRAY', items: {type: 'NUMBER'}}, zh: {type: 'STRING'}, tr: {type: 'STRING'}}, required: ['box_2d', 'zh', 'tr']}},
+      words: {type: 'ARRAY', items: {type: 'OBJECT', properties: {hz: {type: 'STRING'}, py: {type: 'STRING'}, m: {type: 'STRING'}}, required: ['hz', 'py', 'm']}}}, required: ['blocks', 'words']}}};
+  const out = await gemAsk(body);
+  const blocks = (out.blocks || []).filter(b => Array.isArray(b.box_2d) && b.box_2d.length === 4 && b.tr).map(b => ({box: b.box_2d.map(Number), zh: String(b.zh || ''), tr: String(b.tr).trim()}));
+  const seen = new Set(), words = [];
+  (out.words || []).forEach(w => { const hz = String(w.hz || '').replace(/\s+/g, ''); if(!AZ_HAN.test(hz) || seen.has(hz)) return; seen.add(hz); words.push({hz, py: String(w.py || '').trim().replace(/\s+/g, ' '), m: String(w.m || '').trim()}); });
+  return {blocks, words};
+}
+// ---- Gemini's voice for a word: asked only when ▶ is tapped, kept until the dialog closes
+async function gemSpeech(text){
+  const body = v => ({contents: [{role: 'user', parts: [{text: `Say in Mandarin as spoken in Taiwan, clearly: ${text}`}]}],
+    generationConfig: {responseModalities: ['AUDIO'], ...(v ? {speechConfig: {voiceConfig: {voice: 'Kore'}}} : {})}});
+  let res = await gemCall('gemini-3.8-flash-tts', body(true));
+  if(res.status === 400 && /voice/i.test(JSON.stringify(res.j.error || ''))) res = await gemCall('gemini-3.8-flash-tts', body(false));   // the voice field as it once was
+  if(gemGone(res)){ for(const m of (await gemModels(true)).slice(0, 3)){ res = await gemCall(m, body(false)); if(res.status === 200) break; } }
+  if(res.status !== 200) throw new Error(gemErrKind(res));
+  const part = ((((res.j.candidates || [])[0] || {}).content || {}).parts || []).find(p => p.inlineData || p.inline_data);
+  if(!part) throw new Error('other');
+  const d = part.inlineData || part.inline_data, bin = atob(d.data), bytes = new Uint8Array(bin.length);
+  for(let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  if(String.fromCharCode(...bytes.slice(0, 4)) === 'RIFF') return bytes.buffer;
+  // raw 16-bit PCM (24 kHz unless said otherwise): give it a WAV header
+  const rate = +((String(d.mimeType || d.mime_type || '').match(/rate=(\d+)/) || [])[1] || 24000), h = new DataView(new ArrayBuffer(44)), s = (o, t) => [...t].forEach((c, i) => h.setUint8(o + i, c.charCodeAt(0)));
+  s(0, 'RIFF'); h.setUint32(4, 36 + bytes.length, true); s(8, 'WAVE'); s(12, 'fmt '); h.setUint32(16, 16, true); h.setUint16(20, 1, true); h.setUint16(22, 1, true);
+  h.setUint32(24, rate, true); h.setUint32(28, rate * 2, true); h.setUint16(32, 2, true); h.setUint16(34, 16, true); s(36, 'data'); h.setUint32(40, bytes.length, true);
+  const out = new Uint8Array(44 + bytes.length); out.set(new Uint8Array(h.buffer)); out.set(bytes, 44);
+  return out.buffer;
+}
+function phStopVoice(){
+  if(!phAudio) return;
+  try{ if(phAudio.src) phAudio.src.stop(); }catch(e){}
+  phAudio.src = null;
+  if(phAudio.btn){ phAudio.btn.classList.remove('playing', 'loading'); phAudio.btn.innerHTML = PLAY_IC; phAudio.btn = null; }
+}
+async function phPlay(btn, hz){
+  if(!SOUND_ON) return;
+  if(btn.classList.contains('playing') || btn.classList.contains('loading')){ phStopVoice(); return; }
+  stopSpeech(); phStopVoice();
+  if(!phAudio){ const AC = window.AudioContext || window.webkitAudioContext; if(!AC) return; phAudio = {ctx: new AC(), cache: new Map(), src: null, btn: null}; }
+  const A = phAudio;
+  try{ A.ctx.resume(); }catch(e){}          // this tap unlocks sound on iPhone, for when the voice arrives later
+  A.btn = btn; btn.classList.add('loading');
+  try{
+    let buf = A.cache.get(hz);
+    if(!buf){ buf = await new Promise((ok, bad) => gemSpeech(hz).then(ab => A.ctx.decodeAudioData(ab, ok, bad), bad)); if(phAudio !== A) return; A.cache.set(hz, buf); }
+    if(A.btn !== btn) return;               // another word was tapped meanwhile
+    btn.classList.remove('loading'); btn.classList.add('playing'); btn.innerHTML = STOP_IC;
+    const src = A.ctx.createBufferSource(); src.buffer = buf; src.connect(A.ctx.destination);
+    src.onended = () => { if(A.src === src) phStopVoice(); };
+    A.src = src; src.start();
+  }catch(err){
+    if(A.btn === btn) phStopVoice();
+    if(phAudio === A) toast(err.message === 'quota' ? tx('The free quota is used up for now. Try again later.') : tx('Gemini’s voice is not available right now.'));
+  }
+}
+// ---- the picture: the translation over the text
+// the photo's colour just around a box (median of its edge), and a text colour that reads on it
+function phColors(box){
+  try{
+    const c = phCanvas, W = c.width, H = c.height, g = c.getContext('2d');
+    const [y0, x0, y1, x1] = box, X0 = Math.max(0, Math.floor(x0 / 1000 * W) - 3), X1 = Math.min(W - 1, Math.ceil(x1 / 1000 * W) + 3), Y0 = Math.max(0, Math.floor(y0 / 1000 * H) - 3), Y1 = Math.min(H - 1, Math.ceil(y1 / 1000 * H) + 3);
+    const px = [], take = (x, y) => { const d = g.getImageData(x, y, 1, 1).data; px.push([d[0], d[1], d[2]]); };
+    const n = 24;
+    for(let k = 0; k <= n; k++){ const x = Math.round(X0 + (X1 - X0) * k / n), y = Math.round(Y0 + (Y1 - Y0) * k / n); take(x, Y0); take(x, Y1); take(X0, y); take(X1, y); }
+    const med = i => px.map(p => p[i]).sort((a, b) => a - b)[px.length >> 1], rgb = [med(0), med(1), med(2)];
+    const lum = .299 * rgb[0] + .587 * rgb[1] + .114 * rgb[2];
+    return {bg: `rgb(${rgb.join(',')})`, fg: lum > 140 ? '#111' : '#fff'};
+  }catch(e){ return {bg: 'rgba(245,245,245,.95)', fg: '#111'}; }
+}
+function phOverlayHTML(){
+  return (phData.blocks || []).map(b => {
+    if(!b.c) b.c = phColors(b.box);
+    const [y0, x0, y1, x1] = b.box.map(v => Math.max(0, Math.min(1000, v)) / 10);
+    const py = (y1 - y0) * .12, px = Math.max(.6, (x1 - x0) * .02);   // a little larger than the text, so none of it peeks out
+    const l = Math.max(0, x0 - px), w = Math.min(100 - l, Math.max(3, x1 - x0 + 2 * px));
+    return `<div class="ph-t" data-l="${l}" data-w="${w}" style="top:${Math.max(0, y0 - py)}%;height:${Math.max(1.5, y1 - y0 + 2 * py)}%;background:${b.c.bg};color:${b.c.fg}">${esc(b.tr)}</div>`;
+  }).join('');
+}
+function phFit(root, min){                  // each translation as large as its box allows (min: the smallest size before the box widens)
+  const fit = el => {
+    let f = Math.max(7, Math.min(root.clientHeight * .06, el.clientHeight * .72));
+    el.style.fontSize = f + 'px';
+    while(f > 7 && (el.scrollHeight > el.clientHeight + 1 || el.scrollWidth > el.clientWidth + 1)){ f -= .5; el.style.fontSize = f + 'px'; }
+    return f;
+  };
+  root.querySelectorAll('.ph-t').forEach(el => {
+    const l = +el.dataset.l, w = +el.dataset.w;
+    el.style.left = l + '%'; el.style.width = w + '%';
+    // too small to read: wider, around the same middle (a translation is often longer than the Chinese)
+    for(let k = 1.25; fit(el) < min && k <= 2.01; k += .25){ const nw = Math.min(100, w * k); el.style.width = nw + '%'; el.style.left = Math.max(0, Math.min(100 - nw, l - (nw - w) / 2)) + '%'; }
+  });
+}
+const phIsOrig = () => !!(phData && phData.orig);
+// ---- the dialog
+const PH_SWAP = (back, front) => `<svg class="ln" viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">` +
+  `<text x="6.3" y="9.6" text-anchor="middle" font-size="8" style="fill:currentColor;stroke:none;font-weight:600;font-family:-apple-system,'PingFang TC','Noto Sans CJK TC',sans-serif">${back}</text>` +
+  `<text x="17" y="21.4" text-anchor="middle" font-size="11" style="fill:currentColor;stroke:none;font-weight:700;font-family:-apple-system,'PingFang TC','Noto Sans CJK TC',sans-serif">${front}</text>` +
+  `<g style="stroke-width:1.6"><path d="M11.8 4.5h4.7a3 3 0 0 1 3 3v3.2M17.2 9.2l2.3 2.8 2.3-2.8"/><path d="M11.2 19.6H7.5a3 3 0 0 1-3-3v-2.8M2.2 15.2l2.3-2.8 2.3 2.8"/></g></svg>`;
+const PH_IC = {
+  // translation ⇄ original: two letters with arrows turning round them; the one shown is large in front (A or 文), the other small behind
+  tr: PH_SWAP('文', 'A'),
+  orig: PH_SWAP('A', '文'),
+  save: '<svg class="ln" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M12 3.5v12M7 11l5 5 5-5M4.5 20.5h15"/></svg>',
+  cam: '<svg class="ln" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M3.5 8.5A1.5 1.5 0 0 1 5 7h2.2l1.6-2.2h6.4L16.8 7H19a1.5 1.5 0 0 1 1.5 1.5v9.5A1.5 1.5 0 0 1 19 19.5H5A1.5 1.5 0 0 1 3.5 18z"/><circle cx="12" cy="13" r="3.6"/></svg>',
+  share: '<svg class="ln" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M12 3v12.5M8 7l4-4 4 4M8.5 10.5H6a1 1 0 0 0-1 1V20a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-8.5a1 1 0 0 0-1-1h-2.5"/></svg>'};
+function phOpen(){
+  openForm(`<div class="cf-title">${tx('Photo translation')}</div>
+    <div class="ph-wrap"><div class="ph-img" id="phImg"><img src="${phData.url}" alt=""><div class="ph-ov" id="phOv"></div>${phData.blocks ? '' : `<div class="ph-busy" id="phBusy"><span>${tx('Reading the photo…')}</span></div>`}</div></div>
+    <div class="qz-foot ph-foot2">
+      <button type="button" class="pk-mark" id="phTr"></button>
+      <button type="button" class="pk-mark" id="phSave" title="${tx('Save picture')}" aria-label="${tx('Save picture')}">${PH_IC.save}</button>
+      <button type="button" class="pk-mark" id="phShare" title="${tx('Share')}" aria-label="${tx('Share')}">${PH_IC.share}</button>
+      <button type="button" class="pk-mark" id="phAgain" title="${tx('New photo')}" aria-label="${tx('New photo')}">${PH_IC.cam}</button>
+    </div>
+    <div id="phOut"></div>
+    <div class="ph-keyline"><button type="button" class="ph-link" id="phKey">${tx('Gemini API key')}</button></div>`);
+  fmBox.classList.add('ph-dlg');
+  document.getElementById('phAgain').onclick = () => phFile.click();
+  document.getElementById('phKey').onclick = () => openGemKey(false, phOpen);   // back here afterwards, results kept
+  document.getElementById('phTr').onclick = () => { if(phData.blocks && phData.blocks.length){ phData.orig = !phData.orig; phSync(); } };
+  document.getElementById('phImg').onclick = phFullOpen;
+  document.getElementById('phSave').onclick = phSave;
+  document.getElementById('phShare').onclick = phShare;
+  const img = document.querySelector('#phImg img');
+  img.onload = () => phFit(document.getElementById('phImg'), 11);
+  if(phData.blocks) phShow();
+  phSync();
+}
+function phSync(){                          // the switch and the picture: translation or original; buttons wait for the result
+  const ready = !!(phData && phData.blocks), has = ready && phData.blocks.length > 0, orig = phIsOrig();
+  const b = document.getElementById('phTr'); if(!b) return;
+  b.innerHTML = orig ? PH_IC.orig : PH_IC.tr;   // no colour: the icon itself says which is shown
+  const t = tx(orig ? 'Original (tap for the translation)' : 'Translation (tap for the original)'); b.title = t; b.setAttribute('aria-label', t);
+  b.disabled = !has;
+  ['phSave', 'phShare'].forEach(id => { document.getElementById(id).disabled = !ready; });
+  document.getElementById('phImg').classList.toggle('orig', orig);
+  const f = document.getElementById('phFullBox'); if(f) f.classList.toggle('orig', orig);
+}
+function phShow(){
+  const ov = document.getElementById('phOv'), out = document.getElementById('phOut');
+  if(!ov) return;
+  const busy = document.getElementById('phBusy'); if(busy) busy.remove();
+  const {blocks, words} = phData;
+  if(!blocks.length && !words.length){ out.innerHTML = `<div class="ph-note">${tx('No Chinese text found.')}</div>`; phSync(); return; }
+  ov.innerHTML = phOverlayHTML();
+  phFit(document.getElementById('phImg'), 11);
+  const color = w => { const s = w.py.split(' '); return s.length === [...w.hz].length ? [...w.hz].map((c, i) => `<span style="color:${tv(toneOf(s[i]))}">${esc(c)}</span>`).join('') : esc(w.hz); };
+  out.innerHTML = words.length ? `<div class="ph-vh">${tx('Words')} · ${words.length}</div><div class="ph-words">${words.map((w, i) => `<button type="button" class="ph-w" data-i="${i}" lang="zh-TW">${esc(w.hz)}</button>`).join('')}</div><div class="ph-det" id="phDet" hidden></div>` : '';
+  const det = document.getElementById('phDet');
+  out.onclick = e => {
+    const p = e.target.closest('.ph-play');
+    if(p){ e.stopPropagation(); phPlay(p, p.dataset.hz); return; }
+    const b = e.target.closest('.ph-w');
+    if(b){
+      const on = !b.classList.contains('on');
+      phStopVoice();
+      out.querySelectorAll('.ph-w').forEach(x => x.classList.toggle('on', x === b && on));
+      if(!on){ det.hidden = true; return; }
+      const w = words[+b.dataset.i], r = azIndex().get(w.hz);
+      det.innerHTML = `<div class="ph-dtop"><div class="ph-dh" lang="zh-TW">${color(w)}</div>${HAS_AUDIO ? `<button type="button" class="play ph-play" data-hz="${escAttr(w.hz)}" aria-label="${tx('Play pronunciation')}">${PLAY_IC}</button>` : ''}</div><div class="ph-dp">${w.py ? colorPinyin(w.py) : ''}</div><div class="ph-dm">${esc(w.m)}</div>${r ? `<button type="button" class="ph-card">${tx('Open card')} ›</button>` : ''}`;
+      det.hidden = true;                    // right under the row of the word tapped: after the last word on that line
+      const top = b.offsetTop; let last = b;
+      out.querySelectorAll('.ph-w').forEach(x => { if(Math.abs(x.offsetTop - top) < 4) last = x; });
+      last.after(det); det.hidden = false;
+      return;
+    }
+    const c = e.target.closest('.ph-card');
+    if(c){ const r = azIndex().get(words[+out.querySelector('.ph-w.on').dataset.i].hz); if(!r) return;
+      showPeek(r); peekEl.classList.add('over-form', 'stay'); peekHeld = false; suppressUntil = Date.now() + 150; }
+  };
+  phSync();
+}
+const HAS_AUDIO = !!(window.AudioContext || window.webkitAudioContext);
+// full screen: the picture as large as the screen allows, its translations sized again (text, so sharp); a tap closes it
+function phFullOpen(){
+  if(!phData || !phData.blocks) return;
+  const W = innerWidth, H = innerHeight, iw = phCanvas.width, ih = phCanvas.height, s = Math.min(W / iw, H / ih);
+  const el = document.createElement('div');
+  el.id = 'phFullView';
+  el.innerHTML = `<div class="ph-img ph-fullbox${phIsOrig() ? ' orig' : ''}" id="phFullBox" style="width:${Math.floor(iw * s)}px;height:${Math.floor(ih * s)}px"><img src="${phData.url}" alt=""><div class="ph-ov">${phOverlayHTML()}</div></div>`;
+  el.onclick = () => el.remove();
+  document.body.appendChild(el);
+  phFit(document.getElementById('phFullBox'), 12);
+}
+// the picture as shown (translation or original), as a JPEG file: the boxes drawn as on screen, at the photo's full size
+function phPictureFile(){
+  const c = document.createElement('canvas'), W = phCanvas.width, H = phCanvas.height;
+  c.width = W; c.height = H;
+  const g = c.getContext('2d');
+  g.drawImage(phCanvas, 0, 0);
+  const orig = phIsOrig();
+  if(!orig){
+    const box = document.getElementById('phImg'), k = W / box.clientWidth;
+    box.querySelectorAll('.ph-t').forEach(el => {
+      const cs = getComputedStyle(el), x = el.offsetLeft * k, y = el.offsetTop * k, w = el.offsetWidth * k, h = el.offsetHeight * k, f = parseFloat(cs.fontSize) * k;
+      g.fillStyle = cs.backgroundColor; g.beginPath(); (g.roundRect ? g.roundRect(x, y, w, h, 3 * k) : g.rect(x, y, w, h)); g.fill();
+      g.fillStyle = cs.color; g.font = `${cs.fontWeight} ${f}px ${cs.fontFamily}`; g.textAlign = 'center'; g.textBaseline = 'middle';
+      const words = el.textContent.split(/\s+/), lines = [], maxW = w - 6 * k; let line = '';
+      words.forEach(wd => { const t = line ? line + ' ' + wd : wd; if(g.measureText(t).width > maxW && line){ lines.push(line); line = wd; } else line = t; });
+      if(line) lines.push(line);
+      const lh = f * 1.2, y0 = y + h / 2 - (lines.length - 1) * lh / 2;
+      lines.forEach((t, i) => g.fillText(t, x + w / 2, y0 + i * lh));
+    });
+  }
+  const bin = atob(c.toDataURL('image/jpeg', .92).split(',')[1]), u = new Uint8Array(bin.length);
+  for(let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i);
+  return new File([u], orig ? 'photo-original.jpg' : 'photo-translation.jpg', {type: 'image/jpeg'});
+}
+const IS_IOS = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+function phSave(){                          // iPhone: through the share sheet ("Save Image" puts it in Photos); elsewhere a download
+  if(!phData || !phData.blocks) return;
+  const f = phPictureFile();
+  if(IS_IOS && navigator.canShare && navigator.canShare({files: [f]})){ navigator.share({files: [f]}).catch(() => {}); return; }
+  const a = document.createElement('a'), url = URL.createObjectURL(f);
+  a.href = url; a.download = f.name; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 4000);
+}
+function phShare(){                         // the picture as shown, with the text and its translation
+  if(!phData || !phData.blocks) return;
+  const f = phPictureFile(), text = phData.blocks.map(b => b.zh + '\n' + b.tr).join('\n\n');
+  if(navigator.canShare && navigator.canShare({files: [f]})){ navigator.share({files: [f], text}).catch(() => {}); return; }
+  if(navigator.share){ navigator.share({text}).catch(() => {}); return; }
+  try{ navigator.clipboard.writeText(text).then(() => toast(tx('Copied.'))); }catch(e){}
+}
+// closing forgets it all, as if the feature had never been used (the key stays, so the camera still works next time)
+function phReset(){
+  phStopVoice();
+  if(phAudio){ try{ phAudio.ctx.close(); }catch(e){} phAudio.cache.clear(); }
+  phAudio = null; phData = null; phCanvas = null;
+  const fv = document.getElementById('phFullView'); if(fv) fv.remove();
+  try{ localStorage.removeItem(LS_GEM_M); }catch(e){}
+}
+phFile.addEventListener('change', async () => {
+  const f = phFile.files && phFile.files[0]; phFile.value = '';
+  if(!f) return;
+  if(phData) phReset();                     // a new photo: the last one is forgotten
+  let url;
+  try{ url = await phShrink(f); }catch(e){ toast(tx('The photo couldn’t be read. Try again.')); return; }
+  const mine = phData = {url, blocks: null, words: null, orig: false};
+  phOpen();
+  try{
+    const res = await gemPhoto(url);
+    if(phData !== mine) return;
+    mine.blocks = res.blocks; mine.words = res.words;
+    if(document.getElementById('phOv')) phShow();
+  }catch(err){
+    if(phData !== mine || !document.getElementById('phOut')) return;
+    const m = !navigator.onLine ? tx('No internet connection.') : err.message === 'quota' ? tx('The free quota is used up for now. Try again later.')
+      : err.message === 'key' ? tx('The API key doesn’t work.') : tx('The photo couldn’t be read. Try again.');
+    const busy = document.getElementById('phBusy'); if(busy) busy.remove();
+    document.getElementById('phOut').innerHTML = `<div class="ph-note">${esc(m)}</div>`;
+  }
+});
+document.getElementById('phBtn').addEventListener('click', phShoot);
+
+
 
 function closeForm(){
   fmBack = null;
+  if(phData) phReset();   // the photo translation, closed: forget it all
   dropUnder();
   fmOverlay.classList.remove('on');
   fmOverlay.setAttribute('aria-hidden', 'true');
