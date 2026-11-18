@@ -4640,7 +4640,7 @@ const GEM_IN = 'QWdqRW1HenZObHVnamh4THppSEpkWVJZQUdLQjFfUUM4a2RZSHBVTHFwa0k2TlI4
 const gemOwn = () => { try{ return localStorage.getItem(LS_GEM) || ''; }catch(e){ return ''; } };
 const gemKey = () => gemOwn() || (GEM_IN ? atob(GEM_IN).split('').reverse().join('') : '');
 const phFile = document.createElement('input');
-phFile.type = 'file'; phFile.accept = 'image/*'; phFile.setAttribute('capture', 'environment'); phFile.hidden = true;
+phFile.type = 'file'; phFile.accept = 'image/*'; phFile.hidden = true;   // no 'capture': the phone asks camera or gallery
 document.body.appendChild(phFile);
 const phShoot = () => { if(gemKey()) phFile.click(); else openGemKey(true); };
 let phData = null, phCanvas = null, phAudio = null;   // phAudio: {ctx, cache: Map(word -> AudioBuffer), src, btn}
