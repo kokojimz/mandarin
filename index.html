@@ -690,10 +690,14 @@
 #sortBtn{ position:relative; }
 #sortBtn.mixed::after{ content:''; position:absolute; top:-3px; right:-3px; width:10px; height:10px; border-radius:50%; background:var(--accent); box-shadow:0 0 0 2px var(--bg); pointer-events:none; }
   /* analyze a sentence: the button next to the search box, and its dialog */
-  .az-btn{ flex:none; width:40px; display:inline-flex; align-items:center; justify-content:center; padding:0; border:1px solid var(--border); border-radius:999px; background:var(--card-bg); color:var(--text); cursor:pointer; -webkit-tap-highlight-color:transparent; }
-  .az-btn .tb-ic{ width:20px; height:20px; }
-  .az-btn:active{ opacity:.7; }
+  /* the camera (photo translation) at the right end of the search box */
+  .q-wrap{ flex:1 1 200px; min-width:0; position:relative; display:flex; }
+  .q-wrap input{ flex:1; width:100%; padding-right:44px; }
+  .az-btn{ position:absolute; right:4px; top:50%; transform:translateY(-50%); width:34px; height:34px; display:flex; align-items:center; justify-content:center; padding:0; border:0; border-radius:999px; background:transparent; color:var(--sub); cursor:pointer; -webkit-tap-highlight-color:transparent; }
+  .az-btn .tb-ic{ width:21px; height:21px; }
+  .az-btn:active{ background:var(--border); }
   body.quiz-on .az-btn{ display:none; }
+  body.quiz-on .q-wrap input{ padding-right:16px; }
   .az-sub{ margin-bottom:12px; }
   .az-has .az-sub{ display:none; }
   .az-field{ position:relative; }
@@ -792,8 +796,10 @@
 <p class="sub" id="countSub"></p>
 
 <div class="tools search-row">
+  <div class="q-wrap">
   <input id="q" type="search" placeholder="漢字 / pīnyīn / meaning…" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" aria-label="Search by hanzi, pinyin or meaning">
   <button type="button" id="phBtn" class="az-btn" title="Photo translation" aria-label="Photo translation" data-tx-title="Photo translation"><svg class="tb-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8.5A1.5 1.5 0 0 1 5.5 7h2l1.5-2h6l1.5 2h2A1.5 1.5 0 0 1 20 8.5v9a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 17.5z"/><circle cx="12" cy="13" r="3.5"/></svg></button>
+  </div>
   <div class="quiz-score" id="quizScore" role="status" aria-live="polite" hidden></div>
   <div class="resume" id="resume" role="button" tabindex="0" hidden>
     <span class="rb"></span>
@@ -4699,7 +4705,8 @@ const gemCall = (model, body, ms) => gemFetch(`https://generativelanguage.google
 // Google's models are often busy (503) or slow: try them one after another, the last one that worked first;
 // a busy, slow, used-up (429: each model has its own free quota) or missing model passes to the next; a refused key stops
 // (each model has its own free quota and its own crowd: the more of them, the likelier one is free)
-const GEM_READ = ['gemini-3.8-flash', 'gemini-3.7-flash', 'gemini-3.6-flash', 'gemini-3.5-flash', 'gemini-3-flash-preview', 'gemini-flash-latest', 'gemini-3.5-flash-lite', 'gemini-3.1-flash-lite', 'gemini-flash-lite-latest', 'gemma-4-26b-a4b-it', 'gemma-4-31b-it'];
+// (3 Flash preview first: in a test it was the quickest, about 6 s, with boxes as exact as the others)
+const GEM_READ = ['gemini-3-flash-preview', 'gemini-3.8-flash', 'gemini-3.7-flash', 'gemini-3.6-flash', 'gemini-3.5-flash', 'gemini-flash-latest', 'gemini-3.5-flash-lite', 'gemini-3.1-flash-lite', 'gemini-flash-lite-latest', 'gemma-4-26b-a4b-it', 'gemma-4-31b-it'];
 const GEM_TTS = ['gemini-3.8-flash-tts', 'gemini-3.8-flash-lite-tts', 'gemini-3.1-flash-tts-preview', 'gemini-2.5-flash-preview-tts'];
 async function gemTry(models, make, ms, onNext){
   let res = null, used = '';
@@ -4722,7 +4729,8 @@ async function gemRace(models, make, ms, onNext){
       if(over || i >= list.length || running >= 3) return;
       const m = list[i++]; running++;
       if(i > 1 && onNext) onNext();
-      gemCall(m, make(m), ms).then(res => {
+      const ask = () => gemCall(m, make(m), ms).then(res => (make.refused && make.refused(m, res)) ? ask() : res);
+      ask().then(res => {
         running--;
         if(res.status === 200 || res.status === 0 || gemErrKind(res) === 'key') return finish({res, model: m});
         fails.push({res, model: m});
@@ -4749,7 +4757,12 @@ async function gemAsk(body, onNext){
   // Gemma takes JSON but not the answer's shape: it gets the shape in words
   const plain = JSON.parse(JSON.stringify(body)); delete plain.generationConfig.responseSchema;
   plain.contents[0].parts[plain.contents[0].parts.length - 1].text += ' Answer with JSON only: {"blocks":[{"box_2d":[ymin,xmin,ymax,xmax],"zh":"","tr":""}],"words":[{"hz":"","py":"","m":""}]}.';
-  const make = m => /gemma/.test(m) ? plain : body;
+  // reading and translating a photo needs little thought: minimal thinking answers about a second sooner;
+  // a model that refuses the setting is asked again without it (Gemma never gets it)
+  const fast = JSON.parse(JSON.stringify(body)); fast.generationConfig.thinkingConfig = {thinkingLevel: 'minimal'};
+  const noThink = new Set();
+  const make = m => /gemma/.test(m) ? plain : noThink.has(m) ? body : fast;
+  make.refused = (m, res) => { if(res.status === 400 && /think/i.test(JSON.stringify(res.j.error || '')) && !noThink.has(m)){ noThink.add(m); return true; } return false; };
   let {res, model} = await gemRace([last, ...GEM_READ], make, 40000, onNext);
   // all busy: Google says spikes pass, so once more after a short wait
   if(res.status !== 200 && gemErrKind(res) === 'busy'){ await new Promise(r => setTimeout(r, 4000)); ({res, model} = await gemRace([last, ...GEM_READ], make, 40000, onNext)); }
@@ -4885,7 +4898,6 @@ const PH_IC = {
   // translation ⇄ original: two letters with arrows turning round them; the one shown is large in front (A or 文), the other small behind
   tr: PH_SWAP('文', 'A'),
   orig: PH_SWAP('A', '文'),
-  save: '<svg class="ln" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M12 3.5v12M7 11l5 5 5-5M4.5 20.5h15"/></svg>',
   cam: '<svg class="ln" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M3.5 8.5A1.5 1.5 0 0 1 5 7h2.2l1.6-2.2h6.4L16.8 7H19a1.5 1.5 0 0 1 1.5 1.5v9.5A1.5 1.5 0 0 1 19 19.5H5A1.5 1.5 0 0 1 3.5 18z"/><circle cx="12" cy="13" r="3.6"/></svg>',
   share: '<svg class="ln" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M12 3v12.5M8 7l4-4 4 4M8.5 10.5H6a1 1 0 0 0-1 1V20a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-8.5a1 1 0 0 0-1-1h-2.5"/></svg>'};
 function phOpen(){
@@ -4893,7 +4905,6 @@ function phOpen(){
     <div class="ph-wrap"><div class="ph-img" id="phImg"><img src="${phData.url}" alt=""><div class="ph-ov" id="phOv"></div>${phData.blocks ? '' : `<div class="ph-busy" id="phBusy"><span>${tx('Reading the photo…')}</span></div>`}</div></div>
     <div class="qz-foot ph-foot2">
       <button type="button" class="pk-mark" id="phTr"></button>
-      <button type="button" class="pk-mark" id="phSave" title="${tx('Save picture')}" aria-label="${tx('Save picture')}">${PH_IC.save}</button>
       <button type="button" class="pk-mark" id="phShare" title="${tx('Share')}" aria-label="${tx('Share')}">${PH_IC.share}</button>
       <button type="button" class="pk-mark" id="phAgain" title="${tx('New photo')}" aria-label="${tx('New photo')}">${PH_IC.cam}</button>
     </div>
@@ -4904,7 +4915,6 @@ function phOpen(){
   document.getElementById('phKey').onclick = () => openGemKey(false, phOpen);   // back here afterwards, results kept
   document.getElementById('phTr').onclick = () => { if(phData.blocks && phData.blocks.length){ phData.orig = !phData.orig; phSync(); } };
   document.getElementById('phImg').onclick = phFullOpen;
-  document.getElementById('phSave').onclick = phSave;
   document.getElementById('phShare').onclick = phShare;
   const img = document.querySelector('#phImg img');
   img.onload = () => phFit(document.getElementById('phImg'), 11);
@@ -4917,7 +4927,7 @@ function phSync(){                          // the switch and the picture: trans
   b.innerHTML = orig ? PH_IC.orig : PH_IC.tr;   // no colour: the icon itself says which is shown
   const t = tx(orig ? 'Original (tap for the translation)' : 'Translation (tap for the original)'); b.title = t; b.setAttribute('aria-label', t);
   b.disabled = !has;
-  ['phSave', 'phShare'].forEach(id => { document.getElementById(id).disabled = !ready; });
+  ['phShare'].forEach(id => { document.getElementById(id).disabled = !ready; });
   document.getElementById('phImg').classList.toggle('orig', orig);
   const f = document.getElementById('phFullBox'); if(f) f.classList.toggle('orig', orig);
 }
@@ -4992,14 +5002,6 @@ function phPictureFile(){
   return new File([u], orig ? 'photo-original.jpg' : 'photo-translation.jpg', {type: 'image/jpeg'});
 }
 const IS_IOS = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-function phSave(){                          // iPhone: through the share sheet ("Save Image" puts it in Photos); elsewhere a download
-  if(!phData || !phData.blocks) return;
-  const f = phPictureFile();
-  if(IS_IOS && navigator.canShare && navigator.canShare({files: [f]})){ navigator.share({files: [f]}).catch(() => {}); return; }
-  const a = document.createElement('a'), url = URL.createObjectURL(f);
-  a.href = url; a.download = f.name; document.body.appendChild(a); a.click(); a.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 4000);
-}
 function phShare(){                         // the picture as shown, with the text and its translation
   if(!phData || !phData.blocks) return;
   const f = phPictureFile(), text = phData.blocks.map(b => b.zh + '\n' + b.tr).join('\n\n');
