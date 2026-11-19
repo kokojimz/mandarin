@@ -4909,14 +4909,14 @@ function phFit(root, min){                  // each translation as large as its 
 const phIsOrig = () => !!(phData && phData.orig);
 // ---- the dialog
 // drawn as lines, not as text: a font's own spacing would put the letter off centre (and differs per phone)
-const PH_SWAP = d => `<svg class="ln" viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><rect x="3.75" y="3.75" width="16.5" height="16.5" rx="3.6"/><path d="${d}"/></svg>`;
+const PH_SWAP = d => `<svg class="ln" viewBox="0 0 24 24" width="21.1" height="21.1" aria-hidden="true"><rect x="3.75" y="3.75" width="16.5" height="16.5" rx="3.6"/><path d="${d}"/></svg>`;
 const PH_IC = {
   // translation ⇄ original: a box with A (the translation is shown) or 文 (the original)
   tr: PH_SWAP('M8.9 16.35L12 7.65l3.1 8.7M9.95 13.3h4.1'),
   orig: PH_SWAP('M12 7.3v1.25M8.25 9.45h7.5M10.2 9.45c.75 3 2.7 5.4 5.7 6.95M13.8 9.45c-.75 3-2.7 5.4-5.7 6.95'),
-  reload: '<svg class="ln" viewBox="0 0 24 24" width="25.5" height="25.5" aria-hidden="true"><path d="M19.5 12a7.5 7.5 0 1 1-2.2-5.3M19.5 4v4.2h-4.2"/></svg>',
-  cam: '<svg class="ln" viewBox="0 0 24 24" width="26.4" height="26.4" aria-hidden="true"><path d="M3.5 8.5A1.5 1.5 0 0 1 5 7h2.2l1.6-2.2h6.4L16.8 7H19a1.5 1.5 0 0 1 1.5 1.5v9.5A1.5 1.5 0 0 1 19 19.5H5A1.5 1.5 0 0 1 3.5 18z"/><circle cx="12" cy="13" r="3.6"/></svg>',
-  share: '<svg class="ln" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M12 3v12.5M8 7l4-4 4 4M8.5 10.5H6a1 1 0 0 0-1 1V20a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-8.5a1 1 0 0 0-1-1h-2.5"/></svg>'};
+  reload: '<svg class="ln" viewBox="0 0 24 24" width="23.2" height="23.2" aria-hidden="true"><path d="M19.5 12a7.5 7.5 0 1 1-2.2-5.3M19.5 4v4.2h-4.2"/></svg>',
+  cam: '<svg class="ln" viewBox="0 0 24 24" width="23.1" height="23.1" aria-hidden="true"><path d="M3.5 8.5A1.5 1.5 0 0 1 5 7h2.2l1.6-2.2h6.4L16.8 7H19a1.5 1.5 0 0 1 1.5 1.5v9.5A1.5 1.5 0 0 1 19 19.5H5A1.5 1.5 0 0 1 3.5 18z"/><circle cx="12" cy="13" r="3.6"/></svg>',
+  share: '<svg class="ln" viewBox="0 0 24 24" width="20.7" height="20.7" aria-hidden="true"><path d="M12 3v12.5M8 7l4-4 4 4M8.5 10.5H6a1 1 0 0 0-1 1V20a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-8.5a1 1 0 0 0-1-1h-2.5"/></svg>'};
 function phOpen(){
   openForm(`<div class="fm-title">${tx('Photo translation')}</div>
     <div class="ph-wrap"><div class="ph-img" id="phImg"><img src="${phData.url}" alt=""><div class="ph-ov" id="phOv"></div>${phData.blocks ? '' : `<div class="ph-busy" id="phBusy"><span>${tx('Reading the photo…')}</span></div>`}</div></div>
