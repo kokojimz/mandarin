@@ -4974,10 +4974,17 @@ function phShow(){
       if(!on){ det.hidden = true; return; }
       const w = words[+b.dataset.i], r = azIndex().get(w.hz);
       det.innerHTML = `<div class="ph-dtop"><div class="ph-dh" lang="zh-TW">${color(w)}</div>${HAS_AUDIO ? `<button type="button" class="play ph-play" data-hz="${escAttr(w.hz)}" aria-label="${tx('Play pronunciation')}">${PLAY_IC}</button>` : ''}</div><div class="ph-dp">${w.py ? colorPinyin(w.py) : ''}</div><div class="ph-dm">${esc(w.m)}</div>${r ? `<button type="button" class="ph-card">${tx('Open card')} ›</button>` : ''}`;
-      det.hidden = true;                    // right under the row of the word tapped: after the last word on that line
+      // right under the row of the word tapped: after the last word on that line. Hiding it to measure the rows can make
+      // the dialog short enough to lose its scroll (it jumped to the top): the scroll is put back, then the box shown in full
+      const keep = fmBox.scrollTop, bTop = b.getBoundingClientRect().top;
+      det.hidden = true;
       const top = b.offsetTop; let last = b;
       out.querySelectorAll('.ph-w').forEach(x => { if(Math.abs(x.offsetTop - top) < 4) last = x; });
       last.after(det); det.hidden = false;
+      fmBox.scrollTop = keep;
+      fmBox.scrollTop += b.getBoundingClientRect().top - bTop;   // the word tapped stays where the finger was (the box moved from above it)
+      const fr = fmBox.getBoundingClientRect(), dr = det.getBoundingClientRect();
+      if(dr.bottom > fr.bottom - 8) fmBox.scrollTop += Math.min(dr.bottom - fr.bottom + 8, b.getBoundingClientRect().top - fr.top - 8);   // all of the box in sight, the word too
       return;
     }
     const c = e.target.closest('.ph-card');
