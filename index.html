@@ -407,7 +407,7 @@
   .rp-actions{ display:flex; flex-direction:column; gap:8px; margin-top:20px; }
   .rp-actions .cf-btn{ flex:none; padding:11px 4px; font-size:.85rem; }
   #peek.over-form{ z-index:78; }   /* a card opened from the report shows above it */
-  #peek.over-form .pk-fav, #peek.over-form .pk-tools{ display:none; }   /* their dialogs would open under the card and replace the report */
+  #peek.over-form:not(.can-back) .pk-fav, #peek.over-form:not(.can-back) .pk-tools{ display:none; }   /* their dialogs would replace the report; a dialog that can be reopened (photo, sentences) keeps them */
   /* quiz settings */
   .qs-row{ margin-bottom:14px; text-align:left; }
   .qs-row[hidden]{ display:none; }
@@ -693,7 +693,7 @@
   /* the camera (photo translation) at the right end of the search box */
   .q-wrap{ flex:1 1 200px; min-width:0; position:relative; display:flex; }
   .q-wrap input{ flex:1; width:100%; padding-right:50px; }
-  .az-btn{ position:absolute; right:10px; top:50%; transform:translateY(-50%); width:34px; height:34px; display:flex; align-items:center; justify-content:center; padding:0; border:0; border-radius:999px; background:transparent; color:var(--sub); cursor:pointer; -webkit-tap-highlight-color:transparent; }
+  .az-btn{ position:absolute; right:5px; top:50%; transform:translateY(-50%); width:34px; height:34px; display:flex; align-items:center; justify-content:center; padding:0; border:0; border-radius:999px; background:transparent; color:var(--sub); cursor:pointer; -webkit-tap-highlight-color:transparent; }
   .az-btn .tb-ic{ width:21px; height:21px; }
   .az-btn:active{ background:var(--border); }
   body.quiz-on .az-btn{ display:none; }
@@ -3345,6 +3345,12 @@ function peekHTML(r){
     ${tools}
     ${exampleHTML}`;
 }
+// a card shown above a dialog that can be opened again (peekUnder reopens it): its ⓘ, star and edit dialogs open on top
+// of the card ('was-over' while they are open), and closing them brings the dialog under the card back
+let peekUnder = null;
+function peekLift(){
+  if(peekEl.classList.contains('over-form') && peekUnder){ peekEl.classList.remove('over-form'); peekEl.classList.add('was-over'); }
+}
 function showPeek(r){
   stopSpeech();
   peekR = r;
@@ -3365,7 +3371,7 @@ peekBox.addEventListener('click', e=>{
   if(e.target.closest('.pk-chars')){                 // ⓘ: meaning of each character, in a dialog above the card
     e.stopPropagation();
     if(swallowTap || Date.now() < suppressUntil) return;
-    openCharsDialog(peekR);
+    peekLift(); openCharsDialog(peekR);
     return;
   }
   const xb = e.target.closest('.pk-ex-play');
@@ -3381,7 +3387,7 @@ peekBox.addEventListener('click', e=>{
     e.stopPropagation();
     if(swallowTap || Date.now() < suppressUntil) return;
     const r = peekR, id = +String(r[5]).slice(3);
-    if(tool.classList.contains('pk-edit')) openCardDialog(r[4], id);   // the form opens on top of the preview, like every other dialog
+    if(tool.classList.contains('pk-edit')){ peekLift(); openCardDialog(r[4], id); }   // the form opens on top of the preview, like every other dialog
     else askConfirm(tx('Delete card?'), tx('The card "{0}" will be deleted from "{1}". This cannot be undone.', fullWord(r[0]), lvLabel(r[4])), tx('Delete'), true)
       .then(ok => { if(ok){ closePeek(); deleteCustomCards([id]); } });
     return;
@@ -3391,7 +3397,7 @@ peekBox.addEventListener('click', e=>{
     e.stopPropagation();
     if(swallowTap || Date.now() < suppressUntil) return;
     const k = keyOf(peekR);
-    if(mk.classList.contains('pk-fav')) openGroupPicker(k); else askToggleBookmark(k);   // both open on top of the preview
+    if(mk.classList.contains('pk-fav')){ peekLift(); openGroupPicker(k); } else askToggleBookmark(k);   // both open on top of the preview
     return;
   }
   const pb = e.target.closest('.pk-play');
@@ -3402,7 +3408,7 @@ peekBox.addEventListener('click', e=>{
 function closePeek(){
   stopSpeech(); peekScope = null;
   peekOn = false; peekHeld = false;
-  peekEl.classList.remove('on', 'stay', 'over-form');
+  peekEl.classList.remove('on', 'stay', 'over-form', 'can-back', 'was-over'); peekUnder = null;
   finishQuiz();
 }
 function endPress(){
@@ -4633,7 +4639,7 @@ function openAnalyzer(text){
     const r = azRows[+b.dataset.i]; if(!r) return;
     peekScope = {rows: azRows.slice(), move: () => {}};   // ‹ › go through the words of this text
     showPeek(r);
-    peekEl.classList.add('over-form', 'stay');
+    peekUnder = () => openAnalyzer(); peekEl.classList.add('over-form', 'stay', 'can-back');
     peekHeld = false; suppressUntil = Date.now() + 150;
   });
   azRender();
@@ -4961,7 +4967,7 @@ function phShow(){
     }
     const c = e.target.closest('.ph-card');
     if(c){ const r = azIndex().get(words[+out.querySelector('.ph-w.on').dataset.i].hz); if(!r) return;
-      showPeek(r); peekEl.classList.add('over-form', 'stay'); peekHeld = false; suppressUntil = Date.now() + 150; }
+      showPeek(r); peekUnder = phOpen; peekEl.classList.add('over-form', 'stay', 'can-back'); peekHeld = false; suppressUntil = Date.now() + 150; }
   };
   phSync();
 }
@@ -5055,7 +5061,14 @@ document.getElementById('phBtn').addEventListener('click', phShoot);
 
 function closeForm(){
   fmBack = null;
-  if(phData) phReset();   // the photo translation, closed: forget it all
+  // a dialog opened from a card that sat above another dialog (photo, sentences): closing it brings that dialog back, the card on top again
+  if(peekOn && peekEl.classList.contains('was-over') && peekUnder){
+    peekEl.classList.remove('was-over');
+    peekUnder();
+    peekEl.classList.add('over-form');
+    return;
+  }
+  if(phData && fmBox.classList.contains('ph-dlg')) phReset();   // the photo translation, closed: forget it all
   dropUnder();
   fmOverlay.classList.remove('on');
   fmOverlay.setAttribute('aria-hidden', 'true');
