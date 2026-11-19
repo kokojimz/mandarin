@@ -4698,7 +4698,8 @@ async function gemFetch(url, opt, ms){
 const gemCall = (model, body, ms) => gemFetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body)}, ms);
 // Google's models are often busy (503) or slow: try them one after another, the last one that worked first;
 // a busy, slow, used-up (429: each model has its own free quota) or missing model passes to the next; a refused key stops
-const GEM_READ = ['gemini-3.8-flash', 'gemini-3.7-flash', 'gemini-3.6-flash', 'gemini-3.5-flash', 'gemini-flash-latest', 'gemini-flash-lite-latest'];
+// (each model has its own free quota and its own crowd: the more of them, the likelier one is free)
+const GEM_READ = ['gemini-3.8-flash', 'gemini-3.7-flash', 'gemini-3.6-flash', 'gemini-3.5-flash', 'gemini-3-flash-preview', 'gemini-flash-latest', 'gemini-3.5-flash-lite', 'gemini-3.1-flash-lite', 'gemini-flash-lite-latest', 'gemma-4-26b-a4b-it', 'gemma-4-31b-it'];
 const GEM_TTS = ['gemini-3.8-flash-tts', 'gemini-3.8-flash-lite-tts', 'gemini-3.1-flash-tts-preview', 'gemini-2.5-flash-preview-tts'];
 async function gemTry(models, make, ms, onNext){
   let res = null, used = '';
@@ -4745,10 +4746,16 @@ const gemErr = res => { const e = new Error(gemErrKind(res)); e.detail = (res.st
 const gemGone = res => { const e = JSON.stringify(res.j.error || ''); return res.status === 404 || (res.status === 400 && /model/i.test(e) && !/API key/i.test(e)); };
 async function gemAsk(body, onNext){
   let last = ''; try{ last = localStorage.getItem(LS_GEM_M) || ''; }catch(e){}
-  let {res, model} = await gemRace([last, ...GEM_READ], () => body, 40000, onNext);
+  // Gemma takes JSON but not the answer's shape: it gets the shape in words
+  const plain = JSON.parse(JSON.stringify(body)); delete plain.generationConfig.responseSchema;
+  plain.contents[0].parts[plain.contents[0].parts.length - 1].text += ' Answer with JSON only: {"blocks":[{"box_2d":[ymin,xmin,ymax,xmax],"zh":"","tr":""}],"words":[{"hz":"","py":"","m":""}]}.';
+  const make = m => /gemma/.test(m) ? plain : body;
+  let {res, model} = await gemRace([last, ...GEM_READ], make, 40000, onNext);
+  // all busy: Google says spikes pass, so once more after a short wait
+  if(res.status !== 200 && gemErrKind(res) === 'busy'){ await new Promise(r => setTimeout(r, 4000)); ({res, model} = await gemRace([last, ...GEM_READ], make, 40000, onNext)); }
   if(res.status !== 200 && gemErrKind(res) !== 'key' && (gemGone(res) || res.status === 400)){   // gone or refused: the Flash models Google lists today
     const more = (await gemModels(false)).filter(m => !GEM_READ.includes(m) && m !== last).slice(0, 3);
-    if(more.length){ ({res, model} = await gemRace(more, () => body, 40000, onNext)); }
+    if(more.length){ ({res, model} = await gemRace(more, make, 40000, onNext)); }
   }
   // the answer's shape refused (an older or newer API): once more without it; the request itself describes the shape
   if(res.status === 400 && /schema|response_?mime|Unknown name|Invalid JSON payload/i.test(JSON.stringify(res.j.error || ''))){
