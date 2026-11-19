@@ -252,6 +252,10 @@
   .qz-options{ display:flex; flex-direction:column; gap:10px; margin-bottom:6px; }
   .qz-foot{ display:flex; justify-content:center; align-items:center; gap:6px; margin:17px 0 -10px; }   /* the icons sit as far from the answers as from the bottom edge */   /* under every question: 🔈 ⓘ ↻ */
   .qz-foot .pk-mark{ height:28px; min-width:40px; }   /* small: the row adds little to the dialog */
+  /* the quiz icons sized by eye to look the same size (like the photo row): round or wide ones a little lower, the filled one a little smaller */
+  #qzSnd svg{ width:22.4px; height:20.6px; }
+  #qzIBtn svg{ width:20px; height:20px; }
+  #qzGive svg{ width:22.8px; height:22.8px; }
   .qz-foot[hidden]{ display:none; }
   .qz-foot .pk-mark:disabled{ opacity:.3; cursor:default; }
   #qzGive{ color:#d64545; }   /* give up (counted wrong): red, last in the row */   /* ↻ and ⓘ wait for the answer */
@@ -695,7 +699,6 @@
   .q-wrap{ flex:1 1 200px; min-width:0; position:relative; display:flex; }
   .q-wrap input{ flex:1; width:100%; padding-right:50px; }
   .az-btn{ position:absolute; right:5px; top:50%; transform:translateY(-50%); width:34px; height:34px; display:flex; align-items:center; justify-content:center; padding:0; border:0; border-radius:999px; background:transparent; color:var(--sub); cursor:pointer; -webkit-tap-highlight-color:transparent; }
-  .az-btn .tb-ic{ width:21px; height:21px; }
   .az-btn:active{ background:var(--border); }
   body.quiz-on .az-btn{ display:none; }
   body.quiz-on .q-wrap input{ padding-right:16px; }
@@ -801,7 +804,7 @@
 <div class="tools search-row">
   <div class="q-wrap">
   <input id="q" type="search" placeholder="漢字 / pīnyīn / meaning…" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" aria-label="Search by hanzi, pinyin or meaning">
-  <button type="button" id="phBtn" class="az-btn" title="Photo translation" aria-label="Photo translation" data-tx-title="Photo translation"><svg class="tb-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8.5A1.5 1.5 0 0 1 5.5 7h2l1.5-2h6l1.5 2h2A1.5 1.5 0 0 1 20 8.5v9a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 17.5z"/><circle cx="12" cy="13" r="3.5"/></svg></button>
+  <button type="button" id="phBtn" class="az-btn" title="Photo translation" aria-label="Photo translation" data-tx-title="Photo translation"><svg class="ln" viewBox="0 0 24 24" width="23.1" height="23.1" aria-hidden="true"><path d="M3.5 8.5A1.5 1.5 0 0 1 5 7h2.2l1.6-2.2h6.4L16.8 7H19a1.5 1.5 0 0 1 1.5 1.5v9.5A1.5 1.5 0 0 1 19 19.5H5A1.5 1.5 0 0 1 3.5 18z"/><circle cx="12" cy="13" r="3.6"/></svg></button>
   </div>
   <div class="quiz-score" id="quizScore" role="status" aria-live="polite" hidden></div>
   <div class="resume" id="resume" role="button" tabindex="0" hidden>
@@ -854,7 +857,7 @@
     <div class="qz-foot" id="qzFoot" hidden>
       <button type="button" class="pk-mark" id="qzSnd" data-tx-title="Read aloud automatically"></button>
       <button type="button" class="pk-mark pk-chars" id="qzIBtn" data-tx-title="Meaning of each character"></button>
-      <button type="button" class="pk-mark" id="qzRetry" data-tx-title="Try again"><svg class="ln" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M20 12a8 8 0 1 1-8-8c2.2 0 4.3.9 5.9 2.4L20 8.5"/><path d="M20 4v4.5h-4.5"/></svg></button>
+      <button type="button" class="pk-mark" id="qzRetry" data-tx-title="Try again"><svg class="ln" viewBox="0 0 24 24" width="22.2" height="22.2" aria-hidden="true"><path d="M20 12a8 8 0 1 1-8-8c2.2 0 4.3.9 5.9 2.4L20 8.5"/><path d="M20 4v4.5h-4.5"/></svg></button>
       <button type="button" class="pk-mark" id="qzGive" data-tx-title="Give up"><svg class="ln" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M5 5l9 7-9 7z" style="fill:currentColor"/><path d="M18 5v14"/></svg></button>
     </div>
   </div>
@@ -4914,7 +4917,7 @@ const PH_IC = {
   // translation ⇄ original: a box with A (the translation is shown) or 文 (the original)
   tr: PH_SWAP('M8.9 16.35L12 7.65l3.1 8.7M9.95 13.3h4.1'),
   orig: PH_SWAP('M12 7.3v1.25M8.25 9.45h7.5M10.2 9.45c.75 3 2.7 5.4 5.7 6.95M13.8 9.45c-.75 3-2.7 5.4-5.7 6.95'),
-  reload: '<svg class="ln" viewBox="0 0 24 24" width="23.2" height="23.2" aria-hidden="true"><path d="M19.5 12a7.5 7.5 0 1 1-2.2-5.3M19.5 4v4.2h-4.2"/></svg>',
+  reload: '<svg class="ln" viewBox="0 0 24 24" width="22.2" height="22.2" aria-hidden="true"><path d="M20 12a8 8 0 1 1-8-8c2.2 0 4.3.9 5.9 2.4L20 8.5"/><path d="M20 4v4.5h-4.5"/></svg>',   // the same as the quiz's ↻
   cam: '<svg class="ln" viewBox="0 0 24 24" width="23.1" height="23.1" aria-hidden="true"><path d="M3.5 8.5A1.5 1.5 0 0 1 5 7h2.2l1.6-2.2h6.4L16.8 7H19a1.5 1.5 0 0 1 1.5 1.5v9.5A1.5 1.5 0 0 1 19 19.5H5A1.5 1.5 0 0 1 3.5 18z"/><circle cx="12" cy="13" r="3.6"/></svg>',
   share: '<svg class="ln" viewBox="0 0 24 24" width="20.7" height="20.7" aria-hidden="true"><path d="M12 3v12.5M8 7l4-4 4 4M8.5 10.5H6a1 1 0 0 0-1 1V20a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-8.5a1 1 0 0 0-1-1h-2.5"/></svg>'};
 function phOpen(){
