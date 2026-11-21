@@ -732,6 +732,7 @@
   .empty .az-empty{ display:inline-block; flex:none; margin-top:16px; padding:10px 18px; }
   /* photo translation */
   .ph-wrap{ text-align:center; margin-top:4px; }
+  #formBox.ph-dlg{ overflow-anchor:none; }   /* the word list keeps its own place when the box moves (the browser's own correction would add to it) */
   .ph-img{ position:relative; display:inline-block; max-width:100%; vertical-align:top; border-radius:10px; overflow:hidden; cursor:zoom-in; -webkit-tap-highlight-color:transparent; }
   .ph-img img{ display:block; max-width:100%; max-height:58vh; width:auto; height:auto; }
   .ph-ov{ position:absolute; inset:0; pointer-events:none; }
@@ -4849,10 +4850,11 @@ async function gemSpeech(text){
   const out = new Uint8Array(44 + bytes.length); out.set(new Uint8Array(h.buffer)); out.set(bytes, 44);
   return out.buffer;
 }
-// the voices of all the other words, fetched while the first one plays: ONE request reads them all, a pause after each,
+// the voices of all the words, fetched as soon as the photo is read (and if that has not happened, when one is played): ONE request reads them all, a pause after each,
 // and the recording is cut at the pauses (one request instead of dozens: the free voice quota is small). If the cut does
 // not give one piece per word, nothing is kept and each word is asked for on its own when tapped, as before
 function phPrefetch(A){
+  if(!A){ const AC = window.AudioContext || window.webkitAudioContext; if(!AC || !SOUND_ON) return; A = phAudio = phAudio || {ctx: new AC(), cache: new Map(), wait: new Map(), src: null, btn: null}; }
   if(A.batch || A.done || !phData || !phData.words) return;   // once per photo
   const list = phData.words.map(w => w.hz).filter(hz => !A.cache.has(hz) && !A.wait.has(hz)).slice(0, 60);
   if(list.length < 2) return;
@@ -5062,19 +5064,16 @@ function phShow(){
       if(!on){ det.hidden = true; phHlSet(null); return; }   // the photo stays as it is (no translations) until 文 is tapped
       phData.orig = true;                   // a word chosen: as if 文 was tapped, and it stays so
       phHlSet(+b.dataset.i);
+      const keep = fmBox.scrollTop;          // the dialog's scroll, as it is: put back after the box moves, never changed by it
       const w = words[+b.dataset.i], r = azIndex().get(w.hz);
       det.innerHTML = `<div class="ph-dtop"><div class="ph-dh" lang="zh-TW">${color(w)}</div>${HAS_AUDIO ? `<button type="button" class="play ph-play" data-hz="${escAttr(w.hz)}" aria-label="${tx('Play pronunciation')}">${PLAY_IC}</button>` : ''}</div><div class="ph-dp">${w.py ? colorPinyin(w.py) : ''}</div><div class="ph-dm">${esc(w.m)}</div>${r ? `<button type="button" class="ph-card">${tx('Open card')} ›</button>` : ''}`;
       // right under the row of the word tapped: after the last word on that line. Hiding it to measure the rows can make
-      // the dialog short enough to lose its scroll (it jumped to the top): the scroll is put back, then the box shown in full
-      const keep = fmBox.scrollTop, bTop = b.getBoundingClientRect().top;
+      // the dialog short enough to lose its scroll (it jumped to the top): the scroll is put back; nothing scrolls by itself
       det.hidden = true;
       const top = b.offsetTop; let last = b;
       out.querySelectorAll('.ph-w').forEach(x => { if(Math.abs(x.offsetTop - top) < 4) last = x; });
       last.after(det); det.hidden = false;
       fmBox.scrollTop = keep;
-      fmBox.scrollTop += b.getBoundingClientRect().top - bTop;   // the word tapped stays where the finger was (the box moved from above it)
-      const fr = fmBox.getBoundingClientRect(), dr = det.getBoundingClientRect();
-      if(dr.bottom > fr.bottom - 8) fmBox.scrollTop += Math.min(dr.bottom - fr.bottom + 8, b.getBoundingClientRect().top - fr.top - 8);   // all of the box in sight, the word too
       return;
     }
     const c = e.target.closest('.ph-card');
@@ -5082,6 +5081,7 @@ function phShow(){
       showPeek(r); peekUnder = phOpen; peekEl.classList.add('over-form', 'stay', 'can-back'); peekHeld = false; suppressUntil = Date.now() + 150; }
   };
   phSync();
+  if(words.length > 1) phPrefetch(phAudio);   // every word's voice, fetched now: ▶ then plays at once
 }
 const HAS_AUDIO = !!(window.AudioContext || window.webkitAudioContext);
 // full screen: the picture as large as the screen allows, its translations sized again (text, so sharp); a tap closes it
