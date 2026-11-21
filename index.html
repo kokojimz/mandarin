@@ -4850,21 +4850,32 @@ async function gemSpeech(text){
   const out = new Uint8Array(44 + bytes.length); out.set(new Uint8Array(h.buffer)); out.set(bytes, 44);
   return out.buffer;
 }
-// the voices of all the words, fetched as soon as the photo is read (and if that has not happened, when one is played): ONE request reads them all, a pause after each,
-// and the recording is cut at the pauses (one request instead of dozens: the free voice quota is small). If the cut does
-// not give one piece per word, nothing is kept and each word is asked for on its own when tapped, as before
+// the voices of all the words, fetched as soon as the photo is read: in groups of up to 16 words, each group ONE request
+// that reads them with a pause after each, the recording cut at the pauses (a few requests instead of dozens: the free
+// voice quota is small; all in one voice and tone). A group whose cut does not give one piece per word is asked again once,
+// in two halves; after 3 failed cuts no more groups are asked. What still has no voice is asked for word by word, when tapped
 function phPrefetch(A){
-  if(!A){ const AC = window.AudioContext || window.webkitAudioContext; if(!AC || !SOUND_ON) return; A = phAudio = phAudio || {ctx: new AC(), cache: new Map(), wait: new Map(), src: null, btn: null}; }
-  if(A.batch || A.done || !phData || !phData.words) return;   // once per photo
-  const list = phData.words.map(w => w.hz).filter(hz => !A.cache.has(hz) && !A.wait.has(hz)).slice(0, 60);
-  if(list.length < 2) return;
-  A.batch = gemSpeech(list.join('。\n') + '。')
+  if(!A){ const AC = window.AudioContext || window.webkitAudioContext; if(!AC || !SOUND_ON) return; A = phAudio = phAudio || {ctx: new AC(), cache: new Map(), wait: new Map(), solo: new Map(), src: null, btn: null}; }
+  if(A.started || !phData || !phData.words) return;   // once per photo
+  A.started = true; A.cutFails = 0;
+  const all = phData.words.map(w => w.hz).filter(hz => !A.cache.has(hz));
+  const groups = []; for(let i = 0; i < all.length; i += 16) groups.push(all.slice(i, i + 16));
+  const run = (list, half) => A.noCut ? Promise.resolve() : gemSpeech(list.join('。\n') + '。')
     .then(ab => new Promise((ok, bad) => A.ctx.decodeAudioData(ab, ok, bad)))
     .then(buf => {
       if(phAudio !== A) return;
       const parts = phCut(A.ctx, buf, list.length);
-      if(parts) list.forEach((hz, i) => { if(!A.cache.has(hz)) A.cache.set(hz, parts[i]); });
-    }).catch(() => {}).then(() => { A.batch = null; A.done = true; });
+      if(parts){ A.cutFails = 0; list.forEach((hz, i) => { if(!A.cache.has(hz)) A.cache.set(hz, parts[i]); }); return; }
+      if(++A.cutFails >= 3){ A.noCut = true; return; }   // the cutting keeps failing on this voice: no more quota spent on it
+      if(!half && list.length > 4){ const h = Math.ceil(list.length / 2); return Promise.all([run(list.slice(0, h), true), run(list.slice(h), true)]); }   // once, in halves
+    }).catch(() => {});
+  // every word waits for its group (a tap meanwhile waits too, so all sound alike); two groups at a time (the voice model
+  // allows only a few requests a minute)
+  const jobs = groups.map(list => { let go; const done = new Promise(ok => { go = ok; }); list.forEach(hz => A.wait.set(hz, done)); return {list, go, done}; });
+  const start = j => { j.started = true; return run(j.list).then(() => { j.list.forEach(hz => A.wait.delete(hz)); j.go(); }); };
+  const lane = () => { const j = jobs.find(x => !x.started); if(j && phAudio === A) start(j).then(lane); };
+  lane(); lane();
+  A.kick = hz => { const j = jobs.find(x => !x.started && x.list.includes(hz)); if(j) start(j); };   // a word tapped whose group still waits: that group now
 }
 // the recording cut into n pieces at its n-1 longest pauses (sound: 20 ms steps louder than a share of the loudest)
 function phCut(ctx, buf, n){
@@ -4896,20 +4907,20 @@ async function phPlay(btn, hz){
   if(!SOUND_ON) return;
   if(btn.classList.contains('playing') || btn.classList.contains('loading')){ phStopVoice(); return; }
   stopSpeech(); phStopVoice();
-  if(!phAudio){ const AC = window.AudioContext || window.webkitAudioContext; if(!AC) return; phAudio = {ctx: new AC(), cache: new Map(), wait: new Map(), src: null, btn: null}; }
+  if(!phAudio){ const AC = window.AudioContext || window.webkitAudioContext; if(!AC) return; phAudio = {ctx: new AC(), cache: new Map(), wait: new Map(), solo: new Map(), src: null, btn: null}; }
   const A = phAudio;
   try{ A.ctx.resume(); }catch(e){}          // this tap unlocks sound on iPhone, for when the voice arrives later
   A.btn = btn; btn.classList.add('loading');
   try{
     let buf = A.cache.get(hz);
     if(!buf){
-      const batch = A.batch;
-      let p = A.wait.get(hz);
-      if(!p){ p = new Promise((ok, bad) => gemSpeech(hz).then(ab => A.ctx.decodeAudioData(ab, ok, bad), bad)); A.wait.set(hz, p); p.catch(() => {}).then(() => A.wait.delete(hz)); }
-      phPrefetch(A);                        // meanwhile, all the other words at once
-      // the others' voices already on the way: whichever comes first, that one or this word's own
-      buf = await (batch ? Promise.race([p, batch.then(() => A.cache.get(hz) || p)]) : p);
-      if(phAudio !== A) return; if(!A.cache.has(hz)) A.cache.set(hz, buf);
+      phPrefetch(A);                        // not started yet (sound was off): all the words now
+      if(A.wait.has(hz)){ if(A.kick) A.kick(hz); await A.wait.get(hz); if(phAudio !== A) return; buf = A.cache.get(hz); }   // its group on the way: the same voice as the others
+    }
+    if(!buf){                               // its group failed: this word on its own
+      let p = A.solo.get(hz);
+      if(!p){ p = new Promise((ok, bad) => gemSpeech(hz).then(ab => A.ctx.decodeAudioData(ab, ok, bad), bad)); A.solo.set(hz, p); p.catch(() => A.solo.delete(hz)); }
+      buf = await p; if(phAudio !== A) return; A.cache.set(hz, buf);
     }
     if(A.btn !== btn) return;               // another word was tapped meanwhile
     btn.classList.remove('loading'); btn.classList.add('playing'); btn.innerHTML = STOP_IC;
@@ -5131,7 +5142,7 @@ function phShare(){                         // the picture as shown, with the te
 // closing forgets it all, as if the feature had never been used (the key stays, so the camera still works next time)
 function phReset(){
   phStopVoice();
-  if(phAudio){ try{ phAudio.ctx.close(); }catch(e){} phAudio.cache.clear(); phAudio.wait.clear(); }   // every voice fetched, gone
+  if(phAudio){ try{ phAudio.ctx.close(); }catch(e){} phAudio.cache.clear(); phAudio.wait.clear(); phAudio.solo.clear(); }   // every voice fetched, gone
   phAudio = null; phData = null; phCanvas = null; gemTtsOk = '';
   const fv = document.getElementById('phFullView'); if(fv) fv.remove();
   try{ localStorage.removeItem(LS_GEM_M); }catch(e){}
