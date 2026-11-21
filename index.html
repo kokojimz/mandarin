@@ -738,6 +738,9 @@
   .ph-t{ position:absolute; box-sizing:border-box; display:flex; align-items:center; justify-content:center; text-align:center; overflow:hidden;
     padding:0 3px; border-radius:3px; background:rgba(245,245,245,.95); color:#111; line-height:1.2; font-weight:600; word-break:break-word; }
   .ph-img.orig .ph-ov{ display:none; }
+  .ph-img.hl .ph-ov{ display:none; }   /* a word chosen: the translations make way for its frames */
+  .ph-hl{ position:absolute; inset:0; pointer-events:none; }
+  .ph-hb{ position:absolute; box-sizing:border-box; border:2px solid var(--accent); border-radius:6px; box-shadow:0 0 0 1px rgba(0,0,0,.55), inset 0 0 0 1px rgba(0,0,0,.35); }
   .ph-busy{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,.45); color:#fff; font-size:.9rem; font-weight:600; }
   .ph-busy span{ padding:8px 16px; border-radius:999px; background:rgba(0,0,0,.72); animation:phpulse 1.2s ease-in-out infinite; }
   @keyframes phpulse{ 50%{ opacity:.4; } }
@@ -4776,7 +4779,7 @@ async function gemAsk(body, onNext){
   let last = ''; try{ last = localStorage.getItem(LS_GEM_M) || ''; }catch(e){}
   // Gemma takes JSON but not the answer's shape: it gets the shape in words
   const plain = JSON.parse(JSON.stringify(body)); delete plain.generationConfig.responseSchema;
-  plain.contents[0].parts[plain.contents[0].parts.length - 1].text += ' Answer with JSON only: {"blocks":[{"box_2d":[ymin,xmin,ymax,xmax],"zh":"","tr":""}],"words":[{"hz":"","py":"","m":""}]}.';
+  plain.contents[0].parts[plain.contents[0].parts.length - 1].text += ' Answer with JSON only: {"blocks":[{"box_2d":[ymin,xmin,ymax,xmax],"zh":"","tr":""}],"words":[{"hz":"","py":"","m":"","at":[{"box_2d":[ymin,xmin,ymax,xmax],"angle":0}]}]}.';
   // reading and translating a photo needs little thought: minimal thinking answers about a second sooner;
   // a model that refuses the setting is asked again without it (Gemma never gets it)
   const fast = JSON.parse(JSON.stringify(body)); fast.generationConfig.thinkingConfig = {thinkingLevel: 'minimal'};
@@ -4793,7 +4796,7 @@ async function gemAsk(body, onNext){
   // the answer's shape refused (an older or newer API): once more without it; the request itself describes the shape
   if(res.status === 400 && /schema|response_?mime|Unknown name|Invalid JSON payload/i.test(JSON.stringify(res.j.error || ''))){
     const b2 = JSON.parse(JSON.stringify(body)); delete b2.generationConfig.responseSchema;
-    b2.contents[0].parts[b2.contents[0].parts.length - 1].text += ' Answer with JSON only: {"blocks":[{"box_2d":[ymin,xmin,ymax,xmax],"zh":"","tr":""}],"words":[{"hz":"","py":"","m":""}]}.';
+    b2.contents[0].parts[b2.contents[0].parts.length - 1].text += ' Answer with JSON only: {"blocks":[{"box_2d":[ymin,xmin,ymax,xmax],"zh":"","tr":""}],"words":[{"hz":"","py":"","m":"","at":[{"box_2d":[ymin,xmin,ymax,xmax],"angle":0}]}]}.';
     res = await gemCall(model, b2);
   }
   if(res.status !== 200) throw gemErr(res);
@@ -4812,14 +4815,16 @@ async function gemPhoto(dataUrl, onNext){
       `tr = a natural, short ${tr} translation. ` +
       `2) words: the Chinese text split into words the way a dictionary would, each distinct word once (no duplicates), in order of first appearance, leaving out punctuation. ` +
       `For each: hz = the word in Traditional characters; py = its pinyin with tone marks, following the Taiwan Ministry of Education standard (教育部), syllables separated by spaces; ` +
-      `m = a short ${tr} meaning as used in this photo. Leave out text that is not Chinese. If there is no Chinese text, return empty lists.`}]}],
+      `m = a short ${tr} meaning as used in this photo; at = every place the word appears in the photo, each with box_2d = the tight bounding box of just that word [ymin, xmin, ymax, xmax] normalized to 0-1000 ` +
+      `and angle = how far its text line is turned, in degrees clockwise (0 when level; for vertical text, its tilt from upright). Leave out text that is not Chinese. If there is no Chinese text, return empty lists.`}]}],
     generationConfig: {temperature: 0, responseMimeType: 'application/json', responseSchema: {type: 'OBJECT', properties: {
       blocks: {type: 'ARRAY', items: {type: 'OBJECT', properties: {box_2d: {type: 'ARRAY', items: {type: 'NUMBER'}}, zh: {type: 'STRING'}, tr: {type: 'STRING'}}, required: ['box_2d', 'zh', 'tr']}},
-      words: {type: 'ARRAY', items: {type: 'OBJECT', properties: {hz: {type: 'STRING'}, py: {type: 'STRING'}, m: {type: 'STRING'}}, required: ['hz', 'py', 'm']}}}, required: ['blocks', 'words']}}};
+      words: {type: 'ARRAY', items: {type: 'OBJECT', properties: {hz: {type: 'STRING'}, py: {type: 'STRING'}, m: {type: 'STRING'}, at: {type: 'ARRAY', items: {type: 'OBJECT', properties: {box_2d: {type: 'ARRAY', items: {type: 'NUMBER'}}, angle: {type: 'NUMBER'}}, required: ['box_2d']}}}, required: ['hz', 'py', 'm', 'at']}}}, required: ['blocks', 'words']}}};
   const out = await gemAsk(body, onNext);
   const blocks = (out.blocks || []).filter(b => Array.isArray(b.box_2d) && b.box_2d.length === 4 && b.tr).map(b => ({box: b.box_2d.map(Number), zh: String(b.zh || ''), tr: String(b.tr).trim()}));
   const seen = new Set(), words = [];
-  (out.words || []).forEach(w => { const hz = String(w.hz || '').replace(/\s+/g, ''); if(!AZ_HAN.test(hz) || seen.has(hz)) return; seen.add(hz); words.push({hz, py: String(w.py || '').trim().replace(/\s+/g, ' '), m: String(w.m || '').trim()}); });
+  (out.words || []).forEach(w => { const hz = String(w.hz || '').replace(/\s+/g, ''); if(!AZ_HAN.test(hz) || seen.has(hz)) return; seen.add(hz); words.push({hz, py: String(w.py || '').trim().replace(/\s+/g, ' '), m: String(w.m || '').trim(),
+    at: (Array.isArray(w.at) ? w.at : []).filter(a => a && Array.isArray(a.box_2d) && a.box_2d.length === 4 && a.box_2d.every(v => isFinite(+v))).map(a => ({box: a.box_2d.map(Number), a: +a.angle || 0}))}); });
   return {blocks, words};
 }
 // ---- Gemini's voice for a word: asked only when ▶ is tapped, kept until the dialog closes
@@ -4894,6 +4899,37 @@ function phOverlayHTML(){
     return `<div class="ph-t" data-l="${l}" data-w="${w}" style="top:${Math.max(0, y0 - py)}%;height:${Math.max(1.5, y1 - y0 + 2 * py)}%;background:${b.c.bg};color:${b.c.fg}">${esc(b.tr)}</div>`;
   }).join('');
 }
+// the places of one word in the photo, framed (the translations hide meanwhile): each frame turned like its text.
+// Gemini gives the frame's upright bounds and the turn; the frame itself is worked back from them (in the photo's pixels)
+function phHlHTML(i, k){                   // k: screen pixels per photo pixel, here
+  const w = phData && phData.words && phData.words[i];
+  if(!w || !w.at || !w.at.length) return '';
+  const iw = (phCanvas && phCanvas.width) || 1000, ih = (phCanvas && phCanvas.height) || 1000;
+  return w.at.map(({box, a}) => {
+    const [y0, x0, y1, x1] = box.map(v => Math.max(0, Math.min(1000, v)));
+    const W = (x1 - x0) * iw / 1000, H = (y1 - y0) * ih / 1000, cx = (x0 + x1) / 20, cy = (y0 + y1) / 20;
+    let t = ((a % 180) + 180) % 180; if(t > 90) t -= 180;   // -90..90
+    let fw = W, fh = H, rot = 0;
+    const c = Math.abs(Math.cos(t * Math.PI / 180)), s = Math.abs(Math.sin(t * Math.PI / 180)), d = c * c - s * s;
+    if(Math.abs(t) >= 3 && Math.abs(d) > .25){
+      const ww = (W * c - H * s) / d, hh = (H * c - W * s) / d;
+      if(ww > 2 && hh > 2){ fw = ww; fh = hh; rot = t; }
+    }
+    const pad = Math.max(Math.min(fw, fh) * .3, 6 / (k || 1));   // room around the characters (at least 6 px on screen, small text too)
+    fw += 2 * pad; fh += 2 * pad;
+    return `<div class="ph-hb" style="left:${cx - fw / iw * 50}%;top:${cy - fh / ih * 50}%;width:${fw / iw * 100}%;height:${fh / ih * 100}%${rot ? `;transform:rotate(${rot}deg)` : ''}"></div>`;
+  }).join('');
+}
+function phHlSet(i){                        // i: the word chosen, or null
+  if(phData) phData.sel = i;
+  ['phImg', 'phFullBox'].forEach(id => {
+    const el = document.getElementById(id); if(!el) return;
+    const html = i == null ? '' : phHlHTML(i, el.clientWidth / ((phCanvas && phCanvas.width) || 1000));
+    let l = el.querySelector('.ph-hl'); if(!l){ l = document.createElement('div'); l.className = 'ph-hl'; el.appendChild(l); }
+    l.innerHTML = html; el.classList.toggle('hl', !!html);
+  });
+  phSync();
+}
 function phFit(root, min){                  // each translation as large as its box allows (min: the smallest size before the box widens)
   const fit = el => {
     let f = Math.max(7, Math.min(root.clientHeight * .06, el.clientHeight * .72));
@@ -4908,14 +4944,14 @@ function phFit(root, min){                  // each translation as large as its 
     for(let k = 1.25; fit(el) < min && k <= 2.01; k += .25){ const nw = Math.min(100, w * k); el.style.width = nw + '%'; el.style.left = Math.max(0, Math.min(100 - nw, l - (nw - w) / 2)) + '%'; }
   });
 }
-const phIsOrig = () => !!(phData && phData.orig);
+const phIsOrig = () => !!(phData && (phData.orig || phData.sel != null));   // a word chosen: the photo shows its frames, not the translations
 // ---- the dialog
 // drawn as lines, not as text: a font's own spacing would put the letter off centre (and differs per phone)
-const PH_SWAP = d => `<svg class="ln" viewBox="0 0 24 24" width="22" height="22" style="transform:translateY(.25px)" aria-hidden="true"><path d="${d}M5 20h14"/></svg>`;
+const PH_SWAP = d => `<svg class="ln" viewBox="0 0 24 24" width="23" height="23" aria-hidden="true"><path d="${d}"/></svg>`;
 const PH_IC = {
-  // translation ⇄ original: A (the translation is shown) or 文 (the original), underlined
-  tr: PH_SWAP('M7.5 15.5L12 4l4.5 11.5M9.2 11.2h5.6'),
-  orig: PH_SWAP('M12 3.6v1.9M6.4 6.8h11.2M9.2 6.8c1.1 4 3.6 7 8 8.7M14.8 6.8c-1.1 4-3.6 7-8 8.7'),
+  // translation ⇄ original: A (the translation is shown) or 文 (the original)
+  tr: PH_SWAP('M6.6 19.6L12 4.4l5.4 15.2M8.6 14.3h6.8'),
+  orig: PH_SWAP('M12 4.2v2.4M5.2 8.2h13.6M8.6 8.2c1.4 5.4 4.6 9.4 10 11.6M15.4 8.2c-1.4 5.4-4.6 9.4-10 11.6'),
   reload: '<svg class="ln" viewBox="0 0 24 24" width="22.2" height="22.2" aria-hidden="true"><path d="M20 12a8 8 0 1 1-8-8c2.2 0 4.3.9 5.9 2.4L20 8.5"/><path d="M20 4v4.5h-4.5"/></svg>',   // the same as the quiz's ↻
   cam: '<svg class="ln" viewBox="0 0 24 24" width="22.4" height="22.4" aria-hidden="true"><path d="M4 8.5V6a2 2 0 0 1 2-2h2.5M15.5 4H18a2 2 0 0 1 2 2v2.5M20 15.5V18a2 2 0 0 1-2 2h-2.5M8.5 20H6a2 2 0 0 1-2-2v-2.5"/><circle cx="12" cy="12" r="3.5"/></svg>',
   share: '<svg class="ln" viewBox="0 0 24 24" width="21.5" height="21.5" style="transform:translateY(.5px)" aria-hidden="true"><path d="M12 15V3.5M7.5 8L12 3.5 16.5 8M4 13v5.5A1.5 1.5 0 0 0 5.5 20h13a1.5 1.5 0 0 0 1.5-1.5V13"/></svg>'};
@@ -4932,7 +4968,15 @@ function phOpen(){
   fmBox.classList.add('ph-dlg');
   document.getElementById('phAgain').onclick = () => phFile.click();
   document.getElementById('phReload').onclick = phReload;
-  document.getElementById('phTr').onclick = () => { if(phData.blocks && phData.blocks.length){ phData.orig = !phData.orig; phSync(); } };
+  document.getElementById('phTr').onclick = () => {
+    if(!phData.blocks || !phData.blocks.length) return;
+    if(phData.sel != null){            // a word chosen: let it go, the translations come back
+      document.querySelectorAll('#phOut .ph-w.on').forEach(x => x.classList.remove('on'));
+      const d = document.getElementById('phDet'); if(d) d.hidden = true;
+      phStopVoice(); phData.orig = false; phHlSet(null); return;
+    }
+    phData.orig = !phData.orig; phSync();
+  };
   document.getElementById('phImg').onclick = phFullOpen;
   document.getElementById('phShare').onclick = phShare;
   const img = document.querySelector('#phImg img');
@@ -4958,6 +5002,7 @@ function phShow(){
   if(!blocks.length && !words.length){ out.innerHTML = `<div class="ph-note">${tx('No Chinese text found.')}</div>`; phSync(); return; }
   ov.innerHTML = phOverlayHTML();
   phFit(document.getElementById('phImg'), 11);
+  phHlSet(null);
   const color = w => { const s = w.py.split(' '); return s.length === [...w.hz].length ? [...w.hz].map((c, i) => `<span style="color:${tv(toneOf(s[i]))}">${esc(c)}</span>`).join('') : esc(w.hz); };
   out.innerHTML = words.length ? `<div class="ph-vh">${tx('Words')}: <span style="color:var(--text)">${words.length}</span> · ${tx('Tap the photo to enlarge it')}</div><div class="ph-words">${words.map((w, i) => `<button type="button" class="ph-w" data-i="${i}" lang="zh-TW">${esc(w.hz)}</button>`).join('')}</div><div class="ph-det" id="phDet" hidden></div>` : '';
   const vh = out.querySelector('.ph-vh');   // one line, like the count line: the font shrinks just enough to fit (down to 9px)
@@ -4971,7 +5016,8 @@ function phShow(){
       const on = !b.classList.contains('on');
       phStopVoice();
       out.querySelectorAll('.ph-w').forEach(x => x.classList.toggle('on', x === b && on));
-      if(!on){ det.hidden = true; return; }
+      if(!on){ det.hidden = true; phHlSet(null); return; }
+      phHlSet(+b.dataset.i);
       const w = words[+b.dataset.i], r = azIndex().get(w.hz);
       det.innerHTML = `<div class="ph-dtop"><div class="ph-dh" lang="zh-TW">${color(w)}</div>${HAS_AUDIO ? `<button type="button" class="play ph-play" data-hz="${escAttr(w.hz)}" aria-label="${tx('Play pronunciation')}">${PLAY_IC}</button>` : ''}</div><div class="ph-dp">${w.py ? colorPinyin(w.py) : ''}</div><div class="ph-dm">${esc(w.m)}</div>${r ? `<button type="button" class="ph-card">${tx('Open card')} ›</button>` : ''}`;
       // right under the row of the word tapped: after the last word on that line. Hiding it to measure the rows can make
@@ -5004,6 +5050,7 @@ function phFullOpen(){
   el.onclick = () => el.remove();
   document.body.appendChild(el);
   phFit(document.getElementById('phFullBox'), 12);
+  if(phData.sel != null) phHlSet(phData.sel);   // the word chosen: its frames here too
 }
 // the picture as shown (translation or original), as a JPEG file: the boxes drawn as on screen, at the photo's full size
 function phPictureFile(){
