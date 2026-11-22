@@ -495,6 +495,8 @@
   html, body{ overscroll-behavior-x:none; }   /* a sideways swipe on a touchpad must not go back a page */
   body.learn-on{ overflow:hidden; }
   .cap-ic{ width:18px; height:18px; display:block; }
+  .bear-ic{ width:20px; height:20px; }
+  .lg-name{ display:inline-flex; align-items:center; gap:6px; vertical-align:middle; }
   /* a lesson: full screen over the path */
   #lesson{ position:fixed; inset:0; z-index:58; background:var(--bg); display:none; flex-direction:column; overflow:hidden; }
   #lesson.on{ display:flex; }
@@ -503,7 +505,10 @@
   .ls-bar{ flex:1; height:12px; border-radius:9px; background:var(--border); overflow:hidden; }
   .ls-bar i{ display:block; height:100%; width:0; background:var(--accent); border-radius:9px; transition:width .35s ease; }
   .ls-body{ flex:1; min-height:0; overflow-y:auto; -webkit-overflow-scrolling:touch; overscroll-behavior:contain; width:100%; max-width:560px; margin:0 auto; padding:6px 16px 4px; display:flex; flex-direction:column; }
-  .ls-body > :first-child{ margin-top:auto; }            /* the question: in the middle of the room above the answers */
+  .ls-body:not(.free){ padding-top:3vh; }               /* the question: always at the top, in the same place */
+  .ls-body:not(.free) .ls-tag{ text-align:left; }
+  .ls-xk ~ .ls-tr{ text-align:left; margin-left:0; }
+  .ls-body.free > :first-child{ margin-top:auto; }
   .ls-body.free > :last-child{ margin-bottom:auto; }     /* no answers (a new word, the result): all in the middle */
   .ls-tag{ text-align:center; color:var(--accent); font-weight:700; font-size:.78rem; letter-spacing:.04em; margin-top:6px; }
   .ls-q{ font-weight:700; font-size:1.15rem; margin:10px 0 4px; }
@@ -525,11 +530,14 @@
   .ls-opt:disabled{ cursor:default; opacity:.55; }
   .ls-opt.ok{ border-color:#1e9e5a; background:rgba(30,158,90,.14); opacity:1; }
   .ls-opt.bad{ border-color:#d64545; background:rgba(214,69,69,.12); opacity:1; }
-  .ls-foot{ flex:none; width:100%; max-width:560px; margin:0 auto; padding:12px 16px calc(7vh + env(safe-area-inset-bottom,0px)); }   /* lifted off the bottom edge: answers and Continue where the thumb rests */
-  .ls-fb{ display:none; border-radius:14px; padding:11px 14px; margin-top:14px; font-size:.92rem; line-height:1.45; }
+  .ls-foot{ position:relative; flex:none; width:100%; max-width:560px; margin:0 auto; padding:12px 16px calc(7vh + env(safe-area-inset-bottom,0px)); }   /* lifted off the bottom edge: answers and Continue where the thumb rests */
+  /* right / wrong: a sheet that comes up from the bottom over the lower answers (like Duolingo); the button stays on it */
+  .ls-fb{ display:none; position:absolute; left:0; right:0; bottom:100%; max-height:46vh; overflow-y:auto; padding:16px 20px 4px; border-radius:20px 20px 0 0; font-size:.92rem; line-height:1.45; animation:fbUp .22s ease-out; }
   .ls-fb.ok, .ls-fb.bad{ display:block; }
-  .ls-fb.ok{ background:rgba(30,158,90,.14); }
-  .ls-fb.bad{ background:rgba(214,69,69,.12); }
+  .ls-fb.ok, .ls-foot:has(.ls-fb.ok){ background:linear-gradient(rgba(30,158,90,.16), rgba(30,158,90,.16)), var(--bg); }
+  .ls-fb.bad, .ls-foot:has(.ls-fb.bad){ background:linear-gradient(rgba(214,69,69,.15), rgba(214,69,69,.15)), var(--bg); }
+  @keyframes fbUp{ from{ transform:translateY(16px); opacity:0; } }
+  @media (prefers-reduced-motion:reduce){ .ls-fb{ animation:none; } }
   .ls-fb b{ display:block; font-size:1rem; }
   .ls-fb.ok b{ color:#1e9e5a; } .ls-fb.bad b{ color:#d64545; }
   .ls-go{ display:block; width:100%; padding:14px 0; font-size:1rem; border-radius:14px; }
@@ -569,7 +577,6 @@
   @keyframes bearDroop{ 0%{ transform:none; } 25%{ transform:translateY(3px) scale(1.04,.94) rotate(-4deg); } 50%{ transform:translateY(3px) scale(1.04,.94) rotate(4deg); } 72%{ transform:translateY(2px) scale(1.02,.97) rotate(-2deg); } 88%{ transform:translateY(1px) scale(1.01,.99) rotate(.6deg); } 100%{ transform:none; } }
   @media (prefers-reduced-motion:reduce){ .ls-bear .bm-talk, .ls-bear svg{ animation:none !important; } }
   .ls-bub{ position:absolute; top:-4px; right:-20px; padding:1px 8px; border-radius:10px 10px 10px 2px; background:var(--card-bg); border:1px solid var(--border); color:var(--accent); font-size:1rem; line-height:1.4; visibility:hidden; }
-  .ls-bear.b .ls-bub{ right:auto; left:-20px; border-radius:10px 10px 2px 10px; }
   .ls-bear[data-m="talk"] .ls-bub, .ls-bear.tap .ls-bub{ visibility:visible; }
   .ls-bear.tap{ cursor:pointer; -webkit-tap-highlight-color:transparent; }
   .ls-bears.sm .ls-bear{ width:84px; height:84px; }
@@ -644,7 +651,10 @@
   .ln-stat svg{ width:19px; height:19px; }
   .ln-stat.hot{ color:var(--accent); }
   .ln-top .ln-goal{ flex:1; justify-content:center; }
-  .ln-top .x-btn{ position:static; margin-right:-8px; }   /* the ✕ as far from the edge as the flame on the left */
+  .ln-top .x-btn{ position:static; margin-right:-8px; }   /* the reset button as far from the edge as the flame on the left */
+  .ln-reset{ height:30px; padding:0 14px; border-radius:999px; border:1px solid var(--border); background:transparent; color:#d64545;
+    font-family:inherit; font-size:.85rem; font-weight:700; line-height:1; cursor:pointer; flex:none; -webkit-tap-highlight-color:transparent; }   /* like End in a quiz */
+  .ln-reset:active{ opacity:.6; }
   .ln-lv{ margin:18px 0 4px; }
   .ln-lv-h{ display:flex; align-items:baseline; gap:10px; }
   .ln-lv-h b{ font-size:1.35rem; }
@@ -1277,7 +1287,10 @@ function saveCustomLocal(){ try{ localStorage.setItem(LS_CUSTOM, JSON.stringify(
 function installCustom(){   // (re)build the custom tail of LEVELS, D and EXAMPLES from CUSTOM
   LEVELS.length = BASE_LV; D.length = BASE_N;
   Object.keys(EXAMPLES).forEach(k => { if(k.startsWith('cu:')) delete EXAMPLES[k]; });
-  CUSTOM.groups.forEach(g => LEVELS.push([g.id, g.name, true]));
+  // the Learn group sits right after C1, like a TOCFL level; your own groups follow in your order
+  CUSTOM.groups.slice().sort((a, b) => isLearnGroup(b.name) - isLearnGroup(a.name)).forEach(g => LEVELS.push([g.id, g.name, true]));
+  LEARN_GID = (CUSTOM.groups.find(g => isLearnGroup(g.name)) || {}).id || null;
+  LEARN_HIDDEN = !lnAnyDone();   // no lesson on this device (the group came with a backup or from another device): not shown
   CUSTOM.cards.forEach(c => {
     const row = [c.hz, c.py, c.m, '', c.g, 'cu:' + c.id];
     if(c.mi) row.mi = c.mi;                              // the Indonesian meaning you typed
@@ -1294,7 +1307,9 @@ function installCustom(){   // (re)build the custom tail of LEVELS, D and EXAMPL
   });
 }
 const GROUPS_OF = new Map();                       // card key -> Set of your group ids it is saved in
-const isSaved = k => !!(GROUPS_OF.get(k) && GROUPS_OF.get(k).size);
+let LEARN_GID = null;                              // the Learn group's id (it fills itself: no cards added by hand)
+let LEARN_HIDDEN = false;
+const isSaved = k => { const s = GROUPS_OF.get(k); return !!(s && (s.size > 1 || (s.size === 1 && !(LEARN_HIDDEN && s.has(LEARN_GID))))); };   // its words get the ☆ too, as if saved there
 const isCustomLv = code => CUSTOM_GROUP_ID.test(code) && LEVELS.some(l => l[0] === code && l[2]);
 const lvLabel = code => { const l = LEVELS.find(x => x[0] === code); return l && l[2] ? l[1] : code; };
 try{ const raw = localStorage.getItem(LS_CUSTOM); if(raw) CUSTOM = sanitizeCustom(JSON.parse(raw)); }catch(e){}
@@ -1595,17 +1610,25 @@ function rebuildDerived(){
   recount();
 }
 
+// the Learn group (named 🎓 inside): the words of your lessons. Shown with the bear's head, never renamed or deleted,
+// and only once you have done a lesson
+function isLearnGroup(name){ return name === '\u{1F393}'; }
+function lnAnyDone(){ try{ const s = JSON.parse(localStorage.getItem('tocfl-learn-v1') || '{}'); return !!(s.done && Object.keys(s.done).length); }catch(e){ return false; } }
+function lnBearIcon(){ return '<svg class="cap-ic bear-ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="5.6" cy="5.8" r="3.6" fill="#5a463b"/><circle cx="18.4" cy="5.8" r="3.6" fill="#3e2f27"/><circle cx="5.6" cy="5.9" r="1.8" fill="#d9988a"/><circle cx="18.4" cy="5.9" r="1.8" fill="#b47b6f"/><ellipse cx="12" cy="13.2" rx="9.6" ry="9" fill="#3e2f27"/><ellipse cx="11.2" cy="12.5" rx="8.8" ry="8.3" fill="#5a463b"/><circle cx="8.4" cy="11" r="2.4" fill="#fff"/><circle cx="15.6" cy="11" r="2.4" fill="#fff"/><circle cx="8.7" cy="11.4" r="1.5" fill="#2b1d17"/><circle cx="15.3" cy="11.4" r="1.5" fill="#2b1d17"/><ellipse cx="12" cy="16.6" rx="4" ry="2.9" fill="#f4c88f"/><path d="M10.4 15.2h3.2c.5 0 .6.5.4.9-.5.8-1.1 1.2-2 1.2s-1.5-.4-2-1.2c-.2-.4-.1-.9.4-.9z" fill="#2b1d17"/></svg>'; }
+const grpLabel = name => isLearnGroup(name) ? `<span class="lg-name">${lnBearIcon()}${esc(tx('Learn'))}</span>` : esc(name);
 function buildBar(){
   const bar = document.getElementById('levelBar');
   bar.innerHTML = '';
   LEVELS.forEach(([code,name,custom])=>{
+    const learn = custom && isLearnGroup(name);
+    if(learn && !lnAnyDone()) return;
     const b = document.createElement('button');
     b.dataset.l = code; b.className = active.has(code) ? 'active' : '';
-    b.title = custom ? tx('{0} — hold to rename or delete', name) : name;
-    b.innerHTML = custom ? `<span class="gname">${name === '🎓' ? lnCapIcon() : esc(name)}</span><small class="cnt">${C[code] || 0}</small>`
+    b.title = learn ? tx('Learn') : custom ? tx('{0} — hold to rename or delete', name) : name;
+    b.innerHTML = custom ? `<span class="gname">${learn ? lnBearIcon() : esc(name)}</span><small class="cnt">${C[code] || 0}</small>`
                          : `${code}<small class="cnt">${C[code] || 0}</small>`;
     let held = false;
-    if(custom){
+    if(custom && !learn){
       let t = null;
       const cancel = () => { clearTimeout(t); t = null; };
       b.addEventListener('pointerdown', ev => {
@@ -2063,7 +2086,7 @@ function openReport(){
     </div>
     <div class="rp-sec">
       <div class="rp-h">${tx('Correct answers per day')}</div>
-      <div class="rp-chips">${groups.map(g => `<button type="button" class="rp-chip${reportSel.has(g.code) ? ' on' : ''}" data-c="${escAttr(g.code)}" aria-pressed="${reportSel.has(g.code)}"><i style="background:${reportSel.has(g.code) ? g.color : ''}"></i>${esc(g.name)} <b>${g.pct}%</b></button>`).join('')}</div>
+      <div class="rp-chips">${groups.map(g => `<button type="button" class="rp-chip${reportSel.has(g.code) ? ' on' : ''}" data-c="${escAttr(g.code)}" aria-pressed="${reportSel.has(g.code)}"><i style="background:${reportSel.has(g.code) ? g.color : ''}"></i>${grpLabel(g.name)} <b>${g.pct}%</b></button>`).join('')}</div>
       <div class="rp-chart" id="rpChart"></div>
       <div class="rp-hint">${tx('Tap the chart to see the numbers of a day.')}</div>
     </div>
@@ -4466,7 +4489,7 @@ window.addEventListener('resize', () => {
 function addTarget(){
   if(quizMode || query.trim() || active.size !== 1) return null;
   const c = [...active][0];
-  return isCustomLv(c) && !isSheetGroup(c) ? c : null;   // cards of a linked group are added in the sheet
+  return isCustomLv(c) && !isSheetGroup(c) && c !== LEARN_GID ? c : null;   // cards of a linked group are added in the sheet; the Learn group fills itself
 }
 function viewList(){ const t = addTarget(); return t ? [-1, ...list] : list; }
 function makeAddTile(code){
@@ -6124,7 +6147,7 @@ function openSyncDialog(){
 function groupNameError(n, selfId){
   if(!n) return tx('Please type a name.');
   const low = n.toLowerCase();
-  if(low === 'all') return tx('That name is reserved.');
+  if(low === 'all' || isLearnGroup(n)) return tx('That name is reserved.');
   if(LEVELS.some(l => l[0] !== selfId && (l[2] ? l[1] : l[0]).toLowerCase() === low)) return tx('A group with this name already exists.');   // N1–C1 by code, your groups by name (never by their hidden id g1, g2…)
   return '';
 }
@@ -6139,10 +6162,10 @@ function openGroupPicker(key, st){
   const homeOf = r[5] ? r[4] : null;                        // a card you made always stays in the group it was made in
   // locked rows: the group a card you made lives in (always ticked), and groups linked to a Google Sheet (only the sheet's cards)
   const lockMsg = g => g.src ? 'Cards of this group come from its Google Sheet' : g.id === homeOf ? 'Cards you made stay in their own group' : '';
-  const rows = CUSTOM.groups.map(g => {
+  const rows = CUSTOM.groups.filter(g => !isLearnGroup(g.name)).map(g => {
     const on = g.refs.includes(key), lock = lockMsg(g), home = g.id === homeOf;
     return `<button type="button" class="gp-row${on ? ' on' : ''}${home ? ' home' : lock ? ' sheet' : ''}" data-g="${g.id}" aria-pressed="${on}"${lock ? ` aria-disabled="true" data-lock="${lock}"` : ''}>
-      <span class="gp-name">${esc(g.name)}</span>${CHECK_ICON}</button>`;
+      <span class="gp-name">${grpLabel(g.name)}</span>${CHECK_ICON}</button>`;
   }).join('');
   openForm(`
     <div class="fm-title">${tx('Add to group')}</div>
@@ -6169,7 +6192,7 @@ function openGroupPicker(key, st){
   document.getElementById('fmCancel').onclick = fmBack = () => {
     closeForm();
     const was = new Set(st.was);
-    CUSTOM.groups.forEach(g => { if(g.src || g.id === homeOf) return;
+    CUSTOM.groups.forEach(g => { if(g.src || g.id === homeOf || isLearnGroup(g.name)) return;
       const i = g.refs.indexOf(key), want = was.has(g.id);
       if(want && i < 0) g.refs.push(key); else if(!want && i >= 0) g.refs.splice(i, 1); });
     applyCustomChange();
@@ -6181,7 +6204,7 @@ function openGroupOrder(back){
   openForm(`
     <div class="fm-title">${tx('Group order')}</div>
     <div class="fm-sub">${tx('Tap your groups in the order you want them.')}</div>
-    <div class="gp-list" id="odList">${CUSTOM.groups.map(g => `<button type="button" class="gp-row" data-g="${g.id}"><span class="gp-name">${esc(g.name)}</span><span class="od-num" aria-hidden="true"></span></button>`).join('')}</div>
+    <div class="gp-list" id="odList">${CUSTOM.groups.filter(g => !isLearnGroup(g.name)).map(g => `<button type="button" class="gp-row" data-g="${g.id}"><span class="gp-name">${grpLabel(g.name)}</span><span class="od-num" aria-hidden="true"></span></button>`).join('')}</div>
     <div class="fm-actions">
       <button type="button" class="cf-btn" id="fmCancel">${tx('Cancel')}</button>
       <button type="button" class="cf-btn cf-yes" id="fmOk">${tx('Save')}</button>
@@ -6212,10 +6235,10 @@ function openGroupOrder(back){
 const ORDER_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 9.5C17 4.5 9 3.5 4.6 8.6M4 4.8v4.3h4.3"/><rect x="3.5" y="14" width="4.4" height="4.4" rx=".8"/><rect x="9.8" y="14" width="4.4" height="4.4" rx=".8"/><rect x="16.1" y="14" width="4.4" height="4.4" rx=".8"/></svg>';
 function openGroupDialog(code){
   const g = isCustomLv(code) && CUSTOM.groups.find(x => x.id === code);
-  if(!g) return;                                       // N1–C1 and All can never be renamed or deleted
+  if(!g || isLearnGroup(g.name)) return;              // N1–C1, All and the Learn group can never be renamed or deleted
   const n = C[code] || 0;
   openForm(`
-    ${CUSTOM.groups.length > 1 ? `<span class="o-open"><button type="button" class="o-btn" id="fmOrder" title="${tx('Group order')}" aria-label="${tx('Group order')}">${ORDER_ICON}</button></span>` : ''}
+    ${CUSTOM.groups.filter(g => !isLearnGroup(g.name)).length > 1 ? `<span class="o-open"><button type="button" class="o-btn" id="fmOrder" title="${tx('Group order')}" aria-label="${tx('Group order')}">${ORDER_ICON}</button></span>` : ''}
     <div class="fm-title">${tx('Edit group')}</div>
     <div class="fm-sub">${n === 1 ? tx('This group has 1 card.') : tx('This group has {0} cards.', n)}</div>
     <div class="fm-field"><label for="fmGName">${tx('Group name')}</label>
@@ -6310,7 +6333,7 @@ function suggestPinyin(w){
 
 // -- add / edit a card --
 function openCardDialog(code, editId){
-  if(!isCustomLv(code) || isSheetGroup(code)) return;  // cards can only be added to / edited in your own groups (not in one linked to a sheet)
+  if(!isCustomLv(code) || isSheetGroup(code) || code === LEARN_GID) return;  // cards can only be added to / edited in your own groups (not in one linked to a sheet)
   const c = editId != null ? CUSTOM.cards.find(x => x.id === editId && x.g === code) : null;
   if(editId != null && !c) return;
   const exs = c && c.ex && c.ex.length ? c.ex : [];
@@ -6600,6 +6623,7 @@ function importBackup(data){
       }
       if(data.history && typeof data.history === 'object'){ HIST = readHist(data.history); saveHist(); }
       if(data.learn && typeof data.learn === 'object') lnSave(lnClean(data.learn));
+      setTimeout(lnEnsureGroup, 0);
       if(data.quiz && typeof data.quiz === 'object'){
         quizCfg = readQuizCfg(data.quiz);
         try{ localStorage.setItem(LS_QUIZ, JSON.stringify(quizCfg)); }catch(e){}
@@ -6822,6 +6846,16 @@ function lnClean(x){
           srs: map(x.srs, v => Array.isArray(v) && v.length === 2 && num(v[0]) && Number.isInteger(v[1]) && v[1] >= 0 && v[1] < 7)};
 }
 function lnSave(s){ try{ localStorage.setItem(LS_LEARN, JSON.stringify(s)); }catch(e){} }
+// start Learn over: lessons, stars, streak and reviews, and the Learn group goes (it comes back after your next lesson)
+function lnReset(){
+  askConfirm(tx('Reset progress?'), tx('All lessons, stars, the streak and the daily reviews start over, and the Learn group is emptied. This cannot be undone'), tx('Reset'), true).then(ok => {
+    if(!ok) return;
+    lnSave({done: {}, days: {}, stars: {}, miss: {}, srs: {}});
+    const g = CUSTOM.groups.find(x => isLearnGroup(x.name));
+    if(g){ CUSTOM.groups = CUSTOM.groups.filter(x => x !== g); active.delete(g.id); if(!active.size) LEVELS.forEach(l => { if(l[0] !== g.id) active.add(l[0]); }); applyCustomChange(); }
+    lnRender();
+  });
+}
 const lnDay = (d = new Date()) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 // days in a row with at least one lesson, up to today (or yesterday, while today has none yet)
 function lnStreak(s){
@@ -6844,7 +6878,7 @@ function lnRender(){
   let html = `<div class="ln-top">
       <span class="ln-stat${streak ? ' hot' : ''}" title="${escAttr(tx('Days in a row'))}">${lnIcon.flame}${streak}</span>
       <span class="ln-stat ln-goal${today >= LN_GOAL ? ' hot' : ''}">${lnIcon.goal}${tx('Today {0}/{1}', Math.min(today, LN_GOAL), LN_GOAL)}</span>
-      <button type="button" class="x-btn" id="lnClose" title="${tx('Close')}" aria-label="${tx('Close')}">✕</button>
+      <button type="button" class="ln-reset" id="lnReset" title="${escAttr(tx('Reset progress'))}">${tx('Reset')}</button>
     </div>`;
   const due = lnDue(s).length, learned = Object.keys(s.srs).length;
   if(learned) html += due ? `<button type="button" class="ln-daily" id="lnDaily"><span class="ln-seal" lang="zh-TW">溫</span><span class="ln-tx"><span class="ln-t">${tx('Daily review')}</span><span class="ln-s">${tx('{0} words to review today', due)}</span></span><span class="ln-go">${tx('Start')}</span></button>`
@@ -6976,7 +7010,7 @@ function lnHint(which){
 }
 lnHint('open');
 lnWrap.addEventListener('click', e => {
-  if(e.target.closest('#lnClose')){ closeLearn(); return; }
+  if(e.target.closest('#lnReset')){ lnReset(); return; }
   if(e.target.closest('#lnDaily')){ lsStart({key: 'daily', daily: true, lv: '', name: tx('Daily review')}); return; }
   const n = e.target.closest('.ln-node'); if(!n) return;
   const l = lnList()[+n.dataset.i];
@@ -7028,15 +7062,19 @@ Object.assign(ID_TEXT, {"Review": "Ulangan", "What does it mean?": "Apa artinya?
   "Which pinyin is right?": "Pinyin yang benar yang mana?", "New word": "Kata baru", "Continue": "Lanjut", "Correct!": "Benar!", "Not quite": "Belum tepat",
   "Quit the lesson?": "Keluar dari pelajaran?", "What you did in this lesson will be lost.": "Yang sudah kamu kerjakan di pelajaran ini akan hilang.", "Quit": "Keluar",
   "Lesson complete!": "Pelajaran selesai!", "Review complete!": "Ulangan selesai!", "Test passed!": "Lulus ujian!", "Not passed yet": "Belum lulus",
-  "{0}% correct": "{0}% benar", "{0} words saved in your 🎓 group": "{0} kata masuk grup 🎓", "You need {0}% to pass.": "Butuh {0}% untuk lulus.",
+  "{0}% correct": "{0}% benar", "{0} words saved in your Learn group": "{0} kata masuk grup Belajar", "Reset progress": "Reset progres", "Reset progress?": "Reset progres?", "All lessons, stars, the streak and the daily reviews start over, and the Learn group is emptied. This cannot be undone": "Semua pelajaran, bintang, hari beruntun, dan review harian mulai dari awal, dan grup Belajar dikosongkan. Tindakan ini tidak bisa dibatalkan", "Reset": "Reset", "You need {0}% to pass.": "Butuh {0}% untuk lulus.",
   "Back": "Kembali", "{0} questions": "{0} soal", "Practice again the words you missed most.": "Latihan lagi kata-kata yang paling sering salah.",
   "{0} questions from all the words of {1}. {2}% opens the next level.": "{0} soal dari semua kata {1}. Dapat {2}% untuk membuka level berikutnya.",
   "Tap to hear it again": "Ketuk untuk dengar lagi", "Today’s goal reached!": "Target hari ini tercapai!", "{0} is open!": "{0} terbuka!",
   "Play": "Putar", "Mistakes": "Salah", "Time": "Waktu", "Skip ahead": "Lompati", "Already know these words? Pass it and every lesson up to here counts as done.": "Sudah hafal kata-katanya? Lulus ujian ini dan semua pelajaran sampai di sini dianggap selesai.", "{0} lessons skipped.": "{0} pelajaran dilompati.", "Daily review": "Ulangan harian", "Swipe left to go back to the cards": "Geser ke kiri untuk kembali ke kartu", "Swipe right for Learn 學": "Geser ke kanan untuk mode Belajar 學", "Mock test": "Tryout", "{0} questions · {1} minutes": "{0} soal · {1} menit", "{0} questions ({1} listening, then {1} reading) from all the A1 and A2 practice, in {2} minutes. Like the real test, the answers are only checked at the end.": "{0} soal ({1} mendengar, lalu {1} membaca) dari semua latihan A1 dan A2, dalam {2} menit. Seperti ujian sungguhan, jawaban baru diperiksa di akhir.", "Time is up": "Waktu habis", "Finish": "Selesai", "Aim for at least {0}% before the real test.": "Targetkan minimal {0}% sebelum ujian sungguhan.", "Exam practice {0}": "Latihan ujian {0}", "TOCFL format · {0} questions": "Format TOCFL · {0} soal", "Reading": "Membaca", "Listening": "Mendengar", "Listen to the dialog": "Dengarkan percakapannya", "Read real-life texts and listen to short dialogs, as in the TOCFL test. The questions and answers are in Chinese; the translation comes after you answer.": "Baca teks sehari-hari dan dengarkan percakapan pendek, seperti di ujian TOCFL. Soal dan jawabannya dalam bahasa Mandarin; terjemahannya muncul setelah kamu menjawab.", "Grammar": "Tata bahasa", "{0} words to review today": "{0} kata perlu diulang hari ini", "All caught up for today": "Semua sudah diulang hari ini", "Nothing to review today": "Hari ini tidak ada yang perlu diulang", "What does the sentence mean?": "Apa arti kalimat ini?", "Listen: what does it mean?": "Dengarkan: apa artinya?"});
 lnIcon.review = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19.5 9.5A8 8 0 0 0 5 7.6M4.5 14.5A8 8 0 0 0 19 16.4"/><path d="M5 3.5v4.3h4.3M19 20.5v-4.3h-4.3"/></svg>';
 const LN_PASS = .8, LN_TEST_N = 20, LN_LESSON_N = 15, LN_REVIEW_N = 12, LN_GROUP = '🎓';
-// the group pill shows a drawn mortarboard instead of the emoji (same look on every phone)
-function lnCapIcon(){ return '<svg class="cap-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4.2L1.6 9.1 12 14l10.4-4.9z" fill="currentColor"/><path d="M6.2 11.6v3.9c0 1.7 2.6 3.1 5.8 3.1s5.8-1.4 5.8-3.1v-3.9L12 14.4z" fill="currentColor" opacity=".8"/><path d="M20.6 9.8v5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="20.6" cy="15.9" r="1.4" fill="currentColor"/></svg>'; }
+function lnEnsureGroup(){   // the group there once a lesson is done, and shown / hidden as the progress on this device says
+  const any = lnAnyDone(), has = CUSTOM.groups.some(x => x.name === LN_GROUP);
+  if(any && !has){ CUSTOM.groups.push({id: 'g' + (++CUSTOM.seq), name: LN_GROUP, refs: []}); applyCustomChange(); }
+  else if(has && LEARN_HIDDEN === any) applyCustomChange();
+}
+setTimeout(lnEnsureGroup, 0);
 function lnAddToGroup(rows){
   let g = CUSTOM.groups.find(x => x.name === LN_GROUP), n = 0;
   if(!g){ g = {id: 'g' + (++CUSTOM.seq), name: LN_GROUP, refs: []}; CUSTOM.groups.push(g); }
@@ -7262,7 +7300,8 @@ function lsDialog(lines, btn){
     u.lang = 'zh-TW'; if(v){ u.voice = v; u.lang = v.lang; }
     u.rate = .9; u.pitch = who === 'A' ? 1.25 : .8;
     u.onstart = () => lsBearSet('talk', who === 'A' ? 0 : 1);
-    u.onend = () => { lsBearSet((LS && LS.mood) || 'idle', who === 'A' ? 0 : 1); setTimeout(next, 350); }; u.onerror = () => { lsBearRest(); if(btn) btn.classList.remove('playing'); };
+    u.onend = () => { if(seq !== lsDlgSeq) return; lsBearSet((LS && LS.mood) || 'idle', who === 'A' ? 0 : 1); setTimeout(next, 350); };
+    u.onerror = () => { if(seq !== lsDlgSeq) return; lsBearRest(); if(btn) btn.classList.remove('playing'); };   // a replay cut it off: leave the new one alone
     try{ window.speechSynthesis.speak(u); }catch(e){}
   };
   next();
@@ -7294,9 +7333,9 @@ function lsExam(q){
     LS.mood = ok ? 'happy' : 'sad'; lsBearRest(); lsBearReact();
     playSfx(ok ? 'right' : 'wrong');
     // what it said: the dialog written out, and the translations
-    lsFb.insertAdjacentHTML('afterend', `<div class="ls-xexp">${it.t === 'l' ? `<div lang="zh-TW">${it.d.map(d => `<p><b>${d[0]}：</b>${esc(d[1])}</p>`).join('')}</div>` : ''}<p class="tr">${esc(it.tr[L])}</p></div>`);
+    const xexp = `<div class="ls-xexp">${it.t === 'l' ? `<div lang="zh-TW">${it.d.map(d => `<p><b>${d[0]}：</b>${esc(d[1])}</p>`).join('')}</div>` : ''}<p class="tr">${esc(it.tr[L])}</p></div>`;
     lsFb.className = 'ls-fb ' + (ok ? 'ok' : 'bad');
-    lsFb.innerHTML = `<b>${ok ? tx('Correct!') : tx('Not quite')}</b><span class="w">${esc(it.qt[L])} → <span lang="zh-TW">${esc(it.o[it.a])}</span></span>`;
+    lsFb.innerHTML = `<b>${ok ? tx('Correct!') : tx('Not quite')}</b><span class="w">${esc(it.qt[L])} → <span lang="zh-TW">${esc(it.o[it.a])}</span></span>` + xexp;
     lsSetGo(tx('Continue'), ok ? 'ok' : 'bad');
   });
 }
@@ -7372,7 +7411,7 @@ function lsNext(){
 function lsLayout(){
   const anchor = lsBody.querySelector('.ls-opts, .ls-bank');
   lsBody.classList.toggle('free', !anchor);
-  if(anchor) anchor.before(lsFb); else lessonEl.querySelector('.ls-foot').prepend(lsFb);
+  lessonEl.querySelector('.ls-foot').prepend(lsFb);   // right / wrong: a sheet over the bottom, so nothing above moves
   lsBearPlace(anchor);
 }
 // ---- the bear: a Formosan black bear that talks in listening questions (tap it to hear again), smiles at a right answer, frowns at a wrong one.
@@ -7443,16 +7482,21 @@ function lsBearReact(){
   const cls = LS && LS.mood === 'happy' ? 'hop' : LS && LS.mood === 'sad' ? 'droop' : '';
   if(!cls) return;
   lsBody.querySelectorAll('.ls-bear').forEach(b => {
+    const sv = b.querySelector('svg'); sv.style.transition = sv.style.transform = sv.style.animation = '';   // stop the easing of the talk
     b.classList.remove('hop', 'droop'); void b.offsetWidth; b.classList.add(cls);
     b.querySelector('svg').addEventListener('animationend', () => b.classList.remove(cls), { once:true });
   });
 }
 // a word or sentence read aloud: the bear talks until it ends (at most 10 s, in case the phone never says it ended)
+let lsSaySeq = 0;
 function lsSay(text, btn, talk){
   if(!HAS_TTS || !SOUND_ON) return;
-  if(talk){ lsBearSet('talk', 0); clearTimeout(lsBearT); lsBearT = setTimeout(lsBearRest, 10000); }
+  const seq = ++lsSaySeq;   // a new word cuts the old one off: the old one's end must not stop the bear talking the new one
+  clearTimeout(lsBearT);
+  if(talk){ lsBearSet('talk', 0); lsBearT = setTimeout(() => { if(seq === lsSaySeq) lsBearRest(); }, 10000); }
+  else if(lsBody.querySelector('.ls-bear[data-m="talk"]')) lsBearRest();
   speakManual = true;
-  try{ speak(text, btn, () => { if(talk){ clearTimeout(lsBearT); lsBearRest(); } }); } finally { speakManual = false; }
+  try{ speak(text, btn, () => { if(talk && seq === lsSaySeq){ clearTimeout(lsBearT); lsBearRest(); } }); } finally { speakManual = false; }
 }
 // placed just above the answers (or under a new word / the result); left out when the screen has no room for it
 function lsBearPlace(anchor){
@@ -7460,11 +7504,12 @@ function lsBearPlace(anchor){
   const el = document.createElement('div');
   el.className = 'ls-bears';
   el.innerHTML = `<div class="ls-bear" data-m="idle">${lsBearSVG(false)}<span class="ls-bub">♪</span></div>${two ? `<div class="ls-bear b" data-m="idle">${lsBearSVG(true)}<span class="ls-bub">♪</span></div>` : ''}`;
-  if(anchor) lsFb.before(el); else lsBody.appendChild(el);
+  if(anchor) anchor.before(el); else lsBody.appendChild(el);
   const speaking = HAS_TTS && (window.speechSynthesis.speaking || window.speechSynthesis.pending);
   const replay = LS && LS.replay;
   lsBearSet(speaking && LS.listen && !two ? 'talk' : (LS && LS.mood) || 'idle');
-  if(replay) el.querySelectorAll('.ls-bear').forEach(b => { b.classList.add('tap'); b.setAttribute('role', 'button'); b.setAttribute('aria-label', tx('Play')); b.onclick = () => replay(); });
+  if(replay) el.querySelectorAll('.ls-bear').forEach(b => { b.classList.add('tap'); b.setAttribute('role', 'button'); b.setAttribute('aria-label', tx('Play')); b.tabIndex = 0; b.onclick = () => replay();
+    b.onkeydown = e => { if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); replay(); } }; });
   if(lsBody.scrollHeight > lsBody.clientHeight + 1){ if(replay) el.classList.add('sm'); else el.remove(); }
   else if(LS && LS.done) lsBearReact();
 }
@@ -7476,9 +7521,9 @@ function lsIntro(r){
     <button type="button" class="ls-big ls-tap" lang="zh-TW" title="${escAttr(tx('Tap to hear it again'))}">${w}</button>
     <div class="ls-py">${colorPinyin(pyOf(r))}</div><div class="ls-mean">${esc(meaningOf(r))}</div>
 `;
-  const say = () => lsSay(fullWord(r[0]));
+  const say = () => lsSay(fullWord(r[0]), null, true);
   lsBody.querySelector('.ls-tap').onclick = say;
-  if(lsCanHear()) LS.replay = say;   // tap the bear (or the word) to hear it again
+  if(lsCanHear()){ LS.listen = true; LS.replay = say; }   // the bear says the new word; tap it (or the word) to hear it again
   say();
   lsSetGo(tx('Continue'));
   LS.answered = true;
@@ -7576,10 +7621,10 @@ function lsJudge(q, ok){
   LS.mood = ok ? 'happy' : 'sad'; lsBearRest(); lsBearReact();
   const dur = playSfx(ok ? 'right' : 'wrong');
   const say = q.p ? q.p.e.hz : fullWord(r[0]);
-  setTimeout(() => { if(LS && LS.answered) lsSay(say, null, !!LS.listen); }, dur + 80);
+  if(!LS.listen) setTimeout(() => { if(LS && LS.answered) lsSay(say); }, dur + 80);   // a listening question was heard already: not read again
   lsFb.className = 'ls-fb ' + (ok ? 'ok' : 'bad');
   lsFb.innerHTML = `<b>${ok ? tx('Correct!') : tx('Not quite')}</b>` + (q.p
-    ? `<span class="w"><span lang="zh-TW">${esc(q.p.e.hz)}</span><br><span class="sp">${esc(q.p.e.py || '')}</span><br>${esc(exTrans(q.p.e))}</span>`
+    ? `<span class="w"><span class="sp">${esc(q.p.e.py || '')}</span><br>${esc(exTrans(q.p.e))}</span>`   // the sentence itself is on screen
     : `<span class="w"><span lang="zh-TW">${esc(fullWord(r[0]))}</span> ${colorPinyin(pyOf(r))} · ${esc(shortMeaning(r))}</span>`);
   lsSetGo(tx('Continue'), ok ? 'ok' : 'bad');
 }
@@ -7646,7 +7691,7 @@ function lsFinish(){
     if(mode === 'lesson') LS.intro.forEach(r => { const k = lnKey(r); if(!s.srs[k]) s.srs[k] = [lnToday() + 1, 0]; });   // its words come back tomorrow
     const d = lnDay(), before = s.days[d] || 0;
     s.days[d] = before + 1;
-    lnSave(s);
+    lnSave(s); lnEnsureGroup();
     if(mode === 'lesson') added = lnAddToGroup(LS.intro);
     if(before < LN_GOAL && before + 1 >= LN_GOAL) note = tx('Today’s goal reached!');
     if(mode === 'test' && first){ const nx = ['N1', 'N2', 'A1', 'A2'][['N1', 'N2', 'A1', 'A2'].indexOf(l.lv) + 1]; if(nx) note = tx('{0} is open!', nx); }
@@ -7664,7 +7709,7 @@ function lsFinish(){
     <div class="ls-rt">${title}</div>
     <div class="ls-nums"><div><b>${pct}%</b><span>${tx('Correct')}</span></div><div><b>${LS.wrong}</b><span>${tx('Mistakes')}</span></div><div><b>${time}</b><span>${tx('Time')}</span></div></div>
     ${!passed ? `<div class="ls-note">${tx('You need {0}% to pass.', LN_PASS * 100)}</div>` : ''}
-    ${added ? `<div class="ls-note">${tx('{0} words saved in your 🎓 group', added)}</div>` : ''}
+    ${added ? `<div class="ls-note">${tx('{0} words saved in your Learn group', added)}</div>` : ''}
     ${note ? `<div class="ls-note hot">${esc(note)}</div>` : ''}
     ${LS.missed.size ? `<div class="ln-words ls-missed">${[...LS.missed].map(r => `<div class="ln-w"><span class="h" lang="zh-TW">${esc(fullWord(r[0]))}</span><span class="p">${colorPinyin(pyOf(r))}</span><span class="m">${esc(shortMeaning(r))}</span></div>`).join('')}</div>` : ''}</div>`;
   if(passed) playSfx('right');
