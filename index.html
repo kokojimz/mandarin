@@ -563,14 +563,16 @@
   @keyframes bearTalk{ 0%{ transform:scaleY(1); } 25%{ transform:scaleY(.4); } 45%{ transform:scaleY(.85); } 70%{ transform:scaleY(.3); } 100%{ transform:scaleY(1); } }
   .ls-bear[data-m="talk"] svg{ animation:bearBob .3s ease-in-out infinite alternate; }
   @keyframes bearBob{ to{ transform:translateY(-2px) scale(1.01,1.02); } }
-  .ls-bear.hop svg{ animation:bearHop .6s cubic-bezier(.3,.7,.4,1) 1; }
-  @keyframes bearHop{ 0%{ transform:none; } 15%{ transform:scale(1.08,.9); } 45%{ transform:translateY(-14px) scale(.95,1.06); } 72%{ transform:scale(1.06,.94); } 100%{ transform:none; } }
-  .ls-bear.droop svg{ animation:bearDroop .7s ease-out 1; }
-  @keyframes bearDroop{ 0%{ transform:none; } 25%{ transform:translateY(3px) scale(1.04,.94) rotate(-4deg); } 50%{ transform:translateY(3px) scale(1.04,.94) rotate(4deg); } 75%{ transform:translateY(2px) scale(1.02,.97) rotate(-2deg); } 100%{ transform:none; } }
+  .ls-bear.hop svg{ animation:bearHop .8s ease-in-out 1; }
+  @keyframes bearHop{ 0%{ transform:none; } 14%{ transform:scale(1.07,.91); } 40%{ transform:translateY(-14px) scale(.96,1.05); } 64%{ transform:scale(1.05,.95); } 82%{ transform:scale(.99,1.01); } 100%{ transform:none; } }
+  .ls-bear.droop svg{ animation:bearDroop 1s ease-in-out 1; }
+  @keyframes bearDroop{ 0%{ transform:none; } 25%{ transform:translateY(3px) scale(1.04,.94) rotate(-4deg); } 50%{ transform:translateY(3px) scale(1.04,.94) rotate(4deg); } 72%{ transform:translateY(2px) scale(1.02,.97) rotate(-2deg); } 88%{ transform:translateY(1px) scale(1.01,.99) rotate(.6deg); } 100%{ transform:none; } }
   @media (prefers-reduced-motion:reduce){ .ls-bear .bm-talk, .ls-bear svg{ animation:none !important; } }
   .ls-bub{ position:absolute; top:-4px; right:-20px; padding:1px 8px; border-radius:10px 10px 10px 2px; background:var(--card-bg); border:1px solid var(--border); color:var(--accent); font-size:1rem; line-height:1.4; visibility:hidden; }
   .ls-bear.b .ls-bub{ right:auto; left:-20px; border-radius:10px 10px 2px 10px; }
-  .ls-bear[data-m="talk"] .ls-bub{ visibility:visible; }
+  .ls-bear[data-m="talk"] .ls-bub, .ls-bear.tap .ls-bub{ visibility:visible; }
+  .ls-bear.tap{ cursor:pointer; -webkit-tap-highlight-color:transparent; }
+  .ls-bears.sm .ls-bear{ width:84px; height:84px; }
   /* exam practice: the real-life texts */
   .ls-xk{ margin-bottom:10px; }
   .xr{ margin:2px 0 4px; border-radius:12px; font-size:1.05rem; line-height:1.6; }
@@ -7268,12 +7270,12 @@ function lsDialog(lines, btn){
 function lsExam(q){
   const it = q.it, L = LANG === 'id' ? 0 : 1, hear = it.t === 'l' && lsCanHear();
   const head = it.t === 'r' ? lsRealia(it)
-    : hear ? `<button type="button" class="ls-snd ls-dlg" aria-label="${escAttr(tx('Play'))}">${PLAY_IC}</button><div class="ls-tr">${tx('Listen to the dialog')}</div>`
+    : hear ? `<div class="ls-tr">${tx('Listen to the dialog')}</div>`
     : `<div class="xr xr-text">${it.d.map(d => `<p><b>${d[0]}：</b>${esc(d[1])}</p>`).join('')}</div>`;   // no sound: read it
   lsBody.innerHTML = `${lsCount()}<div class="ls-tag ls-xk">${tx(it.t === 'r' ? 'Reading' : 'Listening')}</div>${head}
     <div class="ls-xq" lang="zh-TW">${esc(it.q)}</div>
     <div class="ls-opts one">${q.opts.map((o, i) => `<button type="button" class="ls-opt ls-xo" data-i="${i}" lang="zh-TW"><b>${'ABCD'[i]}</b> ${esc(o.t)}</button>`).join('')}</div>`;
-  if(hear){ const b = lsBody.querySelector('.ls-dlg'); b.onclick = () => lsDialog(it.d, b); setTimeout(() => { if(LS && LS.qs[LS.qi] === q) lsDialog(it.d, b); }, 300); }
+  if(hear){ LS.listen = true; LS.replay = () => lsDialog(it.d); setTimeout(() => { if(LS && LS.qs[LS.qi] === q) lsDialog(it.d); }, 300); }
   LS.answered = false; LS.opts = q.opts;
   lsHideGo();
   if(LS.mode === 'tryout'){
@@ -7358,7 +7360,7 @@ function lsProgress(){
 function lsSetGo(label, kind){ lsGo.textContent = label; lsGo.disabled = false; lsGo.style.visibility = ''; lsGo.className = 'cf-btn cf-yes ls-go' + (kind ? ' ' + kind : ''); }
 function lsHideGo(){ lsGo.disabled = true; lsGo.className = 'cf-btn cf-yes ls-go'; lsGo.style.visibility = 'hidden'; }
 function lsNext(){
-  lsFb.className = 'ls-fb'; lsFb.innerHTML = ''; if(LS) LS.mood = 'idle';
+  lsFb.className = 'ls-fb'; lsFb.innerHTML = ''; if(LS){ LS.mood = 'idle'; LS.replay = null; LS.listen = false; }
   lsProgress();
   if(LS.step < LS.intro.length){ if(LS.mode === 'grammar') lsGramIntro(LS.intro[0]); else lsIntro(LS.intro[LS.step]); }
   else if(LS.qi < LS.qs.length){ const q = LS.qs[LS.qi]; if(q.k === 'x') lsExam(q); else if('sblo'.includes(q.k)) lsSentence(q); else lsQuestion(q); }
@@ -7373,7 +7375,7 @@ function lsLayout(){
   if(anchor) anchor.before(lsFb); else lessonEl.querySelector('.ls-foot').prepend(lsFb);
   lsBearPlace(anchor);
 }
-// ---- the bear: a Formosan black bear that talks while something is read aloud, smiles at a right answer, frowns at a wrong one.
+// ---- the bear: a Formosan black bear that talks in listening questions (tap it to hear again), smiles at a right answer, frowns at a wrong one.
 // Still the rest of the time (no idle animation). In a dialog, a second bear with a red scarf speaks B's lines.
 function lsBearSVGx(acc, id, scarf){
   const c = n => `${n}${id}`;
@@ -7421,7 +7423,19 @@ let lsBearN = 0;
 const lsBearSVG = b => lsBearSVGx('none', 'bear' + (++lsBearN), b);   // B (a dialog's second voice) wears a red scarf
 let lsBearT = null;
 function lsBearSet(m, who){
-  lsBody.querySelectorAll('.ls-bear').forEach((b, i) => { if(who == null || i === who) b.dataset.m = m; });
+  lsBody.querySelectorAll('.ls-bear').forEach((b, i) => {
+    if(who != null && i !== who) return;
+    if(b.dataset.m === 'talk' && m !== 'talk') lsBearEase(b);
+    b.dataset.m = m;
+  });
+}
+// the talking bob stops by easing back from where it is, not with a jump
+function lsBearEase(b){
+  const s = b.querySelector('svg'), t = getComputedStyle(s).transform;
+  if(!t || t === 'none') return;
+  s.style.transition = 'none'; s.style.transform = t; s.style.animation = 'none'; void s.offsetWidth;
+  s.style.transition = 'transform .35s ease-out'; s.style.transform = 'none';
+  setTimeout(() => { s.style.transition = s.style.transform = s.style.animation = ''; }, 380);
 }
 const lsBearRest = () => lsBearSet((LS && LS.mood) || 'idle');
 // one reaction to an answer or a result: a hop when happy, a droop when sad
@@ -7434,11 +7448,11 @@ function lsBearReact(){
   });
 }
 // a word or sentence read aloud: the bear talks until it ends (at most 10 s, in case the phone never says it ended)
-function lsSay(text, btn){
+function lsSay(text, btn, talk){
   if(!HAS_TTS || !SOUND_ON) return;
-  lsBearSet('talk', 0); clearTimeout(lsBearT); lsBearT = setTimeout(lsBearRest, 10000);
+  if(talk){ lsBearSet('talk', 0); clearTimeout(lsBearT); lsBearT = setTimeout(lsBearRest, 10000); }
   speakManual = true;
-  try{ speak(text, btn, () => { clearTimeout(lsBearT); lsBearRest(); }); } finally { speakManual = false; }
+  try{ speak(text, btn, () => { if(talk){ clearTimeout(lsBearT); lsBearRest(); } }); } finally { speakManual = false; }
 }
 // placed just above the answers (or under a new word / the result); left out when the screen has no room for it
 function lsBearPlace(anchor){
@@ -7448,8 +7462,10 @@ function lsBearPlace(anchor){
   el.innerHTML = `<div class="ls-bear" data-m="idle">${lsBearSVG(false)}<span class="ls-bub">♪</span></div>${two ? `<div class="ls-bear b" data-m="idle">${lsBearSVG(true)}<span class="ls-bub">♪</span></div>` : ''}`;
   if(anchor) lsFb.before(el); else lsBody.appendChild(el);
   const speaking = HAS_TTS && (window.speechSynthesis.speaking || window.speechSynthesis.pending);
-  lsBearSet(speaking && !two ? 'talk' : (LS && LS.mood) || 'idle');
-  if(lsBody.scrollHeight > lsBody.clientHeight + 1) el.remove();
+  const replay = LS && LS.replay;
+  lsBearSet(speaking && LS.listen && !two ? 'talk' : (LS && LS.mood) || 'idle');
+  if(replay) el.querySelectorAll('.ls-bear').forEach(b => { b.classList.add('tap'); b.setAttribute('role', 'button'); b.setAttribute('aria-label', tx('Play')); b.onclick = () => replay(); });
+  if(lsBody.scrollHeight > lsBody.clientHeight + 1){ if(replay) el.classList.add('sm'); else el.remove(); }
   else if(LS && LS.done) lsBearReact();
 }
 
@@ -7459,10 +7475,10 @@ function lsIntro(r){
   lsBody.innerHTML = `<div class="ls-tag">${tx('New word')} · ${LS.step + 1}/${LS.intro.length}</div>
     <button type="button" class="ls-big ls-tap" lang="zh-TW" title="${escAttr(tx('Tap to hear it again'))}">${w}</button>
     <div class="ls-py">${colorPinyin(pyOf(r))}</div><div class="ls-mean">${esc(meaningOf(r))}</div>
-    ${lsCanHear() ? `<button type="button" class="ls-play" aria-label="${escAttr(tx('Play'))}">${PLAY_IC}</button>` : ''}`;
+`;
   const say = () => lsSay(fullWord(r[0]));
   lsBody.querySelector('.ls-tap').onclick = say;
-  const pb = lsBody.querySelector('.ls-play'); if(pb) pb.onclick = say;
+  if(lsCanHear()) LS.replay = say;   // tap the bear (or the word) to hear it again
   say();
   lsSetGo(tx('Continue'));
   LS.answered = true;
@@ -7476,12 +7492,12 @@ function lsQuestion(q){
   const hzOpt = k === 'h' || k === 'a';
   const ask = {m: tx('What does it mean?'), h: tx('Which hanzi is it?'), a: tx('Listen: which word is it?'), p: tx('Which pinyin is right?')}[k];
   const head = k === 'h' ? `<div class="ls-say">${esc(meaningOf(r))}</div>`
-    : k === 'a' ? `<button type="button" class="ls-snd" aria-label="${escAttr(tx('Play'))}">${PLAY_IC}</button>`
+    : k === 'a' ? ''
     : `<div class="ls-big" lang="zh-TW">${esc(fullWord(r[0]))}</div>`;
   lsBody.innerHTML = `${lsCount()}<div class="ls-q">${ask}</div>${head}
     <div class="ls-opts${hzOpt || k === 'p' ? '' : ' one'}">${opts.map((o, i) => `<button type="button" class="ls-opt${hzOpt ? ' hz' : ''}" data-i="${i}"${hzOpt ? ' lang="zh-TW"' : ''}>${
       k === 'p' ? esc(o.t) : hzOpt ? esc(fullWord(o.row[0])) : esc(shortMeaning(o.row))}</button>`).join('')}</div>`;
-  if(k === 'a'){ const b = lsBody.querySelector('.ls-snd'); b.onclick = () => lsSay(fullWord(r[0])); setTimeout(() => { if(LS && LS.qs[LS.qi] === q) lsSay(fullWord(r[0])); }, 250); }
+  if(k === 'a'){ LS.listen = true; LS.replay = () => lsSay(fullWord(r[0]), null, true); setTimeout(() => { if(LS && LS.qs[LS.qi] === q) LS.replay(); }, 250); }
   LS.answered = false; LS.opts = opts;
   lsHideGo();   // a tap on an answer checks it at once
   lsBody.querySelectorAll('.ls-opt').forEach(b => b.onclick = () => lsAnswer(q, opts, +b.dataset.i));
@@ -7507,7 +7523,7 @@ function lsSentence(q){
       const t = exTrans(x); if(!used.has(t)){ used.add(t); others.push(t); } if(others.length === 3) break; }
     opts = shuffle([{t: tr, ok: true}, ...others.map(t => ({t, ok: false}))]);
     body = `<div class="ls-q">${tx(k === 'l' ? 'Listen: what does it mean?' : 'What does the sentence mean?')}</div>
-      ${k === 'l' ? `<button type="button" class="ls-snd" aria-label="${escAttr(tx('Play'))}">${PLAY_IC}</button>` : `<div class="ls-sent" lang="zh-TW">${lsSentHTML(q)}</div>`}
+      ${k === 'l' ? '' : `<div class="ls-sent" lang="zh-TW">${lsSentHTML(q)}</div>`}
       <div class="ls-opts one">${opts.map((o, i) => `<button type="button" class="ls-opt ls-otr" data-i="${i}">${esc(o.t)}</button>`).join('')}</div>`;
   } else if(k === 'b'){
     if(q.g){   // grammar: the pattern word, and wrong ones (the pattern's other words too, when the translation tells them apart)
@@ -7530,7 +7546,7 @@ function lsSentence(q){
   LS.answered = false; LS.opts = opts;
   lsHideGo();
   lsBody.querySelectorAll('.ls-unk').forEach(b => b.onclick = ev => { ev.stopPropagation(); lsGloss(b.dataset.w); });
-  if(k === 'l'){ const b = lsBody.querySelector('.ls-snd'); b.onclick = () => lsSay(e.hz); setTimeout(() => { if(LS && LS.qs[LS.qi] === q) lsSay(e.hz); }, 250); }
+  if(k === 'l'){ LS.listen = true; LS.replay = () => lsSay(e.hz, null, true); setTimeout(() => { if(LS && LS.qs[LS.qi] === q) LS.replay(); }, 250); }
   if(opts) lsBody.querySelectorAll('.ls-opt').forEach(b => b.onclick = () => lsAnswer(q, opts, +b.dataset.i));
   if(k === 'o'){
     const line = lsBody.querySelector('.ls-line'), bank = lsBody.querySelector('.ls-bank');
@@ -7560,7 +7576,7 @@ function lsJudge(q, ok){
   LS.mood = ok ? 'happy' : 'sad'; lsBearRest(); lsBearReact();
   const dur = playSfx(ok ? 'right' : 'wrong');
   const say = q.p ? q.p.e.hz : fullWord(r[0]);
-  setTimeout(() => { if(LS && LS.answered) lsSay(say); }, dur + 80);
+  setTimeout(() => { if(LS && LS.answered) lsSay(say, null, !!LS.listen); }, dur + 80);
   lsFb.className = 'ls-fb ' + (ok ? 'ok' : 'bad');
   lsFb.innerHTML = `<b>${ok ? tx('Correct!') : tx('Not quite')}</b>` + (q.p
     ? `<span class="w"><span lang="zh-TW">${esc(q.p.e.hz)}</span><br><span class="sp">${esc(q.p.e.py || '')}</span><br>${esc(exTrans(q.p.e))}</span>`
@@ -7572,7 +7588,7 @@ function lsAnswer(q, opts, i){
   LS.answered = true;
   const ok = opts[i].ok;
   lsBody.querySelectorAll('.ls-opt').forEach((b, j) => { b.disabled = true; if(opts[j].ok) b.classList.add('ok'); else if(j === i) b.classList.add('bad'); });
-  if(q.k === 'l'){ const h = lsBody.querySelector('.ls-snd'); if(h) h.insertAdjacentHTML('afterend', `<div class="ls-sent" lang="zh-TW">${lsSentHTML(q)}</div>`); }
+  if(q.k === 'l'){ const h = lsBody.querySelector('.ls-q'); if(h) h.insertAdjacentHTML('afterend', `<div class="ls-sent" lang="zh-TW">${lsSentHTML(q)}</div>`); }
   if(q.k === 'b'){ const bl = lsBody.querySelector('.ls-blank'); if(bl){ bl.textContent = q.g ? q.ans : fullWord(q.r[0]); bl.classList.add(ok ? 'ok' : 'bad'); } }
   lsJudge(q, ok);
 }
