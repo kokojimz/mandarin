@@ -486,11 +486,6 @@
   footer{ text-align:center; color:var(--sub); font-size:.72rem; margin:14px auto 0; line-height:1.5; position:relative; max-width:960px; }   /* as wide as the cards: the portal sits under the last column */
   @media (min-width:1250px){ footer{ max-width:1122px; } }
   /* the portal to Learn mode: a glowing round door at the right of the footer (and back, at the end of the path) */
-  .portal{ position:absolute; right:0; top:50%; transform:translateY(-50%); width:46px; height:46px; border-radius:50%; border:0; padding:0; cursor:pointer;
-    background:radial-gradient(circle at 34% 30%, #ffbe6e, var(--accent) 52%, #9c5310); color:#fff; font:700 1.2rem/1 "Noto Sans TC","PingFang TC",sans-serif;
-    box-shadow:0 0 0 3px rgba(224,139,43,.22), 0 0 16px rgba(224,139,43,.45); animation:portalGlow 3.2s ease-in-out infinite; }
-  .portal span{ display:block; transform:translateY(-1px); }
-  @keyframes portalGlow{ 50%{ box-shadow:0 0 0 6px rgba(224,139,43,.12), 0 0 26px rgba(224,139,43,.65); } }
   #learn{ position:fixed; inset:0; z-index:50; background:var(--bg); overflow-y:auto; -webkit-overflow-scrolling:touch; overscroll-behavior:contain;
     visibility:hidden; transform:translate3d(-100%,0,0); will-change:transform; box-shadow:12px 0 40px rgba(0,0,0,.35); }
   #learn.anim{ transition:transform .34s cubic-bezier(.22,.8,.24,1); }
@@ -501,26 +496,28 @@
   body.learn-on{ overflow:hidden; }
   .cap-ic{ width:18px; height:18px; display:block; }
   /* a lesson: full screen over the path */
-  #lesson{ position:fixed; inset:0; z-index:58; background:var(--bg); display:none; flex-direction:column; }
+  #lesson{ position:fixed; inset:0; z-index:58; background:var(--bg); display:none; flex-direction:column; overflow:hidden; }
   #lesson.on{ display:flex; }
-  .ls-top{ display:flex; align-items:center; gap:12px; width:100%; max-width:560px; margin:0 auto; padding:calc(12px + env(safe-area-inset-top,0px)) 16px 6px; }
+  .ls-top{ position:sticky; top:0; z-index:2; flex:none; display:flex; align-items:center; gap:12px; width:100%; max-width:560px; margin:0 auto; padding:calc(12px + env(safe-area-inset-top,0px)) 16px 6px; background:var(--bg); }
   .ls-top .x-btn{ position:static; flex:none; }
   .ls-bar{ flex:1; height:12px; border-radius:9px; background:var(--border); overflow:hidden; }
   .ls-bar i{ display:block; height:100%; width:0; background:var(--accent); border-radius:9px; transition:width .35s ease; }
-  .ls-body{ flex:1; min-height:0; overflow-y:auto; width:100%; max-width:560px; margin:0 auto; padding:10px 16px 8px; display:flex; flex-direction:column; }
+  .ls-body{ flex:1; min-height:0; overflow-y:auto; -webkit-overflow-scrolling:touch; overscroll-behavior:contain; width:100%; max-width:560px; margin:0 auto; padding:6px 16px 4px; display:flex; flex-direction:column; }
+  .ls-body > :first-child{ margin-top:auto; }            /* the question: in the middle of the room above the answers */
+  .ls-body.free > :last-child{ margin-bottom:auto; }     /* no answers (a new word, the result): all in the middle */
   .ls-tag{ text-align:center; color:var(--accent); font-weight:700; font-size:.78rem; letter-spacing:.04em; margin-top:6px; }
   .ls-q{ font-weight:700; font-size:1.15rem; margin:10px 0 4px; }
-  .ls-big{ display:block; margin:22px auto 8px; font-size:3.6rem; line-height:1.2; text-align:center; font-family:inherit; color:var(--text); background:none; border:0; padding:0 8px; }
+  .ls-big{ display:block; margin:14px auto 4px; font-size:3.6rem; line-height:1.2; text-align:center; font-family:inherit; color:var(--text); background:none; border:0; padding:0 8px; }
   button.ls-big{ cursor:pointer; }
   .ls-py{ text-align:center; font-size:1.35rem; }
   .ls-mean{ text-align:center; color:var(--sub); margin:8px auto 0; max-width:30em; line-height:1.45; }
-  .ls-say{ text-align:center; font-size:1.3rem; font-weight:600; margin:28px 0 10px; line-height:1.4; }
+  .ls-say{ text-align:center; font-size:1.3rem; font-weight:600; margin:16px 0 4px; line-height:1.4; }
   .ls-play{ display:flex; align-items:center; justify-content:center; width:52px; height:52px; margin:18px auto 0; border-radius:50%; border:1px solid var(--border); background:var(--card-bg); color:var(--accent); cursor:pointer; }
   .ls-play svg{ width:24px; height:24px; fill:currentColor; }
-  .ls-snd{ display:flex; align-items:center; justify-content:center; width:96px; height:96px; margin:26px auto 10px; border-radius:50%; border:0; background:var(--accent); color:#fff; cursor:pointer; box-shadow:0 0 0 8px rgba(224,139,43,.15); }
+  .ls-snd{ display:flex; align-items:center; justify-content:center; width:88px; height:88px; margin:16px auto 6px; border-radius:50%; border:0; background:var(--accent); color:#fff; cursor:pointer; box-shadow:0 0 0 8px rgba(224,139,43,.15); }
   .ls-snd:active{ transform:scale(.95); }
   .ls-snd svg{ width:42px; height:42px; fill:currentColor; }
-  .ls-opts{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:auto; padding-top:22px; }
+  .ls-opts{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:auto; padding-top:16px; }
   .ls-opts.one{ grid-template-columns:1fr; }
   .ls-opt{ min-height:60px; padding:10px 12px; border-radius:14px; border:1.5px solid var(--border); background:var(--card-bg); color:var(--text); font:inherit; font-size:1rem; line-height:1.35; cursor:pointer; }
   .ls-opt.hz{ font-size:1.7rem; }
@@ -528,8 +525,8 @@
   .ls-opt:disabled{ cursor:default; opacity:.55; }
   .ls-opt.ok{ border-color:#1e9e5a; background:rgba(30,158,90,.14); opacity:1; }
   .ls-opt.bad{ border-color:#d64545; background:rgba(214,69,69,.12); opacity:1; }
-  .ls-foot{ width:100%; max-width:560px; margin:0 auto; padding:8px 16px calc(16px + env(safe-area-inset-bottom,0px)); }
-  .ls-fb{ display:none; border-radius:14px; padding:11px 14px; margin-bottom:10px; font-size:.92rem; line-height:1.45; }
+  .ls-foot{ flex:none; width:100%; max-width:560px; margin:0 auto; padding:12px 16px calc(7vh + env(safe-area-inset-bottom,0px)); }   /* lifted off the bottom edge: answers and Continue where the thumb rests */
+  .ls-fb{ display:none; border-radius:14px; padding:11px 14px; margin-top:14px; font-size:.92rem; line-height:1.45; }
   .ls-fb.ok, .ls-fb.bad{ display:block; }
   .ls-fb.ok{ background:rgba(30,158,90,.14); }
   .ls-fb.bad{ background:rgba(214,69,69,.12); }
@@ -552,6 +549,28 @@
   .ls-note{ margin-top:14px; font-size:.88rem; color:var(--sub); }
   .ls-note.hot{ color:var(--accent); font-weight:700; }
   .ls-missed{ margin:16px auto 0; max-width:380px; }
+  /* the bear, just above the answers */
+  .ls-bears{ display:flex; justify-content:center; align-items:flex-end; gap:26px; margin-top:auto; padding-top:12px; flex-shrink:0; }
+  .ls-bears ~ .ls-opts, .ls-bears ~ .ls-bank{ margin-top:0; }
+  .ls-body.free .ls-bears{ margin-top:18px; }
+  .ls-bear{ position:relative; width:108px; height:108px; }
+  .ls-bear svg{ display:block; width:100%; height:100%; overflow:hidden; transform-origin:50% 100%; }
+  .ls-bear .bm, .ls-bear .be{ display:none; }
+  .ls-bear[data-m="idle"] .bm-idle, .ls-bear[data-m="talk"] .bm-talk, .ls-bear[data-m="happy"] .bm-happy, .ls-bear[data-m="sad"] .bm-sad{ display:inline; }
+  .ls-bear:not([data-m="happy"]) .be-open, .ls-bear[data-m="happy"] .be-happy, .ls-bear[data-m="sad"] .be-sad{ display:inline; }
+  /* motion only while something happens (no idle loop, for the battery): talking = mouth + a small bob; an answer = one hop or one droop */
+  .ls-bear .bm-talk{ transform-box:fill-box; transform-origin:center; animation:bearTalk .6s linear infinite; }
+  @keyframes bearTalk{ 0%{ transform:scaleY(1); } 25%{ transform:scaleY(.4); } 45%{ transform:scaleY(.85); } 70%{ transform:scaleY(.3); } 100%{ transform:scaleY(1); } }
+  .ls-bear[data-m="talk"] svg{ animation:bearBob .3s ease-in-out infinite alternate; }
+  @keyframes bearBob{ to{ transform:translateY(-2px) scale(1.01,1.02); } }
+  .ls-bear.hop svg{ animation:bearHop .6s cubic-bezier(.3,.7,.4,1) 1; }
+  @keyframes bearHop{ 0%{ transform:none; } 15%{ transform:scale(1.08,.9); } 45%{ transform:translateY(-14px) scale(.95,1.06); } 72%{ transform:scale(1.06,.94); } 100%{ transform:none; } }
+  .ls-bear.droop svg{ animation:bearDroop .7s ease-out 1; }
+  @keyframes bearDroop{ 0%{ transform:none; } 25%{ transform:translateY(3px) scale(1.04,.94) rotate(-4deg); } 50%{ transform:translateY(3px) scale(1.04,.94) rotate(4deg); } 75%{ transform:translateY(2px) scale(1.02,.97) rotate(-2deg); } 100%{ transform:none; } }
+  @media (prefers-reduced-motion:reduce){ .ls-bear .bm-talk, .ls-bear svg{ animation:none !important; } }
+  .ls-bub{ position:absolute; top:-4px; right:-20px; padding:1px 8px; border-radius:10px 10px 10px 2px; background:var(--card-bg); border:1px solid var(--border); color:var(--accent); font-size:1rem; line-height:1.4; visibility:hidden; }
+  .ls-bear.b .ls-bub{ right:auto; left:-20px; border-radius:10px 10px 2px 10px; }
+  .ls-bear[data-m="talk"] .ls-bub{ visibility:visible; }
   /* exam practice: the real-life texts */
   .ls-xk{ margin-bottom:10px; }
   .xr{ margin:2px 0 4px; border-radius:12px; font-size:1.05rem; line-height:1.6; }
@@ -575,7 +594,7 @@
   .xr-chat .n{ font-size:.72rem; color:var(--sub); margin:0 6px 2px; }
   .xr-chat .b{ padding:8px 12px; border-radius:14px; background:var(--card-bg); border:1px solid var(--border); font-size:1rem; }
   .xr-chat .me .b{ background:var(--accent); border-color:var(--accent); color:#fff; }
-  .ls-dlg.playing{ animation:lnPulse 1.4s ease-in-out infinite; }
+  .ls-dlg.playing{ opacity:.75; }   /* playing: dimmed a little, no animation (battery) */
   .ls-body > *{ flex-shrink:0; }   /* a long text scrolls; nothing gets squeezed */
   .ls-xq{ font-size:1.2rem; font-weight:700; margin:16px 0 0; }
   .ls-xo{ text-align:left; font-size:1.05rem; }
@@ -597,7 +616,7 @@
   .ls-gplay{ flex:none; width:34px; height:34px; margin-top:2px; border-radius:50%; border:1px solid var(--border); background:transparent; color:var(--accent); display:flex; align-items:center; justify-content:center; cursor:pointer; }
   .ls-gplay svg{ width:14px; height:14px; fill:currentColor; }
   .ln-node.grammar .ln-seal{ font-size:1.15rem; font-weight:600; }
-  .ls-sent{ font-size:1.65rem; line-height:1.6; text-align:center; margin:22px 4px 8px; }
+  .ls-sent{ font-size:1.65rem; line-height:1.6; text-align:center; margin:14px 4px 4px; }
   .ls-tw{ color:var(--accent); font-weight:inherit; }
   .ls-unk{ font:inherit; color:inherit; background:none; border:0; padding:0; cursor:pointer; text-decoration:underline dotted var(--sub); text-underline-offset:6px; text-decoration-thickness:2px; }
   .ls-blank{ color:var(--accent); }
@@ -607,12 +626,12 @@
   .ls-opt.ls-otr{ font-size:.95rem; text-align:left; padding:10px 14px; }
   .ls-fb .sp{ font-size:.85rem; color:var(--sub); }
   .ls-line{ display:flex; flex-wrap:wrap; justify-content:center; gap:8px; min-height:58px; padding:8px 0; margin:8px 0 6px; border-bottom:2px solid var(--border); }
-  .ls-bank{ display:flex; flex-wrap:wrap; justify-content:center; gap:8px; margin-top:auto; padding-top:18px; }
+  .ls-bank{ display:flex; flex-wrap:wrap; justify-content:center; gap:8px; margin-top:auto; padding-top:16px; }
   .ls-tile{ padding:8px 14px; min-width:48px; border-radius:12px; border:1.5px solid var(--border); background:var(--card-bg); color:var(--text); font:inherit; font-size:1.35rem; cursor:pointer; }
   .ls-tile.gone{ visibility:hidden; }
   .ls-tile.ok{ border-color:#1e9e5a; background:rgba(30,158,90,.14); } .ls-tile.bad{ border-color:#d64545; background:rgba(214,69,69,.12); }
   .ls-tile:disabled{ cursor:default; }
-  .ln-daily{ display:flex; align-items:center; gap:12px; width:100%; margin:6px 0 4px; padding:10px 12px 10px 10px; border-radius:14px; border:1.5px solid var(--accent); background:var(--card-bg); color:var(--text); font:inherit; text-align:left; cursor:pointer; }
+  .ln-daily{ display:flex; align-items:center; gap:12px; width:100%; margin:6px 0 4px; padding:10px 12px; border-radius:14px; border:1.5px solid var(--accent); background:var(--card-bg); color:var(--text); font:inherit; text-align:left; cursor:pointer; }
   .ln-daily .ln-seal{ background:var(--accent); border-color:var(--accent); color:#fff; font-size:1.15rem; }
   .ln-daily.done{ border-color:var(--border); cursor:default; }
   .ln-daily.done .ln-seal{ background:var(--bg); border-color:var(--border); color:var(--sub); }
@@ -623,7 +642,7 @@
   .ln-stat svg{ width:19px; height:19px; }
   .ln-stat.hot{ color:var(--accent); }
   .ln-top .ln-goal{ flex:1; justify-content:center; }
-  .ln-top .x-btn{ position:static; }
+  .ln-top .x-btn{ position:static; margin-right:-8px; }   /* the ✕ as far from the edge as the flame on the left */
   .ln-lv{ margin:18px 0 4px; }
   .ln-lv-h{ display:flex; align-items:baseline; gap:10px; }
   .ln-lv-h b{ font-size:1.35rem; }
@@ -631,15 +650,15 @@
   .ln-lv-h .ln-n{ margin-left:auto; font-variant-numeric:tabular-nums; }
   .ln-bar{ height:8px; border-radius:9px; background:var(--border); margin-top:8px; overflow:hidden; }
   .ln-bar i{ display:block; height:100%; background:var(--accent); border-radius:9px; }
-  .ln-unit{ margin:16px 0 0; padding:12px 14px; border-radius:14px; background:var(--card-bg); border:1px solid var(--border); }
+  .ln-unit{ margin:16px 0 0; padding:12px 12px; border-radius:14px; background:var(--card-bg); border:1px solid var(--border); }
   .ln-unit.cur{ background:var(--accent); border-color:var(--accent); color:#fff; }
   .ln-unit .ln-uk{ font-size:.72rem; opacity:.75; }
   .ln-unit .ln-un{ font-weight:700; font-size:1rem; margin-top:1px; }
   .ln-unit .ln-uw{ font-size:.85rem; opacity:.8; margin-top:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   /* the lessons of a unit: a list on a line, each with a seal (its number; 復 a review, 試 the test) */
   .ln-path{ position:relative; display:flex; flex-direction:column; gap:4px; padding:10px 0 2px; }
-  .ln-path::before{ content:''; position:absolute; left:25px; top:26px; bottom:26px; width:2px; background:var(--border); }
-  .ln-node{ position:relative; display:flex; align-items:center; gap:12px; width:100%; padding:8px 10px 8px 4px; border:0; border-radius:12px; background:transparent;
+  .ln-path::before{ content:''; position:absolute; left:32px; top:26px; bottom:26px; width:2px; background:var(--border); }
+  .ln-node{ position:relative; display:flex; align-items:center; gap:12px; width:100%; padding:8px 12px; border:0; border-radius:12px; background:transparent;
     color:var(--text); font:inherit; text-align:left; cursor:pointer; -webkit-tap-highlight-color:transparent; }
   .ln-node:active{ background:rgba(128,128,128,.1); }
   .ln-node.cur{ background:var(--card-bg); box-shadow:inset 0 0 0 1.5px var(--accent); }
@@ -647,8 +666,7 @@
     background:var(--bg); border:2px solid var(--border); color:var(--sub); font-weight:700; font-size:1rem; font-variant-numeric:tabular-nums; }
   .ln-node.cur .ln-seal{ background:var(--card-bg); }
   .ln-node.done .ln-seal{ background:var(--accent); border-color:var(--accent); color:#fff; }
-  .ln-node.cur .ln-seal{ border-color:var(--accent); color:var(--accent); animation:lnPulse 2s ease-in-out infinite; }
-  @keyframes lnPulse{ 50%{ box-shadow:0 0 0 6px rgba(224,139,43,.18); } }
+  .ln-node.cur .ln-seal{ color:var(--text); }   /* the lesson open now: only its row is framed, the seal stays plain */
   .ln-node.review .ln-seal, .ln-node.test .ln-seal{ font-size:1.15rem; font-weight:600; }
   .ln-node.test .ln-seal{ width:42px; border-radius:50%; }
   .ln-tx{ flex:1; min-width:0; }
@@ -6760,7 +6778,7 @@ initStorage();
 // path (lessons themselves come next). Progress stays on this device. ====
 const LN_THEMES = {"N1":[["Aku, kamu, dia","Me, you, them",["我","你","妳","他","她","我們","你們","妳們","他們","她們","您","誰"]],["Nama & negara","Names & countries",["人","姓名","名字","姓","叫","是","國","中國","美國","日本","台灣","臺灣","住","家","朋友"]],["Salam & bertanya","Greetings & questions",["謝謝","對不起","請問","再見","請","什麼","甚麼","嗎","呢","吧","怎麼樣"]],["Angka","Numbers",["一","二","三","四","五","六","七","八","九","十","兩","百","千","半","個","第","幾","多少"]],["Waktu","Time",["時間","小時","現在","今年","今天","明天","昨天","早上","上午","中午","下午","晚上","時候","分","點","歲","年","以前","以後","久","早","再"]],["Keluarga","Family",["爸爸","爸","媽媽","媽","哥哥","哥","弟弟","弟","姊姊","姐姐","姊","姐","妹妹","妹","小孩(子)"]],["Sekolah","School",["老師","學生","同學","大學","學校","上課","中文","字","書","筆","電腦"]],["Belajar & bicara","Learning & talking",["學","問","說","寫","聽","看","知道","對","能","可以"]],["Tempat","Places",["這","那","這裡","這裏","這兒","那裡","那裏","那兒","哪裡","哪裏","哪兒"]],["Pergi & kendaraan","Going & transport",["來","去","回","到","走","坐","等","開車","公共汽車","公車","車(子)"]],["Belanja","Shopping",["買","錢","塊","貴","便宜","給","東西","有","找"]],["Makan & hiburan","Food & fun",["吃","飯","水","位","電話","打電話","電視(機)","電影"]],["Rasa & sifat","Feelings & qualities",["想","覺得","喜歡","漂亮","高","老","好","很","真","大","小","難","容易","忙","做"]],["Kata kecil penting","Little key words",["的","也","不","沒","沒有","都","只","就","可是","還是","了","得","過"]]],"N2":[["Orang di sekitar","People around us",["男","女","孩子","小姐","先生","太太","女兒","兒子","大家","家人","自己","它","它們","手機"]],["Kalender","Calendar",["明年","去年","前年","後年","前天","後天","生日","月","日","號","天","星期","星期天","星期日","禮拜天","週末","周末"]],["Jam & hitungan","Clock & counting",["分鐘","鐘頭","晚","萬","元","一點","一點兒","一點點","一些"]],["Sekolah","School",["課","功課","教室","考試","下課","句子","問題","意思","英文","紙","本","張","枝","畫","畫兒"]],["Belajar","Studying",["讀","念","唸","教","會","懂","錯","告訴","說話","為什麼"]],["Kerja & sehat","Work & health",["工作","醫生","醫師","藥","生病","看病","感冒","病","累","餓","痛","休息"]],["Tubuh","The body",["身體","手","腳","頭","眼睛","鼻(子)","耳朵","嘴巴","嘴"]],["Rumah","Home",["房(子)","房間","樓","門","門口","桌(子)","椅(子)","床","開","起床","睡覺"]],["Cuaca & alam","Weather & nature",["天氣","冷","熱","下雨","雨","風","空氣","山","花","花兒","公園","牛","豬","魚","雞"]],["Hobi & olahraga","Hobbies & sport",["玩","運動","走路","唱歌","唱","歌","跳舞","跳","打","球"]],["Posisi","Position",["裡面","裏面","上(面)","下(面)","外(面)","外頭","前(面)","後(面)","左(邊)","右(邊)","旁(邊)","裡","裏","中","邊","邊兒","地方","附近"]],["Bepergian","Getting around",["路","站","快","慢","計程車","火車","飛機","輛","出","進","帶","拿","國家","外國"]],["Pakaian & belanja","Clothes & shopping",["衣服","衣","鞋(子)","穿","件","店","一共","共","夠","比","新","舊","長","短"]],["Makanan","Food",["菜","肉","蛋","餃(子)","麵","湯","包子","麵包","蛋糕","小吃","食物","餐廳","飯館","水果","香蕉","巧克力"]],["Minuman & di meja","Drinks & at the table",["喝","牛奶","咖啡","茶","酒","果汁","飲料","冰","杯","杯(子)","碗","筷(子)","菜單","甜","飽"]],["Perasaan & sifat","Feelings & qualities",["愛","快樂","怕","美","胖","矮","瘦","低","不錯","方便","非常","太","最","真的","有點","有一點","有一點兒"]],["Melihat & berbuat","Seeing & doing",["見","看見","聽見","像","一樣","用","要","介紹","事","事兒","怎麼","哪","沒關係"]],["Kata penghubung","Linking words",["從","在","和","跟","一起","因為","所以","一定","可能","應該","應","常常","常","每","先","然後","馬上","別","還","又","少","多","著","起來"]]],"A1":[["Keluarga & orang","Family & people",["爺爺","奶奶","家庭","別人","大人","老人","年輕","男生","女生","小朋友","客人","結婚"]],["Alamat & kontak","Address & contact",["零","號碼","地址","名","市","城市","城","街","電子郵件","喂"]],["Waktu & musim","Time & seasons",["禮拜","從前","剛剛","剛","一會兒","一會","最近","春天","春","夏天","夏","秋天","秋","冬天","冬","過年","新年"]],["Perasaan","Feelings",["笑","哭","高興","緊張","可愛","生氣","難過","聰明","辛苦","舒服","奇怪","小心"]],["Pikiran & sikap","Thoughts & attitude",["相信","認為","以為","願意","希望","習慣","經驗","當然","決定","記得","忘","想法","注意"]],["Kerja","Work",["醫院","公司","辦公室","工人","護士","司機","老闆","老板","上班","下班","能力","努力"]],["Rencana","Plans",["準備","打算","計畫","計劃","機會","如果","要是","開始","辦法","方法","有用","進步"]],["Sekolah","School",["小學","高中","上學","開學","班","年級","作業","成績","黑板","課本","字典","圖書館","宿舍"]],["Bahasa & belajar","Language & study",["語言","華語","華文","讀書","回答","答","句","圖","部分","部份","學習","練習","參加","文化","清楚","講"]],["Di rumah","At home",["屋(子)","間","大樓","樓上","樓下","樓梯","電梯","廚房","客廳","窗(子)","窗戶","洗手間","廁所"]],["Isi rumah","Things at home",["家具","沙發","盒","盒(子)","關","燈","冷氣(機)","冰箱","電","乾淨","房租","租","搬","掛"]],["Alam & hewan","Nature & animals",["世界","火","雪","下雪","地","河","湖","海","草","樹","太陽","馬","鳥","貓","狗","隻"]],["Sehari-hari","Daily life",["洗","洗澡","有空","有空兒","餐","脫","發現","有時候","有時","平常","總是","已經","後來","最後"]],["Olahraga","Sport",["游泳","跑","跑步","踢","足球","籃球","網球","棒球","比賽","騎","腳踏車","自行車"]],["Hiburan & internet","Fun & the internet",["上網","網路","網站","報紙","電影院","場","部","次","音樂","票","活動","故事","聊天","聊天兒"]],["Sopan santun","Being polite",["客氣","不客氣","不好意思","麻煩","禮物","歡迎","認識","見面","聽說","幫忙","幫助","幫","怎麼辦"]],["Pos & bank","Post & bank",["寄","接","郵局","銀行","信","信封","錢包","信用卡","付","事情"]],["Jalan & arah","Streets & directions",["車站","汽車","飛機場","機場","馬路","路口","十字路口","對面","中間","離","離開","經過","往","向","轉","一直","近","遠"]],["Mata angin","Compass",["南","南部","西","西部","北","北部","東","東部","台"]],["Jalan-jalan","Travel",["旅行","飯店","旅館","參觀","地圖","照相機","相機","照相","照片","相片","相片兒","風景","袋子"]],["Tubuh & sehat","Body & health",["病人","頭髮","髮","手指(頭)","指頭","肚(子)","臉","心","健康","渴","眼鏡"]],["Belanja","Shopping",["賣","書店","商店","市場","超級市場","超市","送","放","拉","掉","試"]],["Pakaian & warna","Clothes & colors",["顏色","黃色","白色","手錶","手表","錶","表","襪(子)","雙","裙(子)","褲(子)","大衣","帽(子)","皮包","外套","戴"]],["Membandingkan","Comparing",["比較","較","差不多","輕","重","樣子","特別","簡單","重要","其他","其它","聲音","聲","好像","壞","棒","變"]],["Makanan","Food",["三明治","漢堡","蘋果","西瓜","點心","冰淇淋","青菜","糖","烤","餵"]],["Minuman & rasa","Drinks & taste",["啤酒","紅茶","味道","酸","苦","鹹","辣","香"]],["Alat makan & satuan","Tableware & measures",["叉(子)","刀(子)","湯匙","盤","盤(子)","片","瓶","瓶(子)","支","份","道","條","種","包"]],["Jumlah","Amounts",["一半","一半兒","更","全部","所有","需要","各","有的","加","算"]],["Kata penghubung","Linking words",["但是","但","或是","把","被","讓","雖然","那麼","這麼","本來","啦","呀","啊","替","一下(子)","一下子兒","不過","才","行","交","借"]]],"A2":[["Data diri","About me",["出生","住址","母語","年紀","身高","長大","男人","女人","老太太","傳真"]],["Keluarga besar","Extended family",["父親","母親","父母","外公","外婆","伯伯","伯","伯父","伯母","叔叔","叔","姑姑","阿姨","兄弟","孫女","孫子"]],["Waktu","Time",["鐘","時鐘","時","白天","半夜","夜晚","夜","日子","不久","剛才","正好","剛好","當時","同時","時差","鬧鐘"]],["Perasaan","Feelings",["害怕","開心","擔心","傷心","放心","心情","幸福","煩","可怕","輕鬆","無聊","有趣","有意思","可惜"]],["Sifat orang","Personality",["美麗","帥","笨","認真","敢","急","禮貌","害羞","關心","用功","有名","有錢","關係","身邊"]],["Kantor","At the office",["經理","教書","開會","加班","打工","報告","資料","管理","服務","合作","生意","商人","辦"]],["Cara & pendapat","Ways & opinions",["做法","作法","看法","意見","建議","同意","討論","了解","瞭解","選","選擇","要求","原因","目的","好處","壞處"]],["Ujian & soal","Tests & questions",["查","考","例如","例(子)","題目","題","答案","程度","標準","差","嚴重","正式"]],["Mata pelajaran","School subjects",["念書","唸書","歷史","數學","書法","英語","作文","漢字","詞","文法","美術","體育","研究","教育","知識"]],["Berhitung","Math",["加上","減","乘","除","倍","以上","以下","一切","任何","許多"]],["Kampus","Campus",["國小","中學","學院","大學生","教授","學期","畢業","室友","操場","校園","座位","位子"]],["Libur","Holidays",["放假","春假","暑假","寒假","假","假日","節日","春節","除夕","傳統","現代","春季"]],["Meja belajar","At the desk",["書桌","書包","書架","本子","尺","日記","遍","改","忘記","趕快"]],["Kamar & rumah","Rooms & house",["座","臥室","臥房","浴室","院(子)","書房","大門","層","房東","房屋","搬家","鄰居"]],["Barang rumah","Household things",["洗衣機","餐桌","箱","箱(子)","櫃(子)","打開","鎖","鑰匙","傘","枕頭","籃(子)"]],["Kamar mandi","Bathroom",["拖鞋","毛巾","刷(子)","刷","肥皂","牙膏","牙刷","衛生紙","開水"]],["Alam","Nature",["鄉下","自然","月亮","星星","朵","蚊(子)","環境","環保","垃圾","汙染","溫泉"]],["Cuaca","Weather",["晴天","暖和","涼快","涼","乾","濕","溼","度","颱風","季節"]],["Hidup sehari-hari","Daily life",["發生","照顧","生活","夢","流","流汗","熱鬧","吵","亂","結束","完","出門","遲到"]],["Santai & olahraga","Leisure & sport",["散步","慢跑","野餐","爬","舞","游","游泳池","遊戲","樂器","吉他","興趣","畫家"]],["Berita & hiburan","News & fun",["新聞","雜誌","消息","情形","茶館","茶館兒","門票","收","談","聊","拍","抓"]],["Bergaul & surat","Socializing & letters",["陪","主人","請客","約","約會","派對","祝","開玩笑","留","帶來","封","信箱","郵票","回信","郵件"]],["Kota & negara","Cities & countries",["社會","市區","法律","自由","東方","非洲","美洲","歐洲","亞洲","大陸","中心"]],["Kendaraan","Vehicles",["公路","速度","巴士","加油","摩托車","機車","船","船兒","地鐵","捷運","停車場","月台","搭","飛","油","交通"]],["Perjalanan","Travel",["到處","地點","簽證","行李","背包","入口","出口","方向","拍照","動","起","停","上","下"]],["Tubuh & sakit","Body & illness",["腿","背","脖(子)","汗","臉色","咳嗽","發燒","頭痛","疼","精神","感覺","正常","死"]],["Ke dokter","At the doctor",["救護車","救命","保險","掛號","藥房","影響","危險","安全","保護"]],["Toko & pasar","Shops & markets",["老闆娘","老板娘","店員","百貨公司","夜市","逛","逛街","排隊","客滿","訂","訂位","流行"]],["Bayar","Paying",["刷卡","小費","打折","零錢","零用錢","存","換","提","得到","成功","困難"]],["Warna & pakaian","Colors & clothes",["藍色","綠色","紅色","黑色","毛衣","雨衣","內衣","上衣","皮鞋","手套","口袋","毛"]],["Benda & keadaan","Things & states",["高級","一般","合適","適合","圓","光","髒","破","袋","套","滿","丟","偷","弄","空","底","底下","內","深","淺"]],["Makanan barat","Western food",["沙拉","牛排","海鮮","火腿","熱狗","甜點","餅乾","可樂","汽水"]],["Makanan Taiwan","Taiwanese food",["饅頭","米","豆腐","橘(子)","葡萄","芒果","烏龍茶","豆漿","奶茶","冰塊","冰塊兒","早點"]],["Masak & rasa","Cooking & taste",["鹽","味","味兒","聞","臭","口","罐","顆","新鮮","熟","炒","炸","嚐","嘗","泡","裝"]],["Kata penghubung","Linking words",["不但","而且","不管","只要","除了","或","或者","且","另","另外","不同","同樣","也許","大概","其實","原來","結果","接著","等到","立刻"]],["Kata keterangan","Adverbs",["不用","不必","不得了","只好","必須","需","須","多麼","極","越","整","正","完全","相當","尤其","已","從來","經常","總","直接"]],["Kata kecil","Little words",["這些","那些","這樣","那樣","等等","別的","其中","當中","方面","左右","比方","比方說","最好","還好","沒想到","看起來","利用","一塊","一塊兒","連","包括","步","類","樣","當","傳","哇"]]]};   // level → [[name (id), name (en), words]], each unit one theme
 const LS_LEARN = 'tocfl-learn-v1';
-const LN_GOAL = 2;              // lessons a day
+const LN_GOAL = 5;              // parts of the path a day
 const lnIcon = {
   check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
   star: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 3.2l2.7 5.6 6.1.8-4.5 4.2 1.1 6.1L12 17l-5.4 2.9 1.1-6.1L3.2 9.6l6.1-.8z"/></svg>',
@@ -7024,7 +7042,6 @@ function lnAddToGroup(rows){
   if(n) applyCustomChange();
   return n;
 }
-const lsSay = (text, btn) => { if(!HAS_TTS || !SOUND_ON) return; speakManual = true; try{ speak(text, btn); } finally { speakManual = false; } };
 const lsCanHear = () => HAS_TTS && SOUND_ON;
 // the words of a review: those you missed most in this level so far, then the newest ones
 function lnReviewWords(l, s){
@@ -7242,7 +7259,8 @@ function lsDialog(lines, btn){
     const [who, text] = lines[i++], u = new SpeechSynthesisUtterance(text);
     u.lang = 'zh-TW'; if(v){ u.voice = v; u.lang = v.lang; }
     u.rate = .9; u.pitch = who === 'A' ? 1.25 : .8;
-    u.onend = () => setTimeout(next, 350); u.onerror = () => { if(btn) btn.classList.remove('playing'); };
+    u.onstart = () => lsBearSet('talk', who === 'A' ? 0 : 1);
+    u.onend = () => { lsBearSet((LS && LS.mood) || 'idle', who === 'A' ? 0 : 1); setTimeout(next, 350); }; u.onerror = () => { lsBearRest(); if(btn) btn.classList.remove('playing'); };
     try{ window.speechSynthesis.speak(u); }catch(e){}
   };
   next();
@@ -7271,9 +7289,10 @@ function lsExam(q){
     const i = +b.dataset.i, ok = q.opts[i].ok;
     lsBody.querySelectorAll('.ls-opt').forEach((x, j) => { x.disabled = true; if(q.opts[j].ok) x.classList.add('ok'); else if(j === i) x.classList.add('bad'); });
     if(ok){ LS.right++; LS.firstTry++; } else LS.wrong++;
+    LS.mood = ok ? 'happy' : 'sad'; lsBearRest(); lsBearReact();
     playSfx(ok ? 'right' : 'wrong');
     // what it said: the dialog written out, and the translations
-    lsBody.querySelector('.ls-opts').insertAdjacentHTML('afterend', `<div class="ls-xexp">${it.t === 'l' ? `<div lang="zh-TW">${it.d.map(d => `<p><b>${d[0]}：</b>${esc(d[1])}</p>`).join('')}</div>` : ''}<p class="tr">${esc(it.tr[L])}</p></div>`);
+    lsFb.insertAdjacentHTML('afterend', `<div class="ls-xexp">${it.t === 'l' ? `<div lang="zh-TW">${it.d.map(d => `<p><b>${d[0]}：</b>${esc(d[1])}</p>`).join('')}</div>` : ''}<p class="tr">${esc(it.tr[L])}</p></div>`);
     lsFb.className = 'ls-fb ' + (ok ? 'ok' : 'bad');
     lsFb.innerHTML = `<b>${ok ? tx('Correct!') : tx('Not quite')}</b><span class="w">${esc(it.qt[L])} → <span lang="zh-TW">${esc(it.o[it.a])}</span></span>`;
     lsSetGo(tx('Continue'), ok ? 'ok' : 'bad');
@@ -7339,12 +7358,101 @@ function lsProgress(){
 function lsSetGo(label, kind){ lsGo.textContent = label; lsGo.disabled = false; lsGo.style.visibility = ''; lsGo.className = 'cf-btn cf-yes ls-go' + (kind ? ' ' + kind : ''); }
 function lsHideGo(){ lsGo.disabled = true; lsGo.className = 'cf-btn cf-yes ls-go'; lsGo.style.visibility = 'hidden'; }
 function lsNext(){
-  lsFb.className = 'ls-fb'; lsFb.innerHTML = '';
+  lsFb.className = 'ls-fb'; lsFb.innerHTML = ''; if(LS) LS.mood = 'idle';
   lsProgress();
-  if(LS.step < LS.intro.length){ if(LS.mode === 'grammar') lsGramIntro(LS.intro[0]); else lsIntro(LS.intro[LS.step]); return; }
-  if(LS.qi < LS.qs.length){ const q = LS.qs[LS.qi]; if(q.k === 'x') lsExam(q); else if('sblo'.includes(q.k)) lsSentence(q); else lsQuestion(q); return; }
-  lsFinish();
+  if(LS.step < LS.intro.length){ if(LS.mode === 'grammar') lsGramIntro(LS.intro[0]); else lsIntro(LS.intro[LS.step]); }
+  else if(LS.qi < LS.qs.length){ const q = LS.qs[LS.qi]; if(q.k === 'x') lsExam(q); else if('sblo'.includes(q.k)) lsSentence(q); else lsQuestion(q); }
+  else lsFinish();
+  lsLayout();
 }
+// the answers always end at the same height, within reach of the thumb, with Continue under them; the question sits in the
+// middle of the room above; right / wrong shows between the two, so the answers never move
+function lsLayout(){
+  const anchor = lsBody.querySelector('.ls-opts, .ls-bank');
+  lsBody.classList.toggle('free', !anchor);
+  if(anchor) anchor.before(lsFb); else lessonEl.querySelector('.ls-foot').prepend(lsFb);
+  lsBearPlace(anchor);
+}
+// ---- the bear: a Formosan black bear that talks while something is read aloud, smiles at a right answer, frowns at a wrong one.
+// Still the rest of the time (no idle animation). In a dialog, a second bear with a red scarf speaks B's lines.
+function lsBearSVGx(acc, id, scarf){
+  const c = n => `${n}${id}`;
+  const F = '#5a463b', FS = '#3e2f27', K = '#2f231d';
+  const BODY = 'M60 12 C86 12 99 32 99 58 C99 90 85 106 60 106 C35 106 21 90 21 58 C21 32 34 12 60 12 Z';
+  // one flat colour plus one hard-edged shade crescent on the bottom/right, like Duolingo: shade = shape minus a shifted copy
+  const part = (k, shape, base, shade, dx, dy) => {
+    const col = (f) => shape.replace(/\/>$/, ` fill="${f}"/>`);
+    return `<clipPath id="${c(k)}">${shape}</clipPath>${col(shade)}<g clip-path="url(#${c(k)})"><g transform="translate(${-dx} ${-dy})">${col(base)}</g></g>`;
+  };
+  return `<svg viewBox="0 0 120 120" aria-hidden="true">
+  <defs><clipPath id="${c('b')}"><path d="${BODY}"/></clipPath><clipPath id="${c('m')}"><ellipse cx="60" cy="60" rx="18" ry="13"/></clipPath></defs>
+  <ellipse cx="60" cy="112" rx="30" ry="4" fill="#000" opacity=".15"/>
+  <circle cx="29" cy="22" r="12" fill="${F}"/><circle cx="91" cy="22" r="12" fill="${FS}"/>
+  <circle cx="29" cy="23" r="6.5" fill="#d9988a"/><circle cx="91" cy="23" r="6.5" fill="#b47b6f"/>
+  ${part('a1', `<ellipse cx="22" cy="78" rx="7.5" ry="13" transform="rotate(22 22 78)"/>`, F, FS, 0.5, 3)}${part('a2', `<ellipse cx="98" cy="78" rx="7.5" ry="13" transform="rotate(-22 98 78)"/>`, FS, K, -0.5, 3)}
+  ${part('f1', `<ellipse cx="46" cy="106" rx="10" ry="6"/>`, F, FS, 0, 2.2)}${part('f2', `<ellipse cx="74" cy="106" rx="10" ry="6"/>`, FS, K, 0, 2.2)}
+  <path d="${BODY}" fill="${FS}"/>
+  <g clip-path="url(#${c('b')})"><path d="${BODY}" transform="translate(-6.5 -5.5)" fill="${F}"/></g>
+  <path d="M42 80 L60 94 L78 80 L70 80 L60 87.5 L50 80 Z" fill="#fff4dc"/><path d="M60 87.5 L70 80 L78 80 L60 94 Z" fill="#ead5ad"/>
+  ${scarf ? `<mask id="${c('sh')}"><path d="${BODY}" fill="#fff"/><path d="${BODY}" transform="translate(-6.5 -5.5)" fill="#000"/></mask>
+  <g clip-path="url(#${c('b')})"><path d="M73 76 L84.5 75 L88.6 96 L84 92.8 L80 97.4 Z" transform="translate(1.6 1.2)" fill="#000" opacity=".2"/></g>
+  <path d="M73 76 L84.5 75 L88.6 96 L84 92.8 L80 97.4 Z" fill="#e83e3e"/><path d="M79.5 75.6 L84.5 75 L88.6 96 L84 92.8 Z" fill="#c22f2f"/>
+  <g clip-path="url(#${c('b')})"><path d="M18 64 Q60 82 102 64 L102 71.5 Q60 92 18 71.5 Z" transform="translate(0 1.8)" fill="#000" opacity=".2"/>
+    <path d="M18 64 Q60 82 102 64 L102 71.5 Q60 92 18 71.5 Z" fill="#ff4b4b"/><path d="M18 68.5 Q60 87 102 68.5 L102 71.5 Q60 92 18 71.5 Z" fill="#d93636"/><g mask="url(#${c('sh')})"><path d="M18 64 Q60 82 102 64 L102 71.5 Q60 92 18 71.5 Z" fill="#d93636"/><path d="M18 68.5 Q60 87 102 68.5 L102 71.5 Q60 92 18 71.5 Z" fill="#b82a2a"/></g></g>` : ''}
+  <ellipse cx="60" cy="60" rx="18" ry="13" fill="#f4c88f"/>
+  <g clip-path="url(#${c('m')})"><path d="M40 64 Q60 77 80 62 L80 76 L40 76 Z" fill="#dfab6f"/></g>
+  <circle cx="34" cy="57" r="4.6" fill="#ff9d8f"/><circle cx="86" cy="57" r="4.6" fill="#ff9d8f"/>
+  ${part('n', `<path d="M52.5 53 Q52.5 49.8 56 49.8 L64 49.8 Q67.5 49.8 67.5 53 Q66.6 58.6 60 59.6 Q53.4 58.6 52.5 53 Z"/>`, '#3a2a22', '#241812', 0, 1.6)}
+  <g clip-path="url(#${c('n')})"><ellipse cx="57" cy="51.6" rx="3" ry="1.3" fill="#6a5046"/></g>
+  <g class="be be-open">
+    ${part('w1', `<ellipse cx="45" cy="39" rx="8.5" ry="9.5"/>`, '#fff', '#e4dcd4', 0, 1.6)}${part('w2', `<ellipse cx="75" cy="39" rx="8.5" ry="9.5"/>`, '#fff', '#e4dcd4', 0, 1.6)}
+    <circle cx="46.5" cy="40.5" r="5.8" fill="#2b1d17"/><circle cx="73.5" cy="40.5" r="5.8" fill="#2b1d17"/>
+    <circle cx="48.7" cy="38" r="2.3" fill="#fff"/><circle cx="75.7" cy="38" r="2.3" fill="#fff"/>
+  </g>
+  <g class="be be-happy"><path d="M37.5 42 Q45 33 52.5 42 M67.5 42 Q75 33 82.5 42" stroke="#fff4dc" stroke-width="4" fill="none" stroke-linecap="round"/></g>
+  <g class="be be-sad"><path d="M36.5 28.5 L50 25 M83.5 28.5 L70 25" stroke="#8a7062" stroke-width="3.6" stroke-linecap="round"/></g>
+  <path class="bm bm-idle" d="M53.5 63 Q57 67 60 63.5 Q63 67 66.5 63" stroke="#2b1d17" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  <g class="bm bm-talk" transform="translate(0 1)"><ellipse cx="60" cy="65.5" rx="5.6" ry="5" fill="#7a1f1f"/><path d="M55.8 68 Q60 65 64.2 68 Q60 71 55.8 68 Z" fill="#ff7b7b"/></g>
+  <g class="bm bm-happy" transform="translate(0 1)"><path d="M50.5 61 Q60 75 69.5 61 Z" fill="#7a1f1f"/><path d="M54.5 67.6 Q60 72.4 65.5 67.6 Q60 64.8 54.5 67.6 Z" fill="#ff7b7b"/></g>
+  <path class="bm bm-sad" d="M54 67.5 Q60 62 66 67.5" stroke="#2b1d17" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+</svg>`;
+}
+let lsBearN = 0;
+const lsBearSVG = b => lsBearSVGx('none', 'bear' + (++lsBearN), b);   // B (a dialog's second voice) wears a red scarf
+let lsBearT = null;
+function lsBearSet(m, who){
+  lsBody.querySelectorAll('.ls-bear').forEach((b, i) => { if(who == null || i === who) b.dataset.m = m; });
+}
+const lsBearRest = () => lsBearSet((LS && LS.mood) || 'idle');
+// one reaction to an answer or a result: a hop when happy, a droop when sad
+function lsBearReact(){
+  const cls = LS && LS.mood === 'happy' ? 'hop' : LS && LS.mood === 'sad' ? 'droop' : '';
+  if(!cls) return;
+  lsBody.querySelectorAll('.ls-bear').forEach(b => {
+    b.classList.remove('hop', 'droop'); void b.offsetWidth; b.classList.add(cls);
+    b.querySelector('svg').addEventListener('animationend', () => b.classList.remove(cls), { once:true });
+  });
+}
+// a word or sentence read aloud: the bear talks until it ends (at most 10 s, in case the phone never says it ended)
+function lsSay(text, btn){
+  if(!HAS_TTS || !SOUND_ON) return;
+  lsBearSet('talk', 0); clearTimeout(lsBearT); lsBearT = setTimeout(lsBearRest, 10000);
+  speakManual = true;
+  try{ speak(text, btn, () => { clearTimeout(lsBearT); lsBearRest(); }); } finally { speakManual = false; }
+}
+// placed just above the answers (or under a new word / the result); left out when the screen has no room for it
+function lsBearPlace(anchor){
+  const two = LS && LS.qs[LS.qi] && LS.qs[LS.qi].k === 'x' && LS.qs[LS.qi].it.t === 'l' && !LS.done;
+  const el = document.createElement('div');
+  el.className = 'ls-bears';
+  el.innerHTML = `<div class="ls-bear" data-m="idle">${lsBearSVG(false)}<span class="ls-bub">♪</span></div>${two ? `<div class="ls-bear b" data-m="idle">${lsBearSVG(true)}<span class="ls-bub">♪</span></div>` : ''}`;
+  if(anchor) lsFb.before(el); else lsBody.appendChild(el);
+  const speaking = HAS_TTS && (window.speechSynthesis.speaking || window.speechSynthesis.pending);
+  lsBearSet(speaking && !two ? 'talk' : (LS && LS.mood) || 'idle');
+  if(lsBody.scrollHeight > lsBody.clientHeight + 1) el.remove();
+  else if(LS && LS.done) lsBearReact();
+}
+
 // meet a new word: the word, its sound, its pinyin and meaning
 function lsIntro(r){
   const w = colorWord(r[0], pyOf(r).split(' / ')[0]) || esc(r[0]);
@@ -7449,6 +7557,7 @@ function lsJudge(q, ok){
   else if(LS.mode === 'daily' && !LS.seen.has(k)){ LS.seen.add(k); const cur = s.srs[k] || [0, 0]; s.srs[k] = ok ? [lnToday() + LN_IV[Math.min(cur[1] + 1, LN_IV.length - 1)], Math.min(cur[1] + 1, LN_IV.length - 1)] : [lnToday() + 1, 0]; }
   else if(!ok && s.srs[k]) lnSrsMiss(s, r);
   lnSave(s);
+  LS.mood = ok ? 'happy' : 'sad'; lsBearRest(); lsBearReact();
   const dur = playSfx(ok ? 'right' : 'wrong');
   const say = q.p ? q.p.e.hz : fullWord(r[0]);
   setTimeout(() => { if(LS && LS.answered) lsSay(say); }, dur + 80);
@@ -7503,6 +7612,7 @@ function lsMockFinish(){
     ${wrong.map(q => `<div class="ls-mock"><div class="q" lang="zh-TW">${esc(q.it.q)}</div><div class="qt">${esc(q.it.qt[L])}</div>
       ${q.pick != null ? `<div class="bad" lang="zh-TW">✗ ${esc(q.opts[q.pick].t)}</div>` : ''}<div class="ok" lang="zh-TW">✓ ${esc(q.it.o[q.it.a])}</div><div class="tr">${esc(q.it.tr[L])}</div></div>`).join('')}`;
   playSfx(stars ? 'right' : 'wrong');
+  LS.mood = stars ? 'happy' : 'sad';
   LS.done = true; LS.answered = true;
   lsSetGo(tx('Continue'));
 }
@@ -7542,6 +7652,7 @@ function lsFinish(){
     ${note ? `<div class="ls-note hot">${esc(note)}</div>` : ''}
     ${LS.missed.size ? `<div class="ln-words ls-missed">${[...LS.missed].map(r => `<div class="ln-w"><span class="h" lang="zh-TW">${esc(fullWord(r[0]))}</span><span class="p">${colorPinyin(pyOf(r))}</span><span class="m">${esc(shortMeaning(r))}</span></div>`).join('')}</div>` : ''}</div>`;
   if(passed) playSfx('right');
+  LS.mood = passed ? 'happy' : 'sad';
   LS.done = true; LS.answered = true;
   if(!passed){ lsSetGo(tx('Try again')); LS.retry = l; }
   else lsSetGo(tx('Continue'));
