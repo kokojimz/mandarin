@@ -690,6 +690,7 @@
   .m-rig.m-dip{ animation:mDip 1s ease-in-out 1; }
   .m-rig.m-wave{ animation:mWave 1.3s ease-in-out 1; transform-origin:50% 90%; }
   .m-rig.m-pop{ animation:mPop .6s cubic-bezier(.3,1.6,.5,1) 1; }
+  .m-rig.m-settle{ animation:mSettle .32s ease-out 1; }   /* the voice ended: a little squash back to rest */
   @keyframes mBreathe{ to{ transform:scale(1.012, 1.024); } }
   @keyframes mThink{ from{ transform:rotate(-2deg); } to{ transform:rotate(1.5deg); } }
   @keyframes mHop{ 0%{ transform:none; } 14%{ transform:scale(1.07,.91); } 40%{ transform:translateY(-14%) scale(.96,1.05); } 64%{ transform:scale(1.05,.95); } 82%{ transform:scale(.99,1.01); } 100%{ transform:none; } }
@@ -697,11 +698,11 @@
   @keyframes mDip{ 0%{ transform:none; } 25%{ transform:translateY(3%) scale(1.04,.94) rotate(-4deg); } 50%{ transform:translateY(3%) scale(1.04,.94) rotate(4deg); } 75%{ transform:translateY(1%) scale(1.01,.98) rotate(-1.5deg); } 100%{ transform:none; } }
   @keyframes mWave{ 0%,100%{ transform:none; } 20%{ transform:rotate(-4deg); } 40%{ transform:rotate(3deg); } 60%{ transform:rotate(-3deg); } 80%{ transform:rotate(1.5deg); } }
   @keyframes mPop{ 0%{ transform:scale(.9); } 50%{ transform:scale(1.1); } 100%{ transform:none; } }
+  @keyframes mSettle{ 0%{ transform:scale(1.07,.9); } 45%{ transform:scale(.96,1.05); } 75%{ transform:scale(1.02,.98); } 100%{ transform:none; } }
   @media (prefers-reduced-motion:reduce){ tocfl-mascot .m-rig{ animation:none !important; } }
   @media (prefers-reduced-motion:reduce){ .ls-bear .msc{ animation:none !important; } }
-  .ls-bub{ position:absolute; top:-6px; right:-26px; z-index:1; padding:0 9px 3px; border-radius:12px 12px 12px 3px; background:#fff; border:0; color:#1c1b19; font-size:1.1rem; font-weight:700; line-height:1.3; letter-spacing:.04em; visibility:hidden; }   /* white on a dark page */
-  .ls-bears.sm .ls-bub{ right:-22px; font-size:1rem; }
-  :root[data-theme="light"] .ls-bub{ background:#2a2724; color:#fff; }   /* dark on a light page */
+  .ls-bub{ position:absolute; top:-4px; right:-22px; z-index:1; padding:0 7px 2px; border-radius:10px 10px 10px 3px; background:#fff; border:1px solid #1b1a17; color:#1b1a17; font-size:.95rem; font-weight:700; line-height:1.3; letter-spacing:.04em; visibility:hidden; }   /* white, edged in the dark page's black, on any page */
+  .ls-bears.sm .ls-bub{ right:-18px; font-size:.85rem; }
   .ls-bear[data-m="talk"] .ls-bub{ visibility:visible; }   /* … only while it talks */
   .ls-bear.tap{ cursor:pointer; -webkit-tap-highlight-color:transparent; }
   .ls-bears.sm .ls-bear{ width:84px; height:84px; }
@@ -1831,10 +1832,15 @@ class TocflMascot extends HTMLElement {
       this.rig.addEventListener('animationend', e => { if(e.target === this.rig) this.rig.className = 'm-rig'; });   // a movement done: back to resting
     }
     const p = this.getAttribute('pose') || 'idle', v = mascotVariant(this.getAttribute('variant'));
-    if(p !== this._p || v !== this._v){ this._p = p; this._v = v; this._shown = null; this.start(); }
+    if(p !== this._p || v !== this._v){ const was = this._p; this._p = p; this._v = v; this._shown = null; this.start(); if(was === 'talking') this.settle(); }
     else if(!this._raf) this.draw(...this.holdOf(p));
   }
   holdOf(p){ return (MASCOT_POSE_ANIM[p] || MASCOT_POSE_ANIM.idle).hold; }
+  // talking cut off mid-word: a little squash and bounce hides the jump back to rest
+  settle(){
+    if(!this.rig || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    this.rig.classList.remove('m-settle'); void this.rig.offsetWidth; this.rig.classList.add('m-settle');
+  }
   // one frame of a sheet; a sheet not decoded yet draws when it is
   draw(k, i){
     const s = mascotSheet(k, this._v);
