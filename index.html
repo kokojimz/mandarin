@@ -783,6 +783,7 @@
   .ln-chev{ position:absolute; right:12px; top:50%; width:22px; height:22px; margin-top:-11px; color:var(--sub); transition:transform .2s ease; }
   .ln-unit.open .ln-chev{ transform:rotate(180deg); }
   .ln-path.shut{ display:none; }
+  .ln-unit.cur:not(.open)::after{ content:''; position:absolute; top:-5px; right:-5px; width:14px; height:14px; border-radius:50%; background:var(--accent); box-shadow:0 0 0 2.5px var(--bg); pointer-events:none; }   /* the unit you are in, closed: a dot like Sort's, bigger */
   .ln-unit .ln-uk{ font-size:.72rem; opacity:.75; }
   .ln-unit .ln-un{ font-weight:700; font-size:1rem; margin-top:1px; }
   .ln-unit .ln-uw{ font-size:.85rem; opacity:.8; margin-top:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
@@ -8330,8 +8331,16 @@ function lsMockFinish(){
 }
 // the result's stars: the ones you earned light up one after another, each with a chime a little higher than the last
 const LS_STAR_GAP = 450, LS_STAR_START = 350;
+let lsStarHold = 0;
 function lsStarsHTML(stars){
   setTimeout(() => lsStarSfx(stars), 0);
+  // Continue waits, greyed out, until the last star has popped (set after lsSetGo, which runs right after this)
+  const hold = stars ? LS_STAR_START + (stars - 1) * LS_STAR_GAP + 500 : 0, tok = ++lsStarHold;
+  if(hold) setTimeout(() => {
+    if(tok !== lsStarHold) return;
+    lsGo.disabled = true;
+    setTimeout(() => { if(tok === lsStarHold && LS && LS.done) lsGo.disabled = false; }, hold);
+  }, 0);
   return `<div class="ls-stars">${[1, 2, 3].map(k => `<span class="${k <= stars ? 'on pop' : ''}"${k <= stars ? ` style="animation-delay:${LS_STAR_START + (k - 1) * LS_STAR_GAP}ms"` : ''}>${lnIcon.star}</span>`).join('')}</div>`;
 }
 function lsStarSfx(n){
