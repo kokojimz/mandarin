@@ -535,7 +535,6 @@
   .ls-fb{ display:none; border-radius:14px; padding:11px 14px; margin-top:14px; font-size:.92rem; line-height:1.45; animation:fbIn .2s ease-out; }
   .ls-fb.ok, .ls-fb.bad{ display:block; }
   .ls-var{ text-align:center; color:var(--sub); font-size:.9rem; margin-top:8px; }
-  .ls-go.wait{ opacity:.45; }   /* Continue: until the answer has been read out */
   .ls-fb.ok, .ls-fb.bad{ background:rgba(128,128,128,.1); }   /* a plain box: only "Correct!" / "Not quite" is coloured */
   @keyframes fbIn{ from{ opacity:0; transform:translateY(-6px); } }
   @media (prefers-reduced-motion:reduce){ .ls-fb{ animation:none; } }
@@ -7451,6 +7450,7 @@ function lsProgress(){
 function lsSetGo(label, kind){ lsGo.textContent = label; lsGo.disabled = false; lsGo.style.visibility = ''; lsGo.className = 'cf-btn cf-yes ls-go' + (kind ? ' ' + kind : ''); }
 function lsHideGo(){ lsGo.disabled = true; lsGo.className = 'cf-btn cf-yes ls-go'; lsGo.style.visibility = 'hidden'; }
 function lsNext(){
+  stopSpeech(); lsDlgSeq++; lsSaySeq++; clearTimeout(lsBearT);   // the next screen: whatever was still being read stops at once
   lsFb.className = 'ls-fb'; lsFb.innerHTML = ''; if(LS){ LS.mood = 'idle'; LS.replay = null; LS.listen = false; }
   lsProgress();
   if(LS.step < LS.intro.length){ if(LS.mode === 'grammar') lsGramIntro(LS.intro[0]); else lsIntro(LS.intro[LS.step]); }
@@ -7680,16 +7680,14 @@ function lsJudge(q, ok){
   LS.mood = ok ? 'happy' : 'sad'; lsBearRest(); lsBearReact();
   const dur = playSfx(ok ? 'right' : 'wrong');
   const say = q.p ? q.p.e.hz : fullWord(r[0]);
-  // the answer read out (a listening question was heard already: not again); Continue waits until it has been said
-  const reads = !LS.listen && HAS_TTS && SOUND_ON, me = q;
-  const free = () => { if(LS && LS.answered && LS.qs[LS.qi] === me && lsGo.classList.contains('wait')){ lsGo.disabled = false; lsGo.classList.remove('wait'); } };
-  if(reads){ setTimeout(() => { if(LS && LS.answered && LS.qs[LS.qi] === me) lsSay(say, null, false, free); else free(); }, dur + 80); setTimeout(free, dur + 9000); }
+  // the answer read out (a listening question was heard already: not again); Continue cuts it off (see lsNext)
+  const me = q;
+  if(!LS.listen) setTimeout(() => { if(LS && LS.answered && LS.qs[LS.qi] === me) lsSay(say); }, dur + 80);
   lsFb.className = 'ls-fb ' + (ok ? 'ok' : 'bad');
   lsFb.innerHTML = `<b>${ok ? tx('Correct!') : tx('Not quite')}</b>` + (q.p
     ? `<span class="w"><span class="sp">${esc(q.p.e.py || '')}</span>${q.k === 'b' || q.k === 'o' ? '' : `<br>${esc(exTrans(q.p.e))}`}</span>`   // the sentence (and for b / o its translation) is on screen already
     : `<span class="w"><span lang="zh-TW">${esc(fullWord(r[0]))}</span> ${colorPinyin(pyOf(r))} · ${esc(shortMeaning(r))}</span>`);
   lsSetGo(tx('Continue'), ok ? 'ok' : 'bad');
-  if(reads){ lsGo.disabled = true; lsGo.classList.add('wait'); }
 }
 function lsAnswer(q, opts, i){
   if(LS.answered) return;
