@@ -1154,7 +1154,7 @@
 
 <div id="toast" role="status" aria-live="polite"></div>
 
-<footer>許木德 · 高雄 · 2026<br>TOCFL · CC-CEDICT (CC BY-SA 4.0)<br><span data-tx="Found a bug?">Found a bug?</span> IG: aldin_tk</footer>
+<footer>許木德 · 高雄 · 2026<br>TOCFL · CC-CEDICT (CC BY-SA 4.0)<br><span data-tx="Found a bug?">Found a bug?</span> IG: aldin_tk · pnde_tresna</footer>
 <!-- Learn mode: the other side of the portal -->
 <div id="learn" aria-hidden="true"><div class="ln-wrap" id="lnWrap"></div></div>
 <div id="exam" aria-hidden="true"><div class="xm-wrap" id="xmWrap"></div></div>
@@ -7478,14 +7478,16 @@ function xmResumeSim(){
 }
 // in a simulation the top-left button pauses (two bars, the size of the ✕); on the pause screen and elsewhere it is ✕
 const xmCloseEl = document.getElementById('xmClose');
-function xmPauseBtn(on){
-  xmCloseEl.innerHTML = on ? '<svg viewBox="0 0 24 24" width="0.9em" height="0.9em" fill="currentColor" aria-hidden="true" style="display:block;margin:auto"><rect x="5" y="3.5" width="4.6" height="17" rx="1.4"/><rect x="14.4" y="3.5" width="4.6" height="17" rx="1.4"/></svg>' : '✕';
-  xmCloseEl.setAttribute('aria-label', on ? tx('Pause') : tx('Close'));
+function xmPauseBtn(on){   // true: pause (two bars); 'play': resume (a triangle); false: ✕
+  const svg = d => `<svg viewBox="0 0 24 24" width="0.9em" height="0.9em" fill="currentColor" aria-hidden="true" style="display:block;margin:auto">${d}</svg>`;
+  xmCloseEl.innerHTML = on === 'play' ? svg('<path d="M7 3.8c0-1 1.1-1.6 1.9-1.1l11.3 8.2c.7.5.7 1.6 0 2.1L8.9 21.3c-.8.6-1.9 0-1.9-1.1z"/>')
+    : on ? svg('<rect x="5" y="3.5" width="4.6" height="17" rx="1.4"/><rect x="14.4" y="3.5" width="4.6" height="17" rx="1.4"/>') : '✕';
+  xmCloseEl.setAttribute('aria-label', on === 'play' ? tx('Continue') : on ? tx('Pause') : tx('Close'));
 }
 // pause: the clock stops and the question is hidden; go on, keep it for later, or end it now
 function xmPause(){
   const r = XR; if(!r || !r.sim || r.done || r.paused) return;
-  r.paused = true; r.left = Math.max(0, r.end - Date.now()); xmRunSave(); xmPauseBtn(false);
+  r.paused = true; r.left = Math.max(0, r.end - Date.now()); xmRunSave(); xmPauseBtn('play');
   xmTimerEl.textContent = xmClock(r.left);
   xmShow(`<div class="xm-res xm-pz"><div class="xm-pzi">❚❚</div><div class="xm-lv">${tx('Test paused')}<span>${tx('{0}/{1} answered · {2} left', r.resp.length, XM_SIM_N, xmClock(r.left))}</span></div>
     <p>${tx('The clock is stopped. Your answers are kept, even if you close the app.')}</p>
@@ -7593,7 +7595,7 @@ xmFoot.addEventListener('click', e => {
 document.getElementById('xmClose').addEventListener('click', () => {
   if(!XR){ xmShut(); return; }
   if(XR.sim && !XR.done){
-    if(XR.paused){ xmRunSave(); xmShut(); return; }   // ✕ on the pause screen: keep it for later
+    if(XR.paused){ xmUnpause(); return; }   // ▶ on the pause screen: go on
     if(!XR.resp.length){ xmRunDrop(); xmShut(); return; }
     xmPause(); return;
   }
