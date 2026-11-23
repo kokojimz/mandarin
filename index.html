@@ -1773,7 +1773,7 @@ const MASCOT_FPS = 30, MASCOT_PX = 256, MASCOT_COLS = 8, MASCOT_CELL = 264;   //
 // clip: the sheet; fps: its own speed; from/to: the frames played; times: how often (0 = loop); hold: the frame it stays on after
 const MASCOT_POSE_ANIM = {
   idle: {hold: ['talk', 0]}, thinking: {hold: ['talk', 0]}, surprised: {hold: ['happy', 46]},
-  talking: {clip: 'talk', times: 0, hold: ['talk', 0]},
+  talking: {clip: 'talk', fps: 40, times: 0, hold: ['talk', 0]},   // chattier than the rest
   happy: {clip: 'happy', fps: 42, hold: ['happy', 55]},   // the hop: brisker than the rest
   celebrating: {clip: 'happy', fps: 42, times: 2, hold: ['happy', 55]},
   sad: {clip: 'sad', to: 28, hold: ['sad', 28]},
