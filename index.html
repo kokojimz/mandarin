@@ -516,8 +516,6 @@
   .xm-pill{ flex:none; padding:6px 13px; border-radius:999px; background:var(--accent); color:#fff; font-size:.78rem; font-weight:700; }
   .xm-pill.done{ background:transparent; color:#1e9e5a; border:1px solid #1e9e5a; }
   .xm-book .xm-bt small{ display:block; color:var(--sub); font-size:.72rem; margin-top:4px; }
-  .xm-pause{ flex:none; width:34px; height:34px; border-radius:50%; border:1px solid var(--border); background:var(--card-bg); color:var(--text); font-size:.7rem; letter-spacing:-1px; cursor:pointer; }
-  .xm-pause[hidden]{ display:none; }
   .xm-pz{ padding-top:8vh; }
   .xm-pzi{ width:72px; height:72px; margin:0 auto 14px; border-radius:50%; background:rgba(224,139,43,.15); color:var(--accent); display:flex; align-items:center; justify-content:center; font-size:1.4rem; letter-spacing:-2px; }
   .xm-pzb{ display:flex; flex-direction:column; gap:10px; max-width:320px; margin:26px auto 0; }
@@ -6933,6 +6931,7 @@ function setLang(l){
   refresh(true);
   updateBookmarkUI();
   if(peekR && peekOn) showPeek(peekR);
+  if(examEl.classList.contains('on')) xmRender();
 }
 applyLangStatic();
 importFile.addEventListener('change', () => {
@@ -7110,7 +7109,7 @@ function openLearn(){ if(!learnEl.classList.contains('on') && lnPos === 0) lnSho
 function closeLearn(){ lnSettle(false); }
 // may a swipe start now? Not over a dialog, a card's details, a lesson, the quiz, or a text box
 function lnCanSwipe(t){
-  if(lessonEl.classList.contains('on') || xmRun.classList.contains('on') || document.querySelector('.confirm-overlay.on, #peek.on')) return false;
+  if(lessonEl.classList.contains('on') || xmRun.classList.contains('on') || document.querySelector('.confirm-overlay.on, #peek.on, #formOverlay.on')) return false;
   const fv = document.getElementById('phFullView'); if(fv && fv.offsetParent) return false;
   return !(t && t.closest && t.closest('input, textarea, [contenteditable], .ls-bank, .xr-table'));
 }
@@ -7312,7 +7311,7 @@ function xmRender(){
   const books = band => XM_BOOKS.filter(b => b[0] === band).map(bk => {
     const p = s.p[bk] || {}, its = XM_DATA[bk].i, done = its.filter(it => p[it[0]] != null).length, right = its.filter(it => p[it[0]] === it[6]).length;
     const go = done === its.length ? `<span class="xm-pill done">✓ ${right}/${its.length}</span>` : `<span class="xm-pill">${done ? tx('Continue') : tx('Start')}</span>`;
-    return `<button type="button" class="xm-book${done === its.length ? ' done' : ''}" data-bk="${bk}"><span class="ln-seal">${bk[1]}</span><span class="xm-bt"><b>${tx('Vol. {0}', bk[1])}</b><i><u style="width:${done / its.length * 100}%"></u></i><small>${done ? tx('{0}/{1} done · {2} right', done, its.length, right) : tx('{0} questions', its.length)}</small></span>${go}</button>`;
+    return `<button type="button" class="xm-book${done === its.length ? ' done' : ''}" data-bk="${bk}"><span class="ln-seal">V${bk[1]}</span><span class="xm-bt"><b>${tx('Vol. {0}', bk[1])}</b><i><u style="width:${done / its.length * 100}%"></u></i><small>${done ? tx('{0}/{1} done · {2} right', done, its.length, right) : tx('{0} questions', its.length)}</small></span>${go}</button>`;
   }).join('');
   const sim = saved
     ? `<button type="button" class="cf-btn cf-yes xm-cta" data-resume="1">${tx('Continue the test')}<small>${tx('{0}/{1} answered · {2} left', saved.resp.length, XM_SIM_N, xmClock(saved.left))}</small></button>
@@ -7374,7 +7373,7 @@ function xmText(t, cur){
 // one question: its text or pictures, the question, the choices; reveal = show right / wrong (sel = the choice made)
 function xmQHTML(bk, i, sel, reveal){
   const it = xmIt(bk, i), g = xmGrp(bk, it), band = bk[0], part = it[1], opts = xmOpts(bk, it);
-  let h = `<div class="xm-tag">${tx('Part {0}', part)} · ${esc(xmPartName(bk, part))}${XR && XR.sim ? '' : ` · Band ${bk[0]} ${tx('Vol. {0}', bk[1])} #${it[0]}`}</div>`;
+  let h = `<div class="xm-tag">${tx('Part {0}', part)} · ${esc(xmPartName(bk, part))}${XR && XR.sim ? '' : ` · Band ${bk[0]} V${bk[1]} #${it[0]}`}</div>`;
   if(g){
     g[3].forEach(k => { h += `<img class="xm-img" src="${xmImg(k)}" alt="">`; });
     if(g[1]) h += `<div class="xm-psg" lang="zh-TW">${xmText(g[1], it[0])}</div>`;
