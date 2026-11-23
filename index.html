@@ -505,6 +505,24 @@
   .xm-sec{ margin:18px 0 0; padding:14px; border-radius:16px; background:var(--card-bg); border:1px solid var(--border); }
   .xm-sec h3{ margin:0; font-size:1rem; }
   .xm-sec p{ margin:4px 0 0; color:var(--sub); font-size:.82rem; line-height:1.45; }
+  .xm-sh{ display:flex; gap:12px; align-items:flex-start; }
+  .xm-num{ flex:none; width:28px; height:28px; border-radius:50%; background:var(--accent); color:#fff; font-weight:800; font-size:.9rem; display:flex; align-items:center; justify-content:center; margin-top:1px; }
+  .xm-chips{ display:flex; flex-wrap:wrap; gap:6px; margin:12px 0 0 40px; }
+  .xm-chips span{ padding:4px 10px; border-radius:999px; background:rgba(128,128,128,.12); color:var(--sub); font-size:.75rem; font-weight:600; }
+  .xm-cta{ display:block; width:100%; margin-top:14px; padding:14px 0; font-size:1.05rem; font-weight:800; }
+  .xm-cta small{ display:block; font-size:.75rem; font-weight:500; opacity:.9; margin-top:2px; }
+  .xm-cta2{ display:block; width:100%; margin-top:8px; padding:11px 0; }
+  .xm-last{ text-align:center; color:var(--sub); font-size:.8rem; margin-top:10px; }
+  .xm-pill{ flex:none; padding:6px 13px; border-radius:999px; background:var(--accent); color:#fff; font-size:.78rem; font-weight:700; }
+  .xm-pill.done{ background:transparent; color:#1e9e5a; border:1px solid #1e9e5a; }
+  .xm-book .xm-bt small{ display:block; color:var(--sub); font-size:.72rem; margin-top:4px; }
+  .xm-pause{ flex:none; width:34px; height:34px; border-radius:50%; border:1px solid var(--border); background:var(--card-bg); color:var(--text); font-size:.7rem; letter-spacing:-1px; cursor:pointer; }
+  .xm-pause[hidden]{ display:none; }
+  .xm-pz{ padding-top:8vh; }
+  .xm-pzi{ width:72px; height:72px; margin:0 auto 14px; border-radius:50%; background:rgba(224,139,43,.15); color:var(--accent); display:flex; align-items:center; justify-content:center; font-size:1.4rem; letter-spacing:-2px; }
+  .xm-pzb{ display:flex; flex-direction:column; gap:10px; max-width:320px; margin:26px auto 0; }
+  .xm-pzb .cf-btn{ padding:13px 0; font-size:1rem; }
+  .xm-pzb .xm-end{ color:#d64545; border-color:transparent; }
   .xm-bands{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:12px; }
   .xm-band{ padding:12px 10px; border-radius:14px; border:1.5px solid var(--accent); background:transparent; color:var(--text); font:inherit; cursor:pointer; text-align:center; }
   .xm-band:active{ transform:scale(.97); }
@@ -569,12 +587,14 @@
   .xm-res .xm-sc small{ font-size:1.1rem; color:var(--sub); font-weight:600; }
   .xm-res .xm-lv{ font-size:1.3rem; font-weight:800; margin-top:10px; }
   .xm-res .xm-lv span{ display:block; color:var(--sub); font-size:.85rem; font-weight:500; margin-top:2px; }
-  .xm-scale{ position:relative; height:12px; border-radius:9px; background:var(--border); margin:40px 4px 6px; }
+  .xm-scale{ position:relative; height:12px; border-radius:9px; background:var(--border); margin:44px 4px 30px; }
   .xm-scale i{ position:absolute; left:0; top:0; bottom:0; border-radius:9px; background:var(--accent); }
   .xm-scale s{ position:absolute; top:-6px; bottom:-6px; width:2px; background:var(--text); opacity:.5; }
+  .xm-scale s.dn em{ top:auto; bottom:-18px; }
   .xm-scale s em{ position:absolute; top:-18px; left:50%; transform:translateX(-50%); font-size:.7rem; font-style:normal; white-space:nowrap; color:var(--sub); }
   .xm-bands.one{ grid-template-columns:1fr; }
   .xm-ladder{ display:flex; gap:4px; margin:26px 0 0; }
+  .xm-ladder small{ display:block; font-size:.68rem; font-weight:500; opacity:.8; min-height:1em; }
   .xm-ladder span{ flex:1; padding:8px 0; border-radius:10px; background:var(--border); color:var(--sub); font-size:.8rem; font-weight:700; }
   .xm-ladder span.past{ background:rgba(224,139,43,.35); color:var(--text); }
   .xm-ladder span.on{ background:var(--accent); color:#fff; }
@@ -7172,23 +7192,23 @@ const XM_IMG={"A1-p3-13":"data:image/webp;base64,UklGRmRDAABXRUJQVlA4IFhDAADwUgG
 // Simulation: 50 questions in 60 minutes drawn from the five books of a band; a right answer brings a harder question,
 // a wrong one an easier one (an estimate of ability, updated after every answer); at the end a score out of 80 and a level.
 const XM_LS = 'tocfl-xm-v1', XM_BOOKS = ['A1', 'A2', 'A3', 'A4', 'A5', 'B1', 'B2', 'B3', 'B4', 'B5'];
-const XM_SIM_N = 50, XM_SIM_MIN = 60;
+const XM_SIM_N = 35, XM_SIM_MIN = 60, XM_SIM_MIN_N = 25;   // like the reading CAT: about 35 questions (25–40) in 60 minutes
 // correct answers out of 50 → scaled score
 const XM_SCALE = [0, 10, 10, 10, 13, 16, 19, 21, 23, 25, 27, 29, 31, 32, 34, 35, 37, 38, 39, 41, 42, 43, 45, 46, 47, 48, 49, 51, 52, 53, 54, 55, 56, 58, 59, 60, 61, 62, 63, 64, 66, 68, 70, 71, 72, 73, 74, 76, 78, 79, 80];
 const XM_PART = {A: ['Sentence → picture', 'Picture → sentence', 'Picture and gaps', 'Complete the paragraph', 'Reading'], B: ['Fill in the gaps', 'Reading comprehension']};
 const XM_ASK = {A: ['Which picture matches the sentence?', 'Which sentence matches the picture?', 'Which word fills the gap?', 'Which phrase fills the gap?', ''], B: ['Which word fills the gap?', '']};
 Object.assign(ID_TEXT, {"TOCFL reading test": "Ujian membaca TOCFL", "Mock tests from SC-TOP, with explanations": "Soal latihan resmi SC-TOP, lengkap dengan pembahasan", "Test simulation": "Simulasi ujian",
-  "{0} questions · {1} minutes. A right answer brings a harder question, a wrong one an easier one. At the end: your score and level.": "{0} soal · {1} menit dari Band A dan Band B. Jawaban benar membawa soal yang lebih sulit, salah membawa soal yang lebih mudah. Di akhir: skor dan level.",
+  "{0} questions · {1} minutes. A right answer brings a harder question, a wrong one an easier one. At the end: your score and level.": "{0} soal · {1} menit dari Band A dan Band B, seperti TOCFL CAT. Jawaban benar membawa soal yang lebih sulit, salah membawa soal yang lebih mudah. Di akhir: skor dan level.",
   "Levels 1–2 (A1–A2)": "Level 1–2 (A1–A2)", "Levels 3–4 (B1–B2)": "Level 3–4 (B1–B2)", "Last: {0}": "Terakhir: {0}", "Practice with explanations": "Latihan dengan pembahasan",
   "Answer one question at a time; the explanation comes right after.": "Jawab satu per satu; pembahasan langsung muncul setelahnya.", "Vol. {0}": "Vol. {0}", "All parts": "Semua bagian", "Part {0}": "Bagian {0}",
   "Sentence → picture": "Kalimat → gambar", "Picture → sentence": "Gambar → kalimat", "Picture and gaps": "Gambar & isian", "Complete the paragraph": "Melengkapi paragraf", "Reading": "Bacaan", "Fill in the gaps": "Isian rumpang", "Reading comprehension": "Pemahaman bacaan",
   "Which picture matches the sentence?": "Gambar mana yang sesuai dengan kalimat?", "Which sentence matches the picture?": "Kalimat mana yang sesuai dengan gambar?", "Which word fills the gap?": "Kata mana yang mengisi bagian kosong?", "Which phrase fills the gap?": "Frasa mana yang mengisi bagian kosong?",
   "Correct!": "Benar!", "Not quite": "Kurang tepat", "Continue": "Lanjut", "Results": "Hasil", "Done: {0} of {1} right.": "Selesai: {0} dari {1} benar.", "Do again": "Ulangi", "This part is done. Do it again?": "Bagian ini sudah selesai. Ulangi?", "Your answers here will be cleared.": "Jawabanmu di bagian ini akan dihapus.",
-  "End the test?": "Akhiri ujian?", "Questions not answered yet are not counted.": "Soal yang belum dijawab tidak dihitung.", "End": "Akhiri", "Leave the test?": "Keluar dari ujian?", "This simulation will be lost.": "Simulasi ini akan hilang.", "Leave": "Keluar",
+  "End the test?": "Akhiri ujian?", "Questions not answered yet count as wrong.": "Soal yang belum dijawab dihitung salah.", "End": "Akhiri", "Leave the test?": "Keluar dari ujian?", "This simulation will be lost.": "Simulasi ini akan hilang.", "Leave": "Keluar",
   "Score": "Skor", "Right": "Benar", "Answered": "Dijawab", "Time": "Waktu", "Below Level {0}": "Belum mencapai Level {0}", "Level {0}": "Level {0}",
   "An estimate from the official score table and cut scores (reading only). The real test is a computer adaptive test too, so it is close, not exact.": "Perkiraan dari tabel skor dan batas lulus resmi (membaca saja). Ujian aslinya juga adaptif dengan komputer, jadi hasil ini mendekati, bukan pasti.",
   "Review the answers": "Lihat pembahasan", "Back": "Kembali", "Swipe left for the TOCFL test 考": "Geser ke kiri untuk ujian TOCFL 考", "Swipe right to go back to the cards": "Geser ke kanan untuk kembali ke kartu",
-  "Your answer: {0} · Right: {1}": "Jawabanmu: {0} · Benar: {1}", "No answer": "Tidak dijawab", "Previous": "Sebelumnya", "Start the test": "Mulai ujian", "Your level": "Levelmu"});
+  "Your answer: {0} · Right: {1}": "Jawabanmu: {0} · Benar: {1}", "No answer": "Tidak dijawab", "Previous": "Sebelumnya", "Last result: {0}": "Hasil terakhir: {0}", "{0}/{1} done · {2} right": "{0}/{1} dikerjakan · {2} benar", "{0} questions": "{0} soal", "Continue the test": "Lanjutkan ujian", "{0}/{1} answered · {2} left": "{0}/{1} dijawab · sisa {2}", "Start a new test": "Mulai ujian baru", "Like the real test: {0} questions, {1} minutes, no explanations until the end. Get your score (0–700) and level.": "Seperti ujian asli: {0} soal, {1} menit, pembahasan baru di akhir. Dapat skor (0–700) dan level.", "min": "menit", "questions": "soal", "Pick a volume. Answer one question at a time; the explanation comes right after.": "Pilih volume. Jawab satu per satu, pembahasan langsung muncul setelahnya.", "Start a new test?": "Mulai ujian baru?", "The paused test will be lost.": "Ujian yang dijeda akan hilang.", "Test paused": "Ujian dijeda", "The clock is stopped. Your answers are kept, even if you close the app.": "Waktu berhenti. Jawabanmu tetap tersimpan, walaupun aplikasinya ditutup.", "Save and exit": "Simpan & keluar", "End the test and see the score": "Akhiri ujian & lihat skor", "Pause": "Jeda", "Reading score": "Skor membaca", "Fewer than {0} answers: the score is lowered in proportion.": "Kurang dari {0} jawaban: skornya dikurangi sebanding.", "With fewer than {0} answers the score is lowered in proportion.": "Kalau jawabanmu kurang dari {0}, skornya dikurangi sebanding.", "On the scale of the TOCFL reading CAT (0–700; A1 355, A2 450, B1 490, B2 570). An estimate from the mock tests, which go up to B2: close, not exact.": "Pakai skala TOCFL CAT membaca (0–700; A1 355, A2 450, B1 490, B2 570). Ini perkiraan dari soal latihan yang hanya sampai B2: mendekati, bukan pasti.", "Start the test": "Mulai ujian", "Your level": "Levelmu"});
 
 function xmLoad(){ try{ const s = JSON.parse(localStorage.getItem(XM_LS) || '{}'); return {p: s.p || {}, h: s.h || []}; }catch(e){ return {p: {}, h: []}; } }
 function xmSaveSt(s){ try{ localStorage.setItem(XM_LS, JSON.stringify(s)); }catch(e){} }
@@ -7237,18 +7257,30 @@ function xmTheta(resp, mu){
   return sw ? st / sw : mu;
 }
 const XM_MU = -1;   // the test starts in the middle of Band A
-// the score: how many of the 50 questions of a full test of the band this ability gets right, through the official table
-function xmScore(band, theta){
+// the score: the reading CAT's 0–700 scale. The ability is put on it through four anchors: where the mock tests' own
+// score tables reach Band A Level 1 (42) and 2 (60) and Band B Level 3 (48) and 4 (64) stand for the CAT's cut scores
+const XM_LADDER = [['Novice', '準備級', 0], ['A1', '入門級', 355], ['A2', '基礎級', 450], ['B1', '進階級', 490], ['B2', '高階級', 570]];
+const XM_TOP = 609;   // the mock tests reach B2: no score for C1 (610) from them
+// a full mock test of the band: the right answers expected at this ability, through its score table (smooth between rows)
+function xmBandScore(band, theta){
   const all = XM_BOOKS.filter(b => b[0] === band).flatMap(bk => XM_DATA[bk].i.map(it => xmDiff(bk, it)));
-  const e = all.reduce((a, b) => a + 1 / (1 + Math.exp(-(theta - b))), 0) / all.length * 50;
-  return XM_SCALE[Math.max(0, Math.min(50, Math.round(e)))];
+  const e = Math.max(0, Math.min(50, all.reduce((a, b) => a + 1 / (1 + Math.exp(-(theta - b))), 0) / all.length * 50)), f = Math.floor(e);
+  return f >= 50 ? 80 : XM_SCALE[f] + (XM_SCALE[f + 1] - XM_SCALE[f]) * (e - f);
 }
-// the level: Band B's cut scores first, then Band A's; below Level 1: Novice
-const XM_LADDER = [['Novice', '準備級'], ['A1', '入門級'], ['A2', '基礎級'], ['B1', '進階級'], ['B2', '高階級']];
-function xmLevel(theta){
-  const a = xmScore('A', theta), b = xmScore('B', theta);
-  const k = b >= 64 ? 4 : b >= 48 ? 3 : a >= 60 ? 2 : a >= 42 ? 1 : 0;
-  return {k, cefr: XM_LADDER[k][0], zh: XM_LADDER[k][1], band: k >= 3 ? 'B' : 'A', score: k >= 3 ? b : a, a, b};
+let xmAnchors = null;
+function xmToScale(theta){
+  if(!xmAnchors){
+    const at = (band, target) => { let lo = -8, hi = 8; for(let k = 0; k < 50; k++){ const m = (lo + hi) / 2; if(xmBandScore(band, m) < target) lo = m; else hi = m; } return (lo + hi) / 2; };
+    xmAnchors = [[at('A', 42), 355], [at('A', 60), 450], [at('B', 48), 490], [at('B', 64), 570]];
+  }
+  const A = xmAnchors; let k = 0;
+  while(k < A.length - 2 && theta > A[k + 1][0]) k++;
+  const [t0, s0] = A[k], [t1, s1] = A[k + 1];
+  return Math.round(Math.max(0, Math.min(XM_TOP, s0 + (s1 - s0) * (theta - t0) / (t1 - t0))));
+}
+function xmLevel(score){
+  let k = 0; XM_LADDER.forEach((l, i) => { if(score >= l[2]) k = i; });
+  return {k, cefr: XM_LADDER[k][0], zh: XM_LADDER[k][1], score};
 }
 const xmLvName = k => k ? `${tx('Level {0}', k)} · ${XM_LADDER[k][0]}` : 'Novice';
 const xmPartName = (bk, p) => tx(XM_PART[bk[0]][p - 1]);
@@ -7256,22 +7288,35 @@ const xmBookName = bk => `Band ${bk[0]} · ${tx('Vol. {0}', bk[1])}`;
 
 // ---------- the panel ----------
 const examEl = document.getElementById('exam'), xmWrap = document.getElementById('xmWrap');
+const xmClock = ms => `${Math.floor(ms / 60e3)}:${String(Math.floor(ms / 1e3) % 60).padStart(2, '0')}`;
 function xmRender(){
-  const s = xmLoad();
-  const h = s.h.filter(r => r.k != null)[0], last = h ? tx('Last: {0}', `${xmLvName(h.k)} · Band ${h.band} ${h.score}`) : '';
+  const s = xmLoad(), saved = xmRunLoad();
+  const h = s.h.filter(r => r.k != null)[0], last = h && h.v === 700 ? tx('Last result: {0}', `${h.score} · ${XM_LADDER[h.k][0]}`) : '';
   const books = band => XM_BOOKS.filter(b => b[0] === band).map(bk => {
     const p = s.p[bk] || {}, its = XM_DATA[bk].i, done = its.filter(it => p[it[0]] != null).length, right = its.filter(it => p[it[0]] === it[6]).length;
-    return `<button type="button" class="xm-book${done === its.length ? ' done' : ''}" data-bk="${bk}"><span class="ln-seal">${bk}</span><span class="xm-bt"><b>${esc(xmBookName(bk))}</b><i><u style="width:${done / its.length * 100}%"></u></i></span><span class="xm-bn">${done}/${its.length}${done ? `<br>${tx('Right')} ${right}` : ''}</span></button>`;
+    const go = done === its.length ? `<span class="xm-pill done">✓ ${right}/${its.length}</span>` : `<span class="xm-pill">${done ? tx('Continue') : tx('Start')}</span>`;
+    return `<button type="button" class="xm-book${done === its.length ? ' done' : ''}" data-bk="${bk}"><span class="ln-seal">${bk}</span><span class="xm-bt"><b>${tx('Vol. {0}', bk[1])}</b><i><u style="width:${done / its.length * 100}%"></u></i><small>${done ? tx('{0}/{1} done · {2} right', done, its.length, right) : tx('{0} questions', its.length)}</small></span>${go}</button>`;
   }).join('');
+  const sim = saved
+    ? `<button type="button" class="cf-btn cf-yes xm-cta" data-resume="1">▶ ${tx('Continue the test')}<small>${tx('{0}/{1} answered · {2} left', saved.resp.length, XM_SIM_N, xmClock(saved.left))}</small></button>
+       <button type="button" class="cf-btn xm-cta2" data-sim="1">${tx('Start a new test')}</button>`
+    : `<button type="button" class="cf-btn cf-yes xm-cta" data-sim="1">▶ ${tx('Start the test')}</button>`;
   xmWrap.innerHTML = `<div class="xm-head"><b>${tx('TOCFL reading test')} <span lang="zh-TW">閱讀</span></b><span>${tx('Mock tests from SC-TOP, with explanations')}</span></div>
-    <div class="xm-sec"><h3>${tx('Test simulation')}</h3><p>${tx('{0} questions · {1} minutes. A right answer brings a harder question, a wrong one an easier one. At the end: your score and level.', XM_SIM_N, XM_SIM_MIN)}</p>
-      <div class="xm-bands one"><button type="button" class="xm-band" data-sim="1"><b>${tx('Start the test')}</b><span>Novice · A1 · A2 · B1 · B2</span><em>${esc(last)}</em></button></div></div>
-    <div class="xm-sec"><h3>${tx('Practice with explanations')}</h3><p>${tx('Answer one question at a time; the explanation comes right after.')}</p>
-      <div class="xm-bk-h">BAND A</div>${books('A')}<div class="xm-bk-h">BAND B</div>${books('B')}</div>
+    <div class="xm-sec"><div class="xm-sh"><span class="xm-num">1</span><div><h3>${tx('Test simulation')}</h3><p>${tx('Like the real test: {0} questions, {1} minutes, no explanations until the end. Get your score (0–700) and level.', XM_SIM_N, XM_SIM_MIN)}</p></div></div>
+      <div class="xm-chips"><span>⏱ ${XM_SIM_MIN} ${tx('min')}</span><span>${XM_SIM_N} ${tx('questions')}</span><span>Novice → B2</span></div>
+      ${sim}${last ? `<div class="xm-last">${esc(last)}</div>` : ''}</div>
+    <div class="xm-sec"><div class="xm-sh"><span class="xm-num">2</span><div><h3>${tx('Practice with explanations')}</h3><p>${tx('Pick a volume. Answer one question at a time; the explanation comes right after.')}</p></div></div>
+      <div class="xm-bk-h">BAND A · A1–A2</div>${books('A')}<div class="xm-bk-h">BAND B · B1–B2</div>${books('B')}</div>
     <div class="xm-note">TOCFL Reading Mock Test · 國家華語測驗推動工作委員會 (SC-TOP)</div>`;
 }
 xmWrap.addEventListener('click', e => {
-  const sb = e.target.closest('[data-sim]'); if(sb){ xmStartSim(); return; }
+  if(e.target.closest('[data-resume]')){ xmResumeSim(); return; }
+  const sb = e.target.closest('[data-sim]');
+  if(sb){
+    if(xmRunLoad()) askConfirm(tx('Start a new test?'), tx('The paused test will be lost.'), tx('Start')).then(y => { if(y){ xmRunDrop(); xmStartSim(); } });
+    else xmStartSim();
+    return;
+  }
   const bb = e.target.closest('[data-bk]'); if(bb) xmPickPart(bb.dataset.bk);
 });
 function xmPickPart(bk){
@@ -7288,13 +7333,13 @@ function xmPickPart(bk){
 // ---------- a test running ----------
 const xmRun = document.createElement('div');
 xmRun.id = 'xmRun'; xmRun.setAttribute('aria-hidden', 'true');
-xmRun.innerHTML = `<div class="xm-top"><button type="button" class="x-btn" id="xmClose" aria-label="${tx('Close')}">✕</button><div class="ls-bar"><i id="xmBar"></i></div><span class="xm-cnt" id="xmCnt"></span><span class="xm-timer" id="xmTimer"></span></div>
+xmRun.innerHTML = `<div class="xm-top"><button type="button" class="x-btn" id="xmClose" aria-label="${tx('Close')}">✕</button><div class="ls-bar"><i id="xmBar"></i></div><span class="xm-cnt" id="xmCnt"></span><span class="xm-timer" id="xmTimer"></span><button type="button" class="xm-pause" id="xmPause" hidden aria-label="${tx('Pause')}">❚❚</button></div>
   <div class="xm-body" id="xmBody"></div><div class="xm-foot" id="xmFoot"></div>`;
 document.body.appendChild(xmRun);
-const xmBody = xmRun.querySelector('#xmBody'), xmFoot = xmRun.querySelector('#xmFoot'), xmBar = xmRun.querySelector('#xmBar'), xmCnt = xmRun.querySelector('#xmCnt'), xmTimerEl = xmRun.querySelector('#xmTimer');
+const xmPauseEl = xmRun.querySelector('#xmPause'), xmBody = xmRun.querySelector('#xmBody'), xmFoot = xmRun.querySelector('#xmFoot'), xmBar = xmRun.querySelector('#xmBar'), xmCnt = xmRun.querySelector('#xmCnt'), xmTimerEl = xmRun.querySelector('#xmTimer');
 let XR = null, xmTick = null;
 function xmOpen(){ xmRun.classList.add('on'); xmRun.setAttribute('aria-hidden', 'false'); sfxWake && sfxWake(); }
-function xmShut(){ clearInterval(xmTick); XR = null; xmRun.classList.remove('on'); xmRun.setAttribute('aria-hidden', 'true'); xmRender(); }
+function xmShut(){ clearInterval(xmTick); XR = null; xmPauseBtn(false); xmRun.classList.remove('on'); xmRun.setAttribute('aria-hidden', 'true'); xmRender(); }
 
 // a text: blanks ［n］ as boxes (the one asked now lit), gaps ＿＿ as a line
 function xmText(t, cur){
@@ -7329,7 +7374,7 @@ function xmQHTML(bk, i, sel, reveal){
 function xmExpHTML(it, sel){
   const L = 'ABCDEF', ok = sel === it[6];
   const lines = it[7].split('\n').flatMap(l => l.split(/ (?=✘)/)).map(l => {
-    let x = esc(l).replace(/^([^:：]{2,22}):/, '<b>$1:</b>');
+    let x = esc(l).replace(/^([✔✘] \([A-F]\)[^:：\d]{0,14}|[A-Za-z][A-Za-z ]{1,24}):/, '<b>$1:</b>');
     return `<p>${x}</p>`;
   }).join('');
   const head = sel == null ? tx('Your answer: {0} · Right: {1}', tx('No answer'), L[it[6]]) : ok ? tx('Correct!') : tx('Not quite');
@@ -7385,14 +7430,47 @@ function xmPracticeEnd(){
 // Simulation
 function xmStartSim(){
   const units = xmUnits(XM_BOOKS);
-  XR = {sim: true, units, used: new Set(), queue: [], resp: [], theta: XM_MU, t0: Date.now(), end: Date.now() + XM_SIM_MIN * 60e3, sel: null, cur: null, done: false};
-  xmOpen(); xmSimNext();
+  XR = {sim: true, units, used: new Set(), queue: [], resp: [], theta: XM_MU, end: Date.now() + XM_SIM_MIN * 60e3, sel: null, cur: null, done: false, paused: false};
+  xmRunDrop(); xmOpen(); xmPauseBtn(true); xmSimNext(); xmRunSave();
   clearInterval(xmTick); xmTick = setInterval(xmSimTick, 500); xmSimTick();
 }
+// a test in progress is kept in this browser (after every answer and on pause), so it can go on later
+const XM_RUN = 'tocfl-xm-run-v1';
+function xmRunLoad(){ try{ const r = JSON.parse(localStorage.getItem(XM_RUN) || 'null'); return r && r.resp && r.cur ? r : null; }catch(e){ return null; } }
+function xmRunDrop(){ try{ localStorage.removeItem(XM_RUN); }catch(e){} }
+function xmRunSave(){
+  const r = XR; if(!r || !r.sim || r.done || !r.cur) return;
+  const left = r.paused ? r.left : Math.max(0, r.end - Date.now());
+  try{ localStorage.setItem(XM_RUN, JSON.stringify({resp: r.resp, queue: r.queue, used: [...r.used], cur: r.cur, theta: r.theta, left})); }catch(e){}
+}
+function xmResumeSim(){
+  const d = xmRunLoad(); if(!d) return;
+  XR = {sim: true, units: xmUnits(XM_BOOKS), used: new Set(d.used), queue: d.queue, resp: d.resp, theta: d.theta, end: Date.now() + d.left, sel: null, cur: null, done: false, paused: false};
+  xmOpen(); xmPauseBtn(true);
+  XR.queue.unshift(d.cur); xmSimNext();
+  clearInterval(xmTick); xmTick = setInterval(xmSimTick, 500); xmSimTick();
+}
+function xmPauseBtn(on){ xmPauseEl.hidden = !on; }
+// pause: the clock stops and the question is hidden; go on, keep it for later, or end it now
+function xmPause(){
+  const r = XR; if(!r || !r.sim || r.done || r.paused) return;
+  r.paused = true; r.left = Math.max(0, r.end - Date.now()); xmRunSave();
+  xmTimerEl.textContent = xmClock(r.left);
+  xmShow(`<div class="xm-res xm-pz"><div class="xm-pzi">❚❚</div><div class="xm-lv">${tx('Test paused')}<span>${tx('{0}/{1} answered · {2} left', r.resp.length, XM_SIM_N, xmClock(r.left))}</span></div>
+    <p>${tx('The clock is stopped. Your answers are kept, even if you close the app.')}</p>
+    <div class="xm-pzb"><button type="button" class="cf-btn cf-yes" id="xmGoOn">▶ ${tx('Continue')}</button><button type="button" class="cf-btn" id="xmLater">${tx('Save and exit')}</button><button type="button" class="cf-btn xm-end" id="xmEndNow">${tx('End the test and see the score')}</button></div></div>`, '');
+}
+function xmUnpause(){
+  const r = XR; if(!r || !r.paused) return;
+  r.paused = false; r.end = Date.now() + r.left;
+  r.queue.unshift(r.cur); xmSimNext(); xmSimTick();
+}
+document.addEventListener('visibilitychange', () => { if(document.hidden && XR && XR.sim && !XR.done && !XR.paused) xmPause(); });   // the phone locked, another app: the clock stops
 function xmSimTick(){
   const r = XR; if(!r || !r.sim || r.done){ clearInterval(xmTick); return; }
+  if(r.paused) return;
   const left = Math.max(0, r.end - Date.now());
-  xmTimerEl.textContent = `${Math.floor(left / 60e3)}:${String(Math.floor(left / 1e3) % 60).padStart(2, '0')}`;
+  xmTimerEl.textContent = xmClock(left);
   xmTimerEl.classList.toggle('low', left < 5 * 60e3);
   if(!left){ toast(tx('Time is up')); xmSimFinish(); }
 }
@@ -7426,27 +7504,29 @@ function xmSimConfirm(){
   const it = xmIt(r.cur.bk, r.cur.i);
   r.resp.push({bk: r.cur.bk, i: r.cur.i, sel: r.sel, ok: r.sel === it[6], b: xmDiff(r.cur.bk, it)});
   r.theta = xmTheta(r.resp, XM_MU);
-  xmSimNext();
+  xmSimNext(); xmRunSave();
 }
 function xmSimFinish(){
   const r = XR; if(!r || r.done) return;
   r.done = true; clearInterval(xmTick);
-  const theta = r.resp.length ? r.theta : -6;
-  const lv = xmLevel(theta), right = r.resp.filter(x => x.ok).length;
-  const mins = Math.round((Math.min(Date.now(), r.end) - r.t0) / 60e3);
-  const s = xmLoad(); s.h.unshift({k: lv.k, band: lv.band, score: lv.score, a: lv.a, b: lv.b, right, n: r.resp.length, d: Date.now()}); s.h = s.h.slice(0, 20); xmSaveSt(s);
+  // fewer than 25 answers: the score is lowered in proportion, as in the CAT
+  const n = r.resp.length, raw = n ? xmToScale(r.theta) : 0, score = Math.round(raw * Math.min(1, n / XM_SIM_MIN_N));
+  const lv = xmLevel(score), right = r.resp.filter(x => x.ok).length;
+  const mins = Math.round((XM_SIM_MIN * 60e3 - (r.paused ? r.left : Math.max(0, r.end - Date.now()))) / 60e3);
+  xmRunDrop(); xmPauseBtn(false);
+  const s = xmLoad(); s.h.unshift({v: 700, k: lv.k, score, right, n: r.resp.length, d: Date.now()}); s.h = s.h.slice(0, 20); xmSaveSt(s);
   r.res = {lv, right, mins};
   xmSimResult();
 }
 function xmSimResult(){
   const r = XR, {lv, right, mins} = r.res;
   xmBar.style.width = '100%'; xmCnt.textContent = ''; xmTimerEl.textContent = '';
-  xmShow(`<div class="xm-res"><div class="xm-tag">${tx('Your level')}</div><div class="xm-sc">${lv.cefr}</div>
+  xmShow(`<div class="xm-res"><div class="xm-tag">${tx('Reading score')}</div><div class="xm-sc">${lv.score}<small> / 700</small></div>
     <div class="xm-lv">${esc(xmLvName(lv.k))} <span lang="zh-TW">${lv.zh}</span></div>
-    <div class="xm-ladder">${XM_LADDER.map((l, k) => `<span class="${k < lv.k ? 'past' : k === lv.k ? 'on' : ''}">${l[0]}</span>`).join('')}</div>
-    <div class="xm-bsc"><span>Band A <b>${lv.a}</b>/80</span><span>Band B <b>${lv.b}</b>/80</span></div>
+    <div class="xm-scale"><i style="width:${lv.score / 700 * 100}%"></i>${XM_LADDER.slice(1).map((l, k) => `<s class="${k % 2 ? 'dn' : ''}" style="left:${l[2] / 700 * 100}%"><em>${l[0]} ${l[2]}</em></s>`).join('')}</div>
+    ${r.resp.length < XM_SIM_MIN_N ? `<p>${tx('Fewer than {0} answers: the score is lowered in proportion.', XM_SIM_MIN_N)}</p>` : ''}
     <div class="xm-stats"><div><b>${right}/${r.resp.length}</b><span>${tx('Right')}</span></div><div><b>${r.resp.length}/${XM_SIM_N}</b><span>${tx('Answered')}</span></div><div><b>${mins}′</b><span>${tx('Time')}</span></div></div>
-    <p>${tx('An estimate from the official score table and cut scores (reading only). The real test is a computer adaptive test too, so it is close, not exact.')}</p></div>`,
+    <p>${tx('On the scale of the TOCFL reading CAT (0–700; A1 355, A2 450, B1 490, B2 570). An estimate from the mock tests, which go up to B2: close, not exact.')}</p></div>`,
     (r.resp.length ? `<button type="button" class="cf-btn" id="xmReview">${tx('Review the answers')}</button>` : '') + xmFootBtn(tx('Close'), 'xmDone'));
 }
 // after a simulation: every answer with its explanation, back and forth
@@ -7459,6 +7539,13 @@ function xmReview(k){
   r.sim = true;
 }
 xmBody.addEventListener('click', e => {
+  const pb = e.target.closest('#xmGoOn, #xmLater, #xmEndNow');
+  if(pb){
+    if(pb.id === 'xmGoOn') xmUnpause();
+    else if(pb.id === 'xmLater'){ xmRunSave(); xmShut(); }
+    else askConfirm(tx('End the test?'), tx('With fewer than {0} answers the score is lowered in proportion.', XM_SIM_MIN_N), tx('End')).then(y => { if(y) xmSimFinish(); });
+    return;
+  }
   const b = e.target.closest('.xm-opt'); if(!b || b.disabled || !XR) return;
   const k = +b.dataset.k;
   if(XR.sim && !XR.done) xmSimSelect(k); else if(!XR.sim) xmPracticeAnswer(k);
@@ -7472,12 +7559,13 @@ xmFoot.addEventListener('click', e => {
   else if(b.id === 'xmRvNext') xmReview(XR.rv + 1);
   else if(b.id === 'xmRes') xmSimResult();
 });
+xmPauseEl.addEventListener('click', xmPause);
 document.getElementById('xmClose').addEventListener('click', () => {
   if(!XR){ xmShut(); return; }
   if(XR.sim && !XR.done){
-    if(!XR.resp.length){ xmShut(); return; }
-    askConfirm(tx('End the test?'), tx('Questions not answered yet are not counted.'), tx('End')).then(y => { if(y) xmSimFinish(); });
-    return;
+    if(XR.paused){ xmRunSave(); xmShut(); return; }   // ✕ on the pause screen: keep it for later
+    if(!XR.resp.length){ xmRunDrop(); xmShut(); return; }
+    xmPause(); return;
   }
   xmShut();
 });
