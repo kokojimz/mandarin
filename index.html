@@ -1774,10 +1774,10 @@ const MASCOT_FPS = 30, MASCOT_PX = 256, MASCOT_COLS = 8, MASCOT_CELL = 264;   //
 const MASCOT_POSE_ANIM = {
   idle: {hold: ['talk', 0]}, thinking: {hold: ['talk', 0]}, surprised: {hold: ['happy', 46]},
   talking: {clip: 'talk', fps: 40, times: 0, hold: ['talk', 0]},   // chattier than the rest
-  happy: {clip: 'happy', fps: 42, hold: ['happy', 55]},   // the hop: brisker than the rest
-  celebrating: {clip: 'happy', fps: 42, times: 2, hold: ['happy', 55]},
-  sad: {clip: 'sad', to: 28, hold: ['sad', 28]},
-  waving: {clip: 'wave', hold: ['talk', 0]}
+  happy: {clip: 'happy', fps: 52, hold: ['happy', 55]},   // the hop: brisker than the rest
+  celebrating: {clip: 'happy', fps: 52, times: 2, hold: ['happy', 55]},
+  sad: {clip: 'sad', fps: 40, to: 28, hold: ['sad', 28]},
+  waving: {clip: 'wave', fps: 40, hold: ['talk', 0]}
 };
 const mascotSheets = {};
 // a sheet, decoded once for the whole app: {ready, img, wait}. The brown bear is made from the black one when first needed
@@ -1813,8 +1813,8 @@ const mascotFrames = k => MASCOT_IMG[`n-${k}`] || 56;
 //   el.stop();
 const MASCOT_CLIPS = {
   idle: {pose: 'idle'}, talking: {pose: 'talking'}, thinking: {pose: 'thinking'},
-  hello: {pose: 'waving', ms: 1900}, correct: {pose: 'happy', ms: 1650},
-  celebration: {pose: 'celebrating', ms: 3000}, reassure: {pose: 'sad', ms: 2100},
+  hello: {pose: 'waving', ms: 1500}, correct: {pose: 'happy', ms: 1300},
+  celebration: {pose: 'celebrating', ms: 2600}, reassure: {pose: 'sad', ms: 1600},
   sad: {pose: 'sad'}, surprised: {pose: 'surprised', move: 'pop', ms: 800}
 };
 const MASCOT_EVENTS = {'lesson:correct': 'correct', 'lesson:incorrect': 'reassure', 'lesson:streak': 'celebration', 'lesson:loading': 'thinking',
