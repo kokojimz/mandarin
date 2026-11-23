@@ -778,6 +778,11 @@
   .ln-bar{ height:8px; border-radius:9px; background:var(--border); margin-top:8px; overflow:hidden; }
   .ln-bar i{ display:block; height:100%; background:var(--accent); border-radius:9px; }
   .ln-unit{ margin:16px 0 0; padding:12px 12px; border-radius:14px; background:var(--card-bg); border:1px solid var(--border); }
+  .ln-unit[data-u]{ position:relative; padding-right:44px; cursor:pointer; -webkit-tap-highlight-color:transparent; user-select:none; }
+  .ln-unit[data-u]:active{ opacity:.8; }
+  .ln-chev{ position:absolute; right:12px; top:50%; width:22px; height:22px; margin-top:-11px; color:var(--sub); transition:transform .2s ease; }
+  .ln-unit.open .ln-chev{ transform:rotate(180deg); }
+  .ln-path.shut{ display:none; }
   .ln-unit .ln-uk{ font-size:.72rem; opacity:.75; }
   .ln-unit .ln-un{ font-weight:700; font-size:1rem; margin-top:1px; }
   .ln-unit .ln-uw{ font-size:.85rem; opacity:.8; margin-top:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
@@ -7016,6 +7021,7 @@ function lnReset(){
   askConfirm(tx('Reset progress?'), tx('All lessons, stars, the streak and the daily reviews start over, and the Learn group is emptied. This cannot be undone'), tx('Reset'), true).then(ok => {
     if(!ok) return;
     lnSave({done: {}, days: {}, stars: {}, miss: {}, srs: {}});
+    try{ localStorage.removeItem(LS_LNOPEN); }catch(e){}
     const g = CUSTOM.groups.find(x => isLearnGroup(x.name));
     if(g){ CUSTOM.groups = CUSTOM.groups.filter(x => x !== g); active.delete(g.id); if(!active.size) LEVELS.forEach(l => { if(l[0] !== g.id) active.add(l[0]); }); applyCustomChange(); }
     lnRender();
@@ -7049,6 +7055,7 @@ function lnRender(){
   if(learned) html += due ? `<button type="button" class="ln-daily" id="lnDaily"><span class="ln-seal" lang="zh-TW">溫</span><span class="ln-tx"><span class="ln-t">${tx('Daily review')}</span><span class="ln-s">${tx('{0} words to review today', due)}</span></span><span class="ln-go">${tx('Start')}</span></button>`
     : `<div class="ln-daily done"><span class="ln-seal" lang="zh-TW">溫</span><span class="ln-tx"><span class="ln-t">${tx('Daily review')}</span><span class="ln-s">${tx('All caught up for today')}</span></span><span class="ln-r">${lnIcon.check}</span></div>`;
   let lastLv = '', lastUnit = '', step = 0, lessonNo = 0;
+  const opened = lnOpenLoad(), curUk = cur >= 0 && !list[cur].test && !list[cur].exam && !list[cur].tryout ? list[cur].lv + '.' + list[cur].ui : '';
   list.forEach((l, i) => {
     if(l.lv !== lastLv){
       lastLv = l.lv;
@@ -7063,9 +7070,10 @@ function lnRender(){
       lastUnit = uk;
       if(!l.test && !l.exam && !l.tryout){
         const t = LN_THEMES[l.lv][l.ui], here = list.findIndex(x => x.lv === l.lv && x.ui === l.ui && !s.done[x.key]) === cur && cur >= 0 && list[cur].ui === l.ui && list[cur].lv === l.lv;
-        html += `<div class="ln-unit${here ? ' cur' : ''}"><div class="ln-uk">${tx('Unit {0}', l.ui + 1)}</div><div class="ln-un">${esc(l.name)}</div><div class="ln-uw" lang="zh-TW">${t[2].slice(0, 6).map(esc).join(' · ')}</div></div>`;
-      }
-      html += '<div class="ln-path">';
+        const open = opened[uk] != null ? opened[uk] : uk === curUk;   // at first only the unit you are in is open
+        html += `<div class="ln-unit${here ? ' cur' : ''}${open ? ' open' : ''}" data-u="${uk}" role="button" tabindex="0" aria-expanded="${open}"><div class="ln-uk">${tx('Unit {0}', l.ui + 1)}</div><div class="ln-un">${esc(l.name)}</div><div class="ln-uw" lang="zh-TW">${t[2].slice(0, 6).map(esc).join(' · ')}</div><svg class="ln-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>`;
+        html += `<div class="ln-path${open ? '' : ' shut'}">`;
+      } else html += '<div class="ln-path">';
     }
     const st = s.done[l.key] ? 'done' : i === cur ? 'cur' : 'lock', sn = s.stars[l.key] || 0;
     if(l.words) lessonNo++;
@@ -7079,6 +7087,15 @@ function lnRender(){
   });
   html += `</div><div class="ln-end">TOCFL N1 → A2 · ${tx('{0} lessons', list.filter(l => l.words).length)}</div>`;
   lnWrap.innerHTML = html;
+}
+// which units are opened / closed with their arrow (kept in this browser; a unit never touched: open only if you are in it)
+const LS_LNOPEN = 'tocfl-learn-open-v1';
+function lnOpenLoad(){ try{ return JSON.parse(localStorage.getItem(LS_LNOPEN) || '{}') || {}; }catch(e){ return {}; } }
+function lnToggleUnit(h){
+  const open = !h.classList.contains('open'), o = lnOpenLoad();
+  o[h.dataset.u] = open; try{ localStorage.setItem(LS_LNOPEN, JSON.stringify(o)); }catch(e){}
+  h.classList.toggle('open', open); h.setAttribute('aria-expanded', open);
+  const p = h.nextElementSibling; if(p && p.classList.contains('ln-path')) p.classList.toggle('shut', !open);
 }
 const learnEl = document.getElementById('learn'), lnWrap = document.getElementById('lnWrap');
 // Learn lives to the left of the cards: swipe right to pull it in, swipe left to push it away. It follows the finger and
@@ -7188,11 +7205,16 @@ function lnHint(which){
 lnHint('open'); lnHint('xopen');
 lnWrap.addEventListener('click', e => {
   if(e.target.closest('#lnReset')){ lnReset(); return; }
+  const uh = e.target.closest('.ln-unit[data-u]'); if(uh){ lnToggleUnit(uh); return; }
   if(e.target.closest('#lnDaily')){ lsStart({key: 'daily', daily: true, lv: '', name: tx('Daily review')}); return; }
   const n = e.target.closest('.ln-node'); if(!n) return;
   const l = lnList()[+n.dataset.i];
   if(n.classList.contains('lock') && !l.test){ toast(tx('Finish the lesson before it first')); return; }   // a test is always open: pass it to skip ahead
   lnOpenLesson(l);
+});
+lnWrap.addEventListener('keydown', e => {   // a unit's header from the keyboard
+  const uh = (e.key === 'Enter' || e.key === ' ') && e.target.closest('.ln-unit[data-u]');
+  if(uh){ e.preventDefault(); lnToggleUnit(uh); }
 });
 document.addEventListener('keydown', e => {
   if(e.key === 'Escape' && examEl.classList.contains('on') && !xmRun.classList.contains('on') && !fmOverlay.classList.contains('on') && !cfOverlay.classList.contains('on')){ closeExam(); return; }
