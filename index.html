@@ -680,6 +680,8 @@
   .ls-bear .msc{ transform-origin:50% 100%; }
   tocfl-mascot{ display:block; position:relative; width:100%; height:100%; -webkit-user-select:none; user-select:none; }
   tocfl-mascot canvas{ position:absolute; left:-20.3125%; bottom:-7.8125%; width:140.625%; height:140.625%; pointer-events:none; }   /* the frames have room above the bear for a hop, and an empty margin all round (Safari's drop-shadow wraps an edge the picture touches) */
+  tocfl-mascot canvas{ filter:drop-shadow(0 0 1px rgba(255,255,255,.5)) drop-shadow(0 0 4px rgba(255,255,255,.12)); }   /* a soft light rim round the bear */
+  :root[data-theme="light"] tocfl-mascot canvas{ filter:drop-shadow(0 0 1px rgba(0,0,0,.35)) drop-shadow(0 0 4px rgba(0,0,0,.1)); }   /* on a light page: a soft dark one */
   tocfl-mascot .m-rig{ position:absolute; inset:0; transform-origin:50% 100%; }
   tocfl-mascot[pose="idle"] .m-rig:not([class*=" m-"]){ animation:mBreathe 3.8s ease-in-out infinite alternate; }   /* resting: it breathes */
   tocfl-mascot[pose="thinking"] .m-rig:not([class*=" m-"]){ animation:mThink 3s ease-in-out infinite alternate; }
