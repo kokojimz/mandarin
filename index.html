@@ -1863,7 +1863,7 @@ class TocflMascot extends HTMLElement {
       if(!s.ready){ this._raf = requestAnimationFrame(tick); return; }   // wait for the sheet, then start at its first frame
       if(!t0) t0 = now;
       const f = Math.floor((now - t0) / 1000 * (a.fps || MASCOT_FPS));
-      if(times && f >= len * times){ this._raf = 0; this.draw(...a.hold); return; }
+      if(times && f >= len * times){ this._raf = 0; this.draw(...a.hold); if(this._p === 'waving') this.settle(); return; }   // the paw down: a little bounce
       this.draw(k, from + f % len);
       this._raf = requestAnimationFrame(tick);
     };
