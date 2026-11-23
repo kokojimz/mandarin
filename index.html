@@ -679,7 +679,7 @@
   .ls-bear{ position:relative; width:108px; height:108px; }
   .ls-bear .msc{ transform-origin:50% 100%; }
   tocfl-mascot{ display:block; position:relative; width:100%; height:100%; -webkit-user-select:none; user-select:none; }
-  tocfl-mascot canvas{ position:absolute; left:-12.5%; bottom:0; width:125%; height:125%; pointer-events:none; }   /* the frames have room above the bear for a hop */
+  tocfl-mascot canvas{ position:absolute; left:-20.3125%; bottom:-7.8125%; width:140.625%; height:140.625%; pointer-events:none; }   /* the frames have room above the bear for a hop, and an empty margin all round (Safari's drop-shadow wraps an edge the picture touches) */
   :root[data-theme="dark"] tocfl-mascot canvas, :root[data-theme="dark"] .bear-ic{ filter:drop-shadow(0 0 1px rgba(255,255,255,.5)) drop-shadow(0 0 4px rgba(255,255,255,.12)); }   /* a black bear on a dark page: a soft light rim */
   tocfl-mascot .m-rig{ position:absolute; inset:0; transform-origin:50% 100%; }
   tocfl-mascot[pose="idle"] .m-rig:not([class*=" m-"]){ animation:mBreathe 3.8s ease-in-out infinite alternate; }   /* resting: it breathes */
@@ -1756,12 +1756,12 @@ const MASCOT_IMG={"bear-head":"data:image/webp;base64,UklGRhQOAABXRUJQVlA4WAoAAA
 const MASCOT_POSES = ['idle', 'talking', 'happy', 'celebrating', 'sad', 'thinking', 'surprised', 'waving'];
 const mascotVariant = v => v === 'brown' ? 'brown' : 'bear';   // the black bear; 'brown': the same bear in brown (a dialog's second voice)
 const MASCOT_FPS = 30, MASCOT_PX = 256, MASCOT_COLS = 8, MASCOT_CELL = 264;   // 4 px of empty room round each frame: no edge of the next one bleeds in
-// clip: the sheet; from/to: the frames played; times: how often (0 = loop); hold: the frame it stays on after
+// clip: the sheet; fps: its own speed; from/to: the frames played; times: how often (0 = loop); hold: the frame it stays on after
 const MASCOT_POSE_ANIM = {
   idle: {hold: ['talk', 0]}, thinking: {hold: ['talk', 0]}, surprised: {hold: ['happy', 46]},
   talking: {clip: 'talk', times: 0, hold: ['talk', 0]},
-  happy: {clip: 'happy', hold: ['happy', 55]},
-  celebrating: {clip: 'happy', times: 2, hold: ['happy', 55]},
+  happy: {clip: 'happy', fps: 42, hold: ['happy', 55]},   // the hop: brisker than the rest
+  celebrating: {clip: 'happy', fps: 42, times: 2, hold: ['happy', 55]},
   sad: {clip: 'sad', to: 28, hold: ['sad', 28]},
   waving: {clip: 'wave', hold: ['talk', 0]}
 };
@@ -1799,8 +1799,8 @@ const mascotFrames = k => MASCOT_IMG[`n-${k}`] || 56;
 //   el.stop();
 const MASCOT_CLIPS = {
   idle: {pose: 'idle'}, talking: {pose: 'talking'}, thinking: {pose: 'thinking'},
-  hello: {pose: 'waving', ms: 1900}, correct: {pose: 'happy', ms: 2100},
-  celebration: {pose: 'celebrating', ms: 4000}, reassure: {pose: 'sad', ms: 2100},
+  hello: {pose: 'waving', ms: 1900}, correct: {pose: 'happy', ms: 1650},
+  celebration: {pose: 'celebrating', ms: 3000}, reassure: {pose: 'sad', ms: 2100},
   sad: {pose: 'sad'}, surprised: {pose: 'surprised', move: 'pop', ms: 800}
 };
 const MASCOT_EVENTS = {'lesson:correct': 'correct', 'lesson:incorrect': 'reassure', 'lesson:streak': 'celebration', 'lesson:loading': 'thinking',
@@ -1812,7 +1812,7 @@ class TocflMascot extends HTMLElement {
   render(){
     if(!this.rig){
       this.rig = document.createElement('div'); this.rig.className = 'm-rig';
-      this.cv = document.createElement('canvas'); this.cv.width = this.cv.height = MASCOT_PX;
+      this.cv = document.createElement('canvas'); this.cv.width = this.cv.height = MASCOT_PX + 32;
       this.ctx = this.cv.getContext('2d');
       this.rig.append(this.cv); this.append(this.rig);
       this.rig.addEventListener('animationend', e => { if(e.target === this.rig) this.rig.className = 'm-rig'; });   // a movement done: back to resting
@@ -1828,8 +1828,8 @@ class TocflMascot extends HTMLElement {
     if(!s.ready){ s.wait.push(() => { if(this._p && !this._raf) this.draw(...this.holdOf(this._p)); }); return; }
     if(this._shown === k + i) return;
     this._shown = k + i;
-    this.ctx.clearRect(0, 0, MASCOT_PX, MASCOT_PX);
-    this.ctx.drawImage(s.img, (i % MASCOT_COLS) * MASCOT_CELL + 4, Math.floor(i / MASCOT_COLS) * MASCOT_CELL + 4, MASCOT_PX, MASCOT_PX, 0, 0, MASCOT_PX, MASCOT_PX);
+    this.ctx.clearRect(0, 0, MASCOT_PX + 32, MASCOT_PX + 32);
+    this.ctx.drawImage(s.img, (i % MASCOT_COLS) * MASCOT_CELL + 4, Math.floor(i / MASCOT_COLS) * MASCOT_CELL + 4, MASCOT_PX, MASCOT_PX, 16, 16, MASCOT_PX, MASCOT_PX);
   }
   start(){
     cancelAnimationFrame(this._raf); this._raf = 0;
@@ -1843,7 +1843,7 @@ class TocflMascot extends HTMLElement {
       const s = mascotSheet(k, this._v);
       if(!s.ready){ this._raf = requestAnimationFrame(tick); return; }   // wait for the sheet, then start at its first frame
       if(!t0) t0 = now;
-      const f = Math.floor((now - t0) / 1000 * MASCOT_FPS);
+      const f = Math.floor((now - t0) / 1000 * (a.fps || MASCOT_FPS));
       if(times && f >= len * times){ this._raf = 0; this.draw(...a.hold); return; }
       this.draw(k, from + f % len);
       this._raf = requestAnimationFrame(tick);
