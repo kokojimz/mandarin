@@ -4015,7 +4015,7 @@ if(HAS_TTS) document.addEventListener('visibilitychange', () => {
   loadVoices();   // the voice objects can go stale too
 });
 function unlockSpeech(){
-  if(speechUnlocked || !HAS_TTS || !SOUND_ON) return;
+  if(speechUnlocked || !HAS_TTS || !SOUND_ON || !IS_IOS) return;   // only iPhone needs it; on Edge the silent " " can hang the online voice
   try{ const u = new SpeechSynthesisUtterance(' '); u.volume = 0; window.speechSynthesis.speak(u); speechUnlocked = true; }catch(e){}
 }
 // a ▶︎ / ■ button: plays the text, or stops it while it plays; does nothing with the sound off (the ▶︎ is dimmed then)
@@ -4025,7 +4025,10 @@ function toggleSpeak(btn, text){ if(!SOUND_ON) return; if(btn.classList.contains
 function speak(text, btn, after){   // after: once the speech has ended (or failed / was stopped)   // btn: the ▶︎ that shows ■ while speaking (none for the quiz's automatic answer)
   if(!HAS_TTS || !(speakManual ? SOUND_ON : ttsOn())) return;
   stopSpeech();
-  const ss = window.speechSynthesis, v = pickVoice();
+  const ss = window.speechSynthesis, picked = pickVoice();
+  // an online voice that did not start before (Edge's "Online (Natural)" voices): the computer's own voice straight away
+  const localOf = x => VOICES.find(y => y !== x && y.localService && isMandarin(y));
+  const v = picked && picked.localService === false && speak.badOnline && localOf(picked) || picked;
   const done = ()=>{ setIdle(btn); if(playingBtn === btn) playingBtn = null; if(after){ const f = after; after = null; f(); } };
   let t0 = 0, ended = false; const seq = ++speakSeq;
   const make = (vv = v) => {
@@ -4045,10 +4048,11 @@ function speak(text, btn, after){   // after: once the speech has ended (or fail
   const online = v && v.localService === false;
   setTimeout(() => {
     if(t0 || ended || seq !== speakSeq) return;
-    const local = online && VOICES.find(x => x !== v && x.localService && isMandarin(x));
+    const local = online && localOf(v);
+    if(local) speak.badOnline = true;                // for the rest of this visit: no more waiting for it
     try{ ss.cancel(); ss.resume(); ss.speak(make(local || v)); }catch(e){ done(); }
     setTimeout(() => { if(!t0 && !ended && seq === speakSeq){ ended = true; done(); } }, 4000);   // still nothing: give up quietly
-  }, online ? 3500 : 1500);
+  }, online ? 2500 : 1500);
 }
 
 // ---- right / wrong sounds in the quiz: short tones made with Web Audio (no audio files); they follow Settings › Sound ----
