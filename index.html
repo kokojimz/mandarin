@@ -680,7 +680,7 @@
   .ls-bear .msc{ transform-origin:50% 100%; }
   tocfl-mascot{ display:block; position:relative; width:100%; height:100%; -webkit-user-select:none; user-select:none; }
   tocfl-mascot canvas{ position:absolute; left:-20.3125%; bottom:-7.8125%; width:140.625%; height:140.625%; pointer-events:none; }   /* the frames have room above the bear for a hop, and an empty margin all round (Safari's drop-shadow wraps an edge the picture touches) */
-  tocfl-mascot canvas{ filter:drop-shadow(0 0 1px rgba(255,255,255,.28)); }   /* a soft light rim round the bear, on dark and light pages */
+  tocfl-mascot canvas{ filter:drop-shadow(0 0 1px rgba(255,255,255,.5)) drop-shadow(0 0 4px rgba(255,255,255,.12)); }   /* a soft light rim round the bear, on dark and light pages */
   tocfl-mascot .m-rig{ position:absolute; inset:0; transform-origin:50% 100%; }
   tocfl-mascot[pose="idle"] .m-rig:not([class*=" m-"]){ animation:mBreathe 3.8s ease-in-out infinite alternate; }   /* resting: it breathes */
   tocfl-mascot[pose="thinking"] .m-rig:not([class*=" m-"]){ animation:mThink 3s ease-in-out infinite alternate; }
@@ -8298,6 +8298,13 @@ function lsTrWords(t){
   return new Set(t.toLowerCase().replace(/[’']s\b/g, ' is').replace(/n[’']t\b/g, ' not').replace(/[’']re\b/g, ' are').replace(/[’']m\b/g, ' am').replace(/[’']ll\b/g, ' will').replace(/[’']ve\b/g, ' have').replace(/[’']d\b/g, ' would')
     .replace(/[^a-z0-9\s]/g, ' ').split(/\s+/).filter(Boolean));
 }
+// the words that carry the meaning ("I have a question." → question): two answers about the same thing are too close to tell
+const LS_STOP = new Set(('i you he she it we they me him us them my your his her its our their mine yours a an the is am are was were be been being do does did not no have has had to of in on at for from and or but with this that these those would will can could may might should shall must please very so too there here what who whom where when how why which want wants like would just also really some any one ' +
+  'aku saya kamu anda dia ia kami kita kalian mereka ini itu yang di ke dari dan atau tapi tetapi dengan untuk adalah ialah sudah telah akan tidak bukan ' +
+  'ada punya sangat sekali amat mau ingin bisa dapat boleh apa apakah siapa siapakah mana kapan bagaimana kenapa mengapa juga saja sedang pernah satu sebuah seorang semua lagi kepada kepadaku kepadamu kepadanya pada hal ya').split(' '));
+// Indonesian words to their root, roughly (bertanya, pertanyaan → tanya)
+const lsIdRoot = w => { if(w.length < 6) return w; const a = w.replace(/^(memper|diper|ber|per|ter|meng|mem|men|me|di|ke|se)/, ''), b = a.length >= 4 ? a : w, c = b.replace(/(kan|an)$/, ''); return c.length >= 4 ? c : b; };
+function lsTrCore(t){ return new Set([...lsTrWords(t)].filter(w => !LS_STOP.has(w)).map(w => lsIdRoot(w.length > 3 ? w.replace(/(es|s)$/, '') : w)).filter(w => w && !LS_STOP.has(w))); }
 function lsSentence(q){
   const {r, k, p} = q, e = p.e, tr = exTrans(e);
   let body = '', opts = null;
@@ -8310,12 +8317,19 @@ function lsSentence(q){
       .map(x => ({x, sc: lnSeg(x.hz).filter(t => !t.p && mine.has(t.w)).length * 2 + (/[？?]$/.test(x.hz) === qm ? 1 : 0) + Math.random()}))
       .sort((a, b) => b.sc - a.sc);
     // no other answer that means the same: "What is your name?" next to "What's your name?", or 你叫什麼名字 next to 請問你叫什麼名字
-    const core = h => h.replace(/[，。？！、,.?!\s]/g, '').replace(/^(請問|那|你好)/, '').replace(/[嗎呢啊吧呀]$/, '');
+    const core = h => { const b = h.replace(/[，。？！、,.?!\s]/g, ''), c = b.replace(/^(請問|那|你好)/, '').replace(/[嗎呢啊吧呀]$/, ''); return c || b; };   // 你好嗎 keeps its 你好
     const myCore = core(e.hz), keep = [tr];
-    const tooClose = t => { const a = lsTrWords(t); return keep.some(k => { const b = lsTrWords(k); let n = 0; a.forEach(w => { if(b.has(w)) n++; }); return n / Math.max(1, new Set([...a, ...b]).size) >= .75; }); };
+    const same = (a, b, cut) => { let n = 0; a.forEach(w => { if(b.has(w)) n++; }); const all = new Set([...a, ...b]).size; return all > 0 && n / all >= cut; };
+    // all its words the same (What's = What is), or what it is about the same ("I'd like to ask a question" next to "I have a question")
+    const tooClose = t => { const a = lsTrWords(t), ac = lsTrCore(t); return keep.some(k => same(a, lsTrWords(k), .75) || same(ac, lsTrCore(k), .5)); };
+    // the Chinese: the one sentence all (or nearly all) inside the other (我們是同學 in 我們是中學同學)
+    const hzSet = h => new Set([...h.replace(/[，。？！、,.?!\s的了嗎呢吧啊呀]/g, '')]);
+    const keepHz = [hzSet(e.hz)];
+    const hzClose = h => { const a = hzSet(h); return keepHz.some(b => { let n = 0; a.forEach(ch => { if(b.has(ch)) n++; }); const m = Math.min(a.size, b.size); return m >= 3 && n / m >= .9; }); };
     for(const {x} of pool){
       const t = exTrans(x), c = core(x.hz);
-      if(!t || used.has(t) || c === myCore || c.includes(myCore) || myCore.includes(c) || tooClose(t)) continue;
+      if(!t || used.has(t) || c === myCore || c.includes(myCore) || myCore.includes(c) || tooClose(t) || hzClose(x.hz)) continue;
+      keepHz.push(hzSet(x.hz));
       used.add(t); keep.push(t); others.push(t);
       if(others.length === 3) break;
     }
