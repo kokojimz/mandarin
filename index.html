@@ -4025,18 +4025,30 @@ function toggleSpeak(btn, text){ if(!SOUND_ON) return; if(btn.classList.contains
 function speak(text, btn, after){   // after: once the speech has ended (or failed / was stopped)   // btn: the ▶︎ that shows ■ while speaking (none for the quiz's automatic answer)
   if(!HAS_TTS || !(speakManual ? SOUND_ON : ttsOn())) return;
   stopSpeech();
-  const u = new SpeechSynthesisUtterance(text);
-  u.lang = 'zh-TW';
-  const v = pickVoice();
-  if(v){ u.voice = v; u.lang = v.lang; }
-  u.rate = 0.85;
+  const ss = window.speechSynthesis, v = pickVoice();
   const done = ()=>{ setIdle(btn); if(playingBtn === btn) playingBtn = null; if(after){ const f = after; after = null; f(); } };
-  let t0 = 0; const seq = ++speakSeq;
-  u.onstart = () => { t0 = performance.now(); if(btn && btn === qzPlay) qzWave(); };   // the dots start with the voice, not before
-  u.onend = () => { if(t0 && seq === speakSeq) learnSyl(text, performance.now() - t0); done(); };   // only when heard to the end
-  u.onerror = done;
+  let t0 = 0, ended = false; const seq = ++speakSeq;
+  const make = (vv = v) => {
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = 'zh-TW'; if(vv){ u.voice = vv; u.lang = vv.lang; }
+    u.rate = 0.85;
+    u.onstart = () => { t0 = performance.now(); if(btn && btn === qzPlay) qzWave(); };   // the dots start with the voice, not before
+    u.onend = () => { ended = true; if(t0 && seq === speakSeq) learnSyl(text, performance.now() - t0); done(); };   // only when heard to the end
+    u.onerror = e => { if(e && e.error === 'interrupted' && seq === speakSeq && !t0) return; ended = true; done(); };
+    speak.last = u;                                   // held, or Chrome may drop it before it ends
+    return u;
+  };
   setPlaying(btn); playingBtn = btn || null;         // show ■ right away
-  try{ if(window.speechSynthesis.paused) window.speechSynthesis.resume(); window.speechSynthesis.speak(u); }catch(e){ done(); }
+  try{ if(ss.paused) ss.resume(); ss.speak(make()); }catch(e){ done(); return; }
+  // a stuck voice (Edge's online voices, Chrome now and then, iPhone after another app): nothing starts. Clear it and say it
+  // once more, with a voice of this computer when there is one (the online ones need the network and are slow to start)
+  const online = v && v.localService === false;
+  setTimeout(() => {
+    if(t0 || ended || seq !== speakSeq) return;
+    const local = online && VOICES.find(x => x !== v && x.localService && isMandarin(x));
+    try{ ss.cancel(); ss.resume(); ss.speak(make(local || v)); }catch(e){ done(); }
+    setTimeout(() => { if(!t0 && !ended && seq === speakSeq){ ended = true; done(); } }, 4000);   // still nothing: give up quietly
+  }, online ? 3500 : 1500);
 }
 
 // ---- right / wrong sounds in the quiz: short tones made with Web Audio (no audio files); they follow Settings › Sound ----
