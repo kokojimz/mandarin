@@ -8639,9 +8639,9 @@ function lsClose(){
   LS = null;
   lessonEl.classList.remove('on'); lessonEl.setAttribute('aria-hidden', 'true');
   if(retry){ lsStart(retry); return; }
+  const y = learnEl.scrollTop;   // back where you were on the path: no jump
   lnRender();
-  const c = lnWrap.querySelector('.ln-node.cur');
-  if(c) learnEl.scrollTo({top: Math.max(0, c.offsetTop - learnEl.clientHeight / 2 + 30), behavior: 'smooth'});
+  learnEl.scrollTop = y;
 }
 function lsQuit(){
   if(!LS) return;
