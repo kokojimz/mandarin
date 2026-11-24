@@ -688,6 +688,7 @@
   tocfl-mascot canvas{ filter:drop-shadow(0 0 1px rgba(255,255,255,.5)) drop-shadow(0 0 4px rgba(255,255,255,.12)); }   /* a soft light rim round the bear */
   :root[data-theme="light"] tocfl-mascot canvas{ filter:drop-shadow(0 0 1px rgba(0,0,0,.35)) drop-shadow(0 0 4px rgba(0,0,0,.1)); }   /* on a light page: a soft dark one */
   tocfl-mascot .m-rig{ position:absolute; inset:0; transform-origin:50% 100%; }
+  tocfl-mascot .m-fx{ position:absolute; left:-50%; bottom:-70%; width:200%; height:400%; pointer-events:none; }   /* the big hop's fire, behind the bear */
   tocfl-mascot[pose="idle"] .m-rig:not([class*=" m-"]){ animation:mBreathe 3.8s ease-in-out infinite alternate; }   /* resting: it breathes */
   tocfl-mascot[pose="thinking"] .m-rig:not([class*=" m-"]){ animation:mThink 3s ease-in-out infinite alternate; }
   .m-rig.m-hop{ animation:mHop .8s ease-in-out 1; }
@@ -1774,6 +1775,8 @@ const MASCOT_IMG = (() => { const o = {}; document.querySelectorAll('script.masc
 // Size it with CSS on the element; the picture is drawn a little larger than the box, so a hop can leave it.
 const MASCOT_POSES = ['idle', 'talking', 'happy', 'celebrating', 'sad', 'thinking', 'surprised', 'waving'];
 const mascotVariant = v => v === 'brown' ? 'brown' : 'bear';   // the black bear; 'brown': the same bear in brown (a dialog's second voice)
+// how high the feet are in each frame of the hop (frame pixels): the big hop adds an arc on top, so the feet fly a clean curve
+const MASCOT_HOP_LIFT = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1.6,9.6,22.4,36.8,40,42.8,44.8,47.6,48,48,48,46,44,42,38.4,28.4,18.4,0.4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0], MASCOT_HOP_UP = 18.5, MASCOT_HOP_DOWN = 36;
 const MASCOT_FPS = 30, MASCOT_PX = 256, MASCOT_COLS = 8, MASCOT_CELL = 264;   // 4 px of empty room round each frame: no edge of the next one bleeds in
 // clip: the sheet; fps: its own speed; from/to: the frames played; times: how often (0 = loop); hold: the frame it stays on after
 const MASCOT_POSE_ANIM = {
@@ -1834,7 +1837,7 @@ class TocflMascot extends HTMLElement {
       this.cv = document.createElement('canvas'); this.cv.width = this.cv.height = MASCOT_PX + 32;
       this.ctx = this.cv.getContext('2d');
       this.rig.append(this.cv); this.append(this.rig);
-      this.rig.addEventListener('animationend', e => { if(e.target === this.rig) this.rig.className = 'm-rig'; });   // a movement done: back to resting
+      this.rig.addEventListener('animationend', e => { if(e.target === this.rig){ this.rig.className = 'm-rig'; this.rig.style.animationDuration = ''; } });   // a movement done: back to resting
     }
     const p = this.getAttribute('pose') || 'idle', v = mascotVariant(this.getAttribute('variant'));
     if(p !== this._p || v !== this._v){ const was = this._p; this._p = p; this._v = v; this._shown = null; this.start(); if(was === 'talking') this.settle(); }
@@ -1856,19 +1859,30 @@ class TocflMascot extends HTMLElement {
     this.ctx.drawImage(s.img, (i % MASCOT_COLS) * MASCOT_CELL + 4, Math.floor(i / MASCOT_COLS) * MASCOT_CELL + 4, MASCOT_PX, MASCOT_PX, 16, 16, MASCOT_PX, MASCOT_PX);
   }
   start(){
-    cancelAnimationFrame(this._raf); this._raf = 0;
+    cancelAnimationFrame(this._raf); this._raf = 0; if(this.rig) this.rig.style.transform = '';
     const a = MASCOT_POSE_ANIM[this._p] || MASCOT_POSE_ANIM.idle;
     if(!a.clip || matchMedia('(prefers-reduced-motion: reduce)').matches){ this.draw(...a.hold); return; }
-    const k = a.clip, from = a.from || 0, to = a.to != null ? a.to : mascotFrames(k) - 1, len = to - from + 1, times = a.times == null ? 1 : a.times;
+    const k = a.clip, from = a.from || 0, to = a.to != null ? a.to : mascotFrames(k) - 1, len = to - from + 1, times = this._p === 'celebrating' && +this.dataset.hops > 0 ? +this.dataset.hops : a.times == null ? 1 : a.times;   // data-hops: how many hops (a lesson's stars)
     mascotSheet(k, this._v);
     let t0 = 0;
+    const rocket = this.dataset.rocket === '1'; delete this.dataset.rocket;
+    const big = rocket || this._p === 'celebrating' && times >= 3;   // three stars (or a third tap on a right answer): the last hop goes higher, on fire
     const tick = now => {
       if(!this.isConnected){ this._raf = 0; return; }
       const s = mascotSheet(k, this._v);
       if(!s.ready){ this._raf = requestAnimationFrame(tick); return; }   // wait for the sheet, then start at its first frame
       if(!t0) t0 = now;
-      const f = Math.floor((now - t0) / 1000 * (a.fps || MASCOT_FPS));
-      if(times && f >= len * times){ this._raf = 0; this.draw(...a.hold); if(this._p === 'waving') this.settle(); return; }   // the paw down: a little bounce
+      const fps = a.fps || MASCOT_FPS, ms = now - t0, slowAt = big ? len * (times - 1) / fps * 1000 : Infinity;
+      const ff = ms < slowAt ? ms / 1000 * fps : len * (times - 1) + (ms - slowAt) / 1000 * fps * .55;   // the big hop: a little slower, it hangs in the air
+      const f = Math.floor(ff);
+      if(times && f >= len * times){ this._raf = 0; this.rig.style.transform = ''; this.draw(...a.hold); if(this._p === 'waving') this.settle(); return; }   // the paw down: a little bounce
+      if(big && f >= len * (times - 1)){   // the last hop: feet on a smooth arc, 1.6 bodies high, in step with the frames
+        const fx = ff % len, fl = Math.floor(fx), u = (fx - MASCOT_HOP_UP) / (MASCOT_HOP_DOWN - MASCOT_HOP_UP), box = this.offsetHeight || 108, px = box * 1.40625 / (MASCOT_PX + 32);
+        const lift = (MASCOT_HOP_LIFT[fl] || 0) + ((MASCOT_HOP_LIFT[fl + 1] || 0) - (MASCOT_HOP_LIFT[fl] || 0)) * (fx - fl);   // smooth in time, between two frames
+        const arc = u > 0 && u < 1 ? box * 1.6 * 4 * u * (1 - u) : 0, up = arc ? arc - lift * px : 0;
+        this.rig.style.transform = up > 0 ? `translateY(${(-up).toFixed(1)}px)` : '';
+        if(arc) this.fire(arc, u);   // in the air: a rocket going up, a meteor coming down
+      }
       this.draw(k, from + f % len);
       this._raf = requestAnimationFrame(tick);
     };
@@ -1876,7 +1890,37 @@ class TocflMascot extends HTMLElement {
     this._raf = requestAnimationFrame(tick);
   }
   replay(){ this._shown = null; this.start(); return this; }
-  disconnectedCallback(){ cancelAnimationFrame(this._raf); this._raf = 0; clearTimeout(this._t); this._p = null; }
+  // fire for the big hop: sparks behind the bear on a canvas of their own (they stay where they were left, so they trail)
+  fire(h, u){
+    if(!this.fx){
+      this.fx = document.createElement('canvas'); this.fx.className = 'm-fx'; this.prepend(this.fx);
+      this.fxc = this.fx.getContext('2d'); this.sparks = [];
+    }
+    const box = this.offsetHeight || 108, W = box * 2, H = box * 4, dpr = Math.min(2, window.devicePixelRatio || 1);
+    if(this.fx.width !== Math.round(W * dpr)){ this.fx.width = Math.round(W * dpr); this.fx.height = Math.round(H * dpr); }
+    const cx = W / 2, feet = H - box * .7 - h, rising = u < .5;
+    for(let i = 0; i < (rising ? 5 : 4); i++){
+      if(rising) this.sparks.push({x: cx + (Math.random() - .5) * box * .35, y: feet - box * .02, vx: (Math.random() - .5) * box * .9, vy: box * (1.2 + Math.random() * 1.4), r: box * (.07 + Math.random() * .07), t: 0, life: .35 + Math.random() * .25});
+      else { const a = Math.random() * Math.PI * 2; this.sparks.push({x: cx + Math.cos(a) * box * .33, y: feet - box * .45 + Math.sin(a) * box * .42, vx: (Math.random() - .5) * box * .5, vy: -box * (.6 + Math.random() * .9), r: box * (.06 + Math.random() * .08), t: 0, life: .3 + Math.random() * .3}); }
+    }
+    if(!this._fxRaf){ let last = 0; const step = now => {
+      const dt = last ? Math.min(.05, (now - last) / 1000) : 0; last = now;
+      const c = this.fxc, d = Math.min(2, window.devicePixelRatio || 1);
+      c.setTransform(d, 0, 0, d, 0, 0); c.clearRect(0, 0, this.fx.width, this.fx.height); c.globalCompositeOperation = 'lighter';
+      this.sparks = this.sparks.filter(p => (p.t += dt) < p.life && p.y < this.fx.height / d - 4);
+      this.sparks.forEach(p => {
+        p.x += p.vx * dt; p.y += p.vy * dt; p.vx *= .96;
+        const k = p.t / p.life, r = p.r * (1 - k * .6);
+        const g = c.createRadialGradient(p.x, p.y, 0, p.x, p.y, r);
+        g.addColorStop(0, `rgba(255,${Math.round(245 - 120 * k)},${Math.round(180 - 170 * k)},${(1 - k) * .95})`);
+        g.addColorStop(.45, `rgba(255,${Math.round(150 - 90 * k)},20,${(1 - k) * .6})`);
+        g.addColorStop(1, 'rgba(255,40,0,0)');
+        c.fillStyle = g; c.beginPath(); c.arc(p.x, p.y, r, 0, 7); c.fill();
+      });
+      if(this.sparks.length && this.isConnected) this._fxRaf = requestAnimationFrame(step); else { this._fxRaf = 0; c.clearRect(0, 0, this.fx.width, this.fx.height); }
+    }; this._fxRaf = requestAnimationFrame(step); }
+  }
+  disconnectedCallback(){ cancelAnimationFrame(this._raf); this._raf = 0; cancelAnimationFrame(this._fxRaf); this._fxRaf = 0; if(this.sparks) this.sparks = []; clearTimeout(this._t); this._p = null; }
   play(name, {settle = 'idle', duration} = {}){
     const c = MASCOT_CLIPS[name] || MASCOT_CLIPS.idle;
     clearTimeout(this._t);
@@ -8240,6 +8284,7 @@ function lsBearSet(m, who){
     if(b.dataset.m === 'talk' && m !== 'talk') lsBearEase(b);
     b.dataset.m = m;
     const mc = b.querySelector('tocfl-mascot');   // the lesson's moods as poses; the end of a lesson, happy: celebrating
+    if(mc){ if(LS && LS.done && LS.stars) mc.dataset.hops = LS.stars; else delete mc.dataset.hops; }   // at the end: a hop for each star
     if(mc) mc.setAttribute('pose', m === 'talk' ? 'talking' : m === 'happy' ? (lsCheer() ? 'celebrating' : 'happy') : m === 'sad' ? 'sad' : 'idle');
   });
 }
@@ -8285,7 +8330,12 @@ function lsBearPlace(anchor){
     const m = LS && LS.mood, mc = b.querySelector('tocfl-mascot');
     if(replay && LS.listen && (!m || m === 'idle')){ replay(); return; }   // a new word or a listening question: the sound again
     if(!mc || b.dataset.m === 'talk') return;
-    if(m === 'happy' || m === 'sad') mc.replay(); else mc.play('hello');
+    if(m === 'happy' && !LS.done){   // a right answer: every third tap, the rocket hop
+      const key = LS.step + '/' + LS.qi; if(b._tapKey !== key){ b._tapKey = key; b._taps = 0; }
+      if(++b._taps % 3 === 0) mc.dataset.rocket = '1';
+      mc.replay();
+    }
+    else if(m === 'happy' || m === 'sad') mc.replay(); else mc.play('hello');
   };
   el.querySelectorAll('.ls-bear').forEach(b => { b.classList.add('tap'); b.onclick = () => poke(b);
     if(replay){ b.setAttribute('role', 'button'); b.setAttribute('aria-label', tx('Play')); b.tabIndex = 0;
@@ -8562,6 +8612,7 @@ function lsFinish(){
     ${added ? `<div class="ls-note">${tx('{0} words saved in your Learn group', added)}</div>` : ''}
     ${note ? `<div class="ls-note hot">${esc(note)}</div>` : ''}
     ${LS.missed.size ? `<div class="ln-words ls-missed">${[...LS.missed].map(r => `<div class="ln-w"><span class="h" lang="zh-TW">${esc(fullWord(r[0]))}</span><span class="p">${colorPinyin(pyOf(r))}</span><span class="m">${esc(shortMeaning(r))}</span></div>`).join('')}</div>` : ''}</div>`;
+  LS.stars = mode === 'daily' ? 1 : stars;   // the bear hops once for each star
   LS.mood = passed ? 'happy' : 'sad';
   LS.done = true; LS.answered = true;
   if(!passed){ lsSetGo(tx('Try again')); LS.retry = l; }
