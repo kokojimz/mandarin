@@ -607,7 +607,8 @@
   html, body{ overscroll-behavior-x:none; }   /* a sideways swipe on a touchpad must not go back a page */
   body.learn-on{ overflow:hidden; }
   .cap-ic{ width:18px; height:18px; display:block; }
-  .bear-ic{ width:20px; height:20px; object-fit:contain; }
+  .bear-ic{ width:20px; height:20px; object-fit:contain; filter:drop-shadow(0 0 .5px rgba(255,255,255,.6)); }   /* a thin light edge, like the bear's */
+  :root[data-theme="light"] .bear-ic{ filter:drop-shadow(0 0 .5px rgba(0,0,0,.4)); }
   .lg-name{ display:inline-flex; align-items:center; gap:6px; vertical-align:middle; }
   /* a lesson: full screen over the path */
   #lesson{ position:fixed; inset:0; z-index:58; background:var(--bg); display:none; flex-direction:column; overflow:hidden; }
@@ -7148,19 +7149,19 @@ function lnList(){
   });
   return LN_LIST;
 }
-function lnLoad(){ try{ const s = JSON.parse(localStorage.getItem(LS_LEARN) || '{}'); return {done: s.done || {}, days: s.days || {}, stars: s.stars || {}, miss: s.miss || {}, srs: s.srs || {}}; }catch(e){ return {done: {}, days: {}, stars: {}, miss: {}, srs: {}}; } }
+function lnLoad(){ try{ const s = JSON.parse(localStorage.getItem(LS_LEARN) || '{}'); return {done: s.done || {}, days: s.days || {}, stars: s.stars || {}, miss: s.miss || {}, srs: s.srs || {}, kept: s.kept || {}}; }catch(e){ return {done: {}, days: {}, stars: {}, miss: {}, srs: {}, kept: {}}; } }
 function lnClean(x){
   const map = (o, ok) => { const r = {}; if(o && typeof o === 'object' && !Array.isArray(o)) Object.keys(o).slice(0, 20000).forEach(k => { if(typeof k === 'string' && k.length < 80 && ok(o[k])) r[k] = o[k]; }); return r; };
   const num = v => Number.isFinite(v) && v >= 0 && v < 1e7;
   return {done: map(x.done, v => v === 1), days: map(x.days, num), stars: map(x.stars, v => [1, 2, 3].includes(v)), miss: map(x.miss, num),
-          srs: map(x.srs, v => Array.isArray(v) && v.length === 2 && num(v[0]) && Number.isInteger(v[1]) && v[1] >= 0 && v[1] < 7)};
+          srs: map(x.srs, v => Array.isArray(v) && v.length === 2 && num(v[0]) && Number.isInteger(v[1]) && v[1] >= 0 && v[1] < 7), kept: map(x.kept, v => v === 1)};
 }
 function lnSave(s){ try{ localStorage.setItem(LS_LEARN, JSON.stringify(s)); }catch(e){} }
 // start Learn over: lessons, stars, streak and reviews, and the Learn group goes (it comes back after your next lesson)
 function lnReset(){
   askConfirm(tx('Reset progress?'), tx('All lessons, stars, the streak and the daily reviews start over, and the Learn group is emptied. This cannot be undone'), tx('Reset'), true).then(ok => {
     if(!ok) return;
-    lnSave({done: {}, days: {}, stars: {}, miss: {}, srs: {}});
+    lnSave({done: {}, days: {}, stars: {}, miss: {}, srs: {}, kept: {}});
     try{ localStorage.removeItem(LS_LNOPEN); }catch(e){}
     const g = CUSTOM.groups.find(x => isLearnGroup(x.name));
     if(g){ CUSTOM.groups = CUSTOM.groups.filter(x => x !== g); active.delete(g.id); if(!active.size) LEVELS.forEach(l => { if(l[0] !== g.id) active.add(l[0]); }); applyCustomChange(); }
@@ -7171,8 +7172,9 @@ const lnDay = (d = new Date()) => `${d.getFullYear()}-${String(d.getMonth() + 1)
 // days in a row with at least one lesson, up to today (or yesterday, while today has none yet)
 function lnStreak(s){
   const d = new Date(); let n = 0;
-  if(!s.days[lnDay(d)]) d.setDate(d.getDate() - 1);
-  while(s.days[lnDay(d)]){ n++; d.setDate(d.getDate() - 1); }
+  const on = d => s.days[lnDay(d)] || s.kept[lnDay(d)];   // a day of lessons, or of a daily review only (it keeps the streak)
+  if(!on(d)) d.setDate(d.getDate() - 1);
+  while(on(d)){ n++; d.setDate(d.getDate() - 1); }
   return n;
 }
 // a word of the list (as the cards show it), by its hanzi within its level
@@ -7191,6 +7193,7 @@ function lnRender(){
       <span class="ln-stat ln-goal${today >= LN_GOAL ? ' hot' : ''}">${lnIcon.goal}${tx('Today {0}/{1}', Math.min(today, LN_GOAL), LN_GOAL)}</span>
       <button type="button" class="ln-reset" id="lnReset" title="${escAttr(tx('Reset progress'))}">${tx('Reset')}</button>
     </div>`;
+  if(lnSyncSaved(s) | lnSpread(s)) lnSave(s);   // both run
   const due = lnDue(s).length, learned = Object.keys(s.srs).length;
   if(learned) html += due ? `<button type="button" class="ln-daily" id="lnDaily"><span class="ln-seal" lang="zh-TW">溫</span><span class="ln-tx"><span class="ln-t">${tx('Daily review')}</span><span class="ln-s">${tx('{0} words to review today', due)}</span></span><span class="ln-go">${tx('Start')}</span></button>`
     : `<div class="ln-daily done"><span class="ln-seal" lang="zh-TW">溫</span><span class="ln-tx"><span class="ln-t">${tx('Daily review')}</span><span class="ln-s">${tx('All caught up for today')}</span></span><span class="ln-r">${lnIcon.check}</span></div>`;
@@ -8004,7 +8007,7 @@ function lsMakeQuestions(rows, n, mode, known){
   const words = mode === 'lesson' ? lsLessonWordQs(rows) : lsWordQs(rows, n - sent.length);
   return mode === 'lesson' ? words.concat(shuffle(sent)) : shuffle(words.concat(sent));   // a lesson: the words first, then the sentences
 }
-// ---- daily review: each word you learned comes back after 1, 3, 7, 14, 30, 60, 120 days (sooner when you miss it) ----
+// ---- daily review: each word you learned comes back after 1, 3, 7, 14, 30, 60, 120 days (a miss: tomorrow, and two steps down) ----
 const LN_IV = [1, 3, 7, 14, 30, 60, 120], LN_DAILY_N = 20;
 const lnToday = () => { const d = new Date(); return Math.round(new Date(d.getFullYear(), d.getMonth(), d.getDate()) / 864e5); };
 const lnKey = r => r[4] + '|' + r[0];
@@ -8012,7 +8015,28 @@ function lnDue(s){
   const t = lnToday();
   return Object.keys(s.srs).filter(k => s.srs[k][0] <= t).sort((a, b) => s.srs[a][0] - s.srs[b][0] || (s.miss[b] || 0) - (s.miss[a] || 0));
 }
-function lnSrsMiss(s, r){ s.srs[lnKey(r)] = [lnToday() + 1, 0]; }
+const lnDown = lv => Math.max(0, (lv || 0) - 2);   // a miss: two steps down the ladder (a word at 60 days goes to 14), not back to the start
+function lnSrsMiss(s, r){ const k = lnKey(r); s.srs[k] = [lnToday() + 1, lnDown(s.srs[k] && s.srs[k][1])]; }
+// 2. after days away: at most LN_DAILY_CAP words due today, the rest spread over the next days
+const LN_DAILY_CAP = 40, LN_NEW_SAVED = 10;
+function lnSpread(s){
+  const d = lnDue(s); if(d.length <= LN_DAILY_CAP) return false;
+  const t = lnToday(); d.slice(LN_DAILY_CAP).forEach((k, i) => { s.srs[k][0] = t + 1 + Math.floor(i / LN_DAILY_CAP); });
+  return true;
+}
+// 3. the cards you saved (☆) in your own groups join the daily review too: 10 new ones a day
+let lnSavedRow = null;
+function lnSyncSaved(s){
+  if(!lnSavedRow){ lnSavedRow = new Map(); D.forEach(r => { if(!r[5] && !lnSavedRow.has(keyOf(r))) lnSavedRow.set(keyOf(r), r); }); }
+  const t = lnToday(), add = [];
+  GROUPS_OF.forEach((gs, k) => {
+    if(![...gs].some(g => g !== LEARN_GID)) return;   // only in the Learn group: its words are there already
+    const r = lnSavedRow.get(k); if(!r) return;
+    const key = lnKey(r); if(!s.srs[key] && lnRow(r[0], r[4]) && !add.includes(key)) add.push(key);
+  });
+  add.forEach((key, i) => { s.srs[key] = [t + 1 + Math.floor(i / LN_NEW_SAVED), 0]; });
+  return add.length > 0;
+}
 // ---- grammar: a card that explains a pattern with two examples, then sentences of the bank that use it (blank, order, meaning) ----
 function lsGramQs(l, s){
   const g = l.grammar, known = lnKnown(l, s), marks = new Set(g.mark), max = (LN_SLEN[l.lv] || 26) + 6;
@@ -8400,9 +8424,9 @@ function lsJudge(q, ok){
     if(r){ LS.missed.add(r); s.miss[k] = (s.miss[k] || 0) + 1; }
     if(LS.mode !== 'test') LS.qs.push(Object.assign({}, q, {k: q.k === 'a' ? 'h' : q.k === 'l' ? 's' : q.k, again: true, pick: []}));   // it comes back at the end, until it is right
   }
-  // daily review: the first answer to a word moves it further away (right) or back to tomorrow (wrong); elsewhere a miss brings it back tomorrow
+  // daily review: the first answer to a word moves it further away (right) or back to tomorrow, two steps down (wrong); elsewhere a miss does the same
   if(!k){}
-  else if(LS.mode === 'daily' && !LS.seen.has(k)){ LS.seen.add(k); const cur = s.srs[k] || [0, 0]; s.srs[k] = ok ? [lnToday() + LN_IV[Math.min(cur[1] + 1, LN_IV.length - 1)], Math.min(cur[1] + 1, LN_IV.length - 1)] : [lnToday() + 1, 0]; }
+  else if(LS.mode === 'daily' && !LS.seen.has(k)){ LS.seen.add(k); const cur = s.srs[k] || [0, 0]; s.srs[k] = ok ? [lnToday() + LN_IV[Math.min(cur[1] + 1, LN_IV.length - 1)], Math.min(cur[1] + 1, LN_IV.length - 1)] : [lnToday() + 1, lnDown(cur[1])]; }
   else if(!ok && s.srs[k]) lnSrsMiss(s, r);
   lnSave(s);
   LS.streak = ok ? (LS.streak || 0) + 1 : 0;
@@ -8510,10 +8534,10 @@ function lsFinish(){
     if(mode !== 'daily'){ s.done[l.key] = 1; s.stars[l.key] = Math.max(s.stars[l.key] || 0, stars); }
     if(mode === 'lesson') LS.intro.forEach(r => { const k = lnKey(r); if(!s.srs[k]) s.srs[k] = [lnToday() + 1, 0]; });   // its words come back tomorrow
     const d = lnDay(), before = s.days[d] || 0;
-    s.days[d] = before + 1;
+    if(mode !== 'daily') s.days[d] = before + 1; else s.kept[d] = 1;   // a daily review keeps the streak alive, but the day's goal is for moving on
     lnSave(s); lnEnsureGroup();
     if(mode === 'lesson') added = lnAddToGroup(LS.intro.concat((LS.l.vars || []).map(hz => lnRow(hz, LS.l.lv)).filter(Boolean)));
-    if(before < LN_GOAL && before + 1 >= LN_GOAL) note = tx('Today’s goal reached!');
+    if(mode !== 'daily' && before < LN_GOAL && before + 1 >= LN_GOAL) note = tx('Today’s goal reached!');
     if(mode === 'test' && first){ const nx = ['N1', 'N2', 'A1', 'A2'][['N1', 'N2', 'A1', 'A2'].indexOf(l.lv) + 1]; if(nx) note = tx('{0} is open!', nx); }
     if(mode === 'test'){   // skipped ahead: every lesson before the test counts as done; its words join the daily review, spread over two weeks
       const list = lnList(), t = lnToday(); let k = 0;
@@ -8525,7 +8549,7 @@ function lsFinish(){
   const secs = Math.round((Date.now() - LS.t0) / 1000), time = `${Math.floor(secs / 60)}:${String(secs % 60).padStart(2, '0')}`;
   const title = mode === 'test' ? (passed ? tx('Test passed!') : tx('Not passed yet')) : mode === 'review' || mode === 'daily' ? tx('Review complete!') : tx('Lesson complete!');
   lsBar.style.width = '100%';
-  lsBody.innerHTML = `<div class="ls-res">${lsStarsHTML(stars)}
+  lsBody.innerHTML = `<div class="ls-res">${mode === 'daily' ? '' : lsStarsHTML(stars)}
     <div class="ls-rt">${title}</div>
     <div class="ls-nums"><div><b>${pct}%</b><span>${tx('Correct')}</span></div><div><b>${LS.wrong}</b><span>${tx('Mistakes')}</span></div><div><b>${time}</b><span>${tx('Time')}</span></div></div>
     ${!passed ? `<div class="ls-note">${tx('You need {0}% to pass.', LN_PASS * 100)}</div>` : ''}
