@@ -1821,7 +1821,7 @@ const mascotFrames = k => MASCOT_IMG[`n-${k}`] || 56;
 //   el.stop();
 const MASCOT_CLIPS = {
   idle: {pose: 'idle'}, talking: {pose: 'talking'}, thinking: {pose: 'thinking'},
-  hello: {pose: 'waving', ms: 1500}, correct: {pose: 'happy', ms: 1300},
+  hello: {pose: 'waving', ms: 1800}, correct: {pose: 'happy', ms: 1300},
   celebration: {pose: 'celebrating', ms: 2600}, reassure: {pose: 'sad', ms: 1600},
   sad: {pose: 'sad'}, surprised: {pose: 'surprised', move: 'pop', ms: 800}
 };
@@ -1840,7 +1840,9 @@ class TocflMascot extends HTMLElement {
       this.rig.addEventListener('animationend', e => { if(e.target === this.rig){ this.rig.className = 'm-rig'; this.rig.style.animationDuration = ''; } });   // a movement done: back to resting
     }
     const p = this.getAttribute('pose') || 'idle', v = mascotVariant(this.getAttribute('variant'));
-    if(p !== this._p || v !== this._v){ const was = this._p; this._p = p; this._v = v; this._shown = null; this.start(); if(was === 'talking') this.settle(); }
+    if(p !== this._p || v !== this._v){ const was = this._p, mid = was === 'talking' && this._raf && v === this._v; this._p = p; this._v = v;
+      if(mid){ cancelAnimationFrame(this._raf); this.toRest(() => { this._shown = null; this.start(); }); }   // the voice ended mid-word: the mouth back to rest first, quickly
+      else { this._shown = null; this.start(); } }
     else if(!this._raf) this.draw(...this.holdOf(p));
   }
   holdOf(p){ return (MASCOT_POSE_ANIM[p] || MASCOT_POSE_ANIM.idle).hold; }
@@ -1854,7 +1856,7 @@ class TocflMascot extends HTMLElement {
     const s = mascotSheet(k, this._v);
     if(!s.ready){ s.wait.push(() => { if(this._p && !this._raf) this.draw(...this.holdOf(this._p)); }); return; }
     if(this._shown === k + i) return;
-    this._shown = k + i;
+    this._shown = k + i; if(k === 'talk') this._ti = i;
     this.ctx.clearRect(0, 0, MASCOT_PX + 32, MASCOT_PX + 32);
     this.ctx.drawImage(s.img, (i % MASCOT_COLS) * MASCOT_CELL + 4, Math.floor(i / MASCOT_COLS) * MASCOT_CELL + 4, MASCOT_PX, MASCOT_PX, 16, 16, MASCOT_PX, MASCOT_PX);
   }
@@ -1875,7 +1877,9 @@ class TocflMascot extends HTMLElement {
       const fps = a.fps || MASCOT_FPS, ms = now - t0, slowAt = big ? len * (times - 1) / fps * 1000 : Infinity;
       const ff = ms < slowAt ? ms / 1000 * fps : len * (times - 1) + (ms - slowAt) / 1000 * fps * .55;   // the big hop: a little slower, it hangs in the air
       const f = Math.floor(ff);
-      if(times && f >= len * times){ this._raf = 0; this.rig.style.transform = ''; this.draw(...a.hold); if(this._p === 'waving') this.settle(); return; }   // the paw down: a little bounce
+      if(times && f >= len * times){ this._raf = 0; this.rig.style.transform = '';
+        if(this._p === 'waving'){ this.lower(); return; }   // the paw comes down (the raise at the clip's start, backwards)
+        this.draw(...a.hold); return; }
       if(big && f >= len * (times - 1)){   // the last hop: feet on a smooth arc, 1.6 bodies high, in step with the frames
         const fx = ff % len, fl = Math.floor(fx), u = (fx - MASCOT_HOP_UP) / (MASCOT_HOP_DOWN - MASCOT_HOP_UP), box = this.offsetHeight || 108, px = box * 1.40625 / (MASCOT_PX + 32);
         const lift = (MASCOT_HOP_LIFT[fl] || 0) + ((MASCOT_HOP_LIFT[fl + 1] || 0) - (MASCOT_HOP_LIFT[fl] || 0)) * (fx - fl);   // smooth in time, between two frames
@@ -1890,6 +1894,32 @@ class TocflMascot extends HTMLElement {
     this._raf = requestAnimationFrame(tick);
   }
   replay(){ this._shown = null; this.start(); return this; }
+  // talking stopped mid-word: the shortest way through the loop to a closed, still frame (back to 2, or on to 48), fast
+  toRest(done){
+    const f0 = this._ti || 0, back = f0 <= 28, to = back ? 2 : 48;
+    if(f0 <= 2 || f0 >= 48){ if(done) done(); return; }
+    let t0 = 0;
+    const tick = now => {
+      if(!this.isConnected){ this._raf = 0; return; }
+      if(!t0) t0 = now;
+      const n = Math.floor((now - t0) / 1000 * 100), f = back ? f0 - n : f0 + n;
+      if(back ? f <= to : f >= to){ this._raf = 0; if(done) done(); return; }
+      this.draw('talk', f); this._raf = requestAnimationFrame(tick);
+    };
+    this._raf = requestAnimationFrame(tick);
+  }
+  // the wave's end: its paw is still up, at the place of frame 19; frames 19 → 7 backwards bring it down to rest
+  lower(done){
+    let t0 = 0;
+    const tick = now => {
+      if(!this.isConnected){ this._raf = 0; return; }
+      if(!t0) t0 = now;
+      const f = 19 - Math.floor((now - t0) / 1000 * 40);
+      if(f < 7){ this._raf = 0; this.draw('talk', 0); if(done) done(); return; }
+      this.draw('wave', f); this._raf = requestAnimationFrame(tick);
+    };
+    this._raf = requestAnimationFrame(tick);
+  }
   // fire for the big hop: sparks behind the bear on a canvas of their own (they stay where they were left, so they trail)
   fire(h, u){
     if(!this.fx){
