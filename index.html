@@ -689,6 +689,7 @@
   .ls-bear[data-m="talk"] .ls-hint, .ls-bear[data-m="happy"] .ls-hint, .ls-bear[data-m="sad"] .ls-hint, .ls-hint.later{ visibility:hidden; }   /* not while it talks, nor once answered */   /* not while it talks */
   .ls-bears.sm .ls-hint{ display:none; }
   .ls-bears.lq:not(.sm){ margin-bottom:11vh; }
+  .ls-bears:has(.m-front){ position:relative; z-index:5; }   /* the fiery hop flies over the answers */
   tocfl-mascot{ display:block; position:relative; width:100%; height:100%; -webkit-user-select:none; user-select:none; }
   tocfl-mascot canvas{ position:absolute; left:-20.3125%; bottom:-7.8125%; width:140.625%; height:140.625%; pointer-events:none; }   /* the frames have room above the bear for a hop, and an empty margin all round (Safari's drop-shadow wraps an edge the picture touches) */
   tocfl-mascot canvas{ filter:drop-shadow(0 0 1px rgba(255,255,255,.5)) drop-shadow(0 0 4px rgba(255,255,255,.12)); }   /* a soft light rim round the bear */
@@ -1840,7 +1841,7 @@ class TocflMascot extends HTMLElement {
     this.ctx.drawImage(s.img, (i % MASCOT_COLS) * MASCOT_CELL + 4, Math.floor(i / MASCOT_COLS) * MASCOT_CELL + 4, MASCOT_PX, MASCOT_PX, 16, 16, MASCOT_PX, MASCOT_PX);
   }
   start(){
-    cancelAnimationFrame(this._raf); this._raf = 0; if(this.rig) this.rig.style.transform = '';
+    cancelAnimationFrame(this._raf); this._raf = 0; this.classList.remove('m-front'); if(this.rig) this.rig.style.transform = '';
     const a = MASCOT_POSE_ANIM[this._p] || MASCOT_POSE_ANIM.idle;
     if(!a.clip || matchMedia('(prefers-reduced-motion: reduce)').matches){ this.draw(...a.hold); return; }
     const k = a.clip, from = a.from || 0, to = a.to != null ? a.to : mascotFrames(k) - 1, len = to - from + 1, times = this._p === 'celebrating' && +this.dataset.hops > 0 ? +this.dataset.hops : a.times == null ? 1 : a.times;   // data-hops: how many hops (a lesson's stars)
@@ -1849,6 +1850,7 @@ class TocflMascot extends HTMLElement {
     const rocket = this.dataset.rocket === '1'; delete this.dataset.rocket;
     const boxH = this.offsetHeight || 108;   // read once, not on every frame
     const big = rocket || this._p === 'celebrating' && times >= 3 && this.dataset.fire === '1';   // three stars (or a third tap on a right answer): the last hop goes higher, on fire
+    if(big) this.classList.add('m-front');   // the fiery hop: in front of everything until it lands
     const tick = now => {
       if(!this.isConnected){ this._raf = 0; return; }
       const s = mascotSheet(k, this._v);
@@ -1857,7 +1859,7 @@ class TocflMascot extends HTMLElement {
       const fps = a.fps || MASCOT_FPS, ms = now - t0, slowAt = big ? len * (times - 1) / fps * 1000 : Infinity;
       const ff = ms < slowAt ? ms / 1000 * fps : len * (times - 1) + (ms - slowAt) / 1000 * fps * .55;   // the big hop: a little slower, it hangs in the air
       const f = Math.floor(ff);
-      if(times && f >= len * times){ this._raf = 0; this.rig.style.transform = '';
+      if(times && f >= len * times){ this._raf = 0; this.rig.style.transform = ''; this.classList.remove('m-front');
         if(this._p === 'waving'){ this.lower(); return; }   // the paw comes down (the raise at the clip's start, backwards)
         this.draw(...a.hold); return; }
       if(big && f >= len * (times - 1)){   // the last hop: feet on a smooth arc, 1.6 bodies high, in step with the frames
