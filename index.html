@@ -639,7 +639,7 @@
   .ls-snd{ display:flex; align-items:center; justify-content:center; width:88px; height:88px; margin:16px auto 6px; border-radius:50%; border:0; background:var(--accent); color:#fff; cursor:pointer; box-shadow:0 0 0 8px rgba(224,139,43,.15); }
   .ls-snd:active{ transform:scale(.95); }
   .ls-snd svg{ width:42px; height:42px; fill:currentColor; }
-  .ls-opts{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:auto; padding-top:16px; }
+  .ls-opts{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:auto; padding-top:16px; position:relative; z-index:2; }   /* over the bear when they move up */
   .ls-opts.one{ grid-template-columns:1fr; }
   .ls-opt{ min-height:60px; padding:10px 12px; border-radius:14px; border:1.5px solid var(--border); background:var(--card-bg); color:var(--text); font:inherit; font-size:1rem; line-height:1.35; cursor:pointer; }
   .ls-opt.hz{ font-size:1.7rem; }
@@ -649,7 +649,7 @@
   .ls-opt.bad{ border-color:#d64545; background:rgba(214,69,69,.12); opacity:1; }
   .ls-foot{ position:relative; flex:none; width:100%; max-width:560px; margin:0 auto; padding:12px 16px calc(7vh + env(safe-area-inset-bottom,0px)); }   /* lifted off the bottom edge: answers and Continue where the thumb rests */
   /* right / wrong + the explanation: a card under the question, in the room above the bear */
-  .ls-fb{ display:none; border-radius:14px; padding:11px 14px; margin-top:14px; font-size:.92rem; line-height:1.45; animation:fbIn .2s ease-out; }
+  .ls-fb{ display:none; position:relative; z-index:2; border-radius:14px; padding:11px 14px; margin-top:14px; font-size:.92rem; line-height:1.45; animation:fbIn .2s ease-out; }
   .ls-fb.ok, .ls-fb.bad{ display:block; }
   .ls-var{ text-align:center; color:var(--sub); font-size:.9rem; margin-top:8px; }
   .ls-fb.ok, .ls-fb.bad{ background:rgba(128,128,128,.1); }   /* a plain box: only "Correct!" / "Not quite" is coloured */
@@ -686,10 +686,9 @@
   .ls-hint{ position:absolute; right:100%; bottom:calc(100% - 46px); width:68px; margin-right:0; text-align:center; color:var(--accent); font-family:'OllieHand', 'Comic Sans MS', 'Chalkboard SE', cursive; font-size:.7rem; line-height:1.02; transform:rotate(-7deg); pointer-events:none; }   /* left of the bear, a note with an arrow; held by its foot, so the arrow points at the eyes however many lines */
   .ls-hint span{ display:block; }
   .ls-hint svg{ display:block; width:26px; height:16px; margin:1px -4px 0 auto; }
-  .ls-bear[data-m="talk"] .ls-hint{ visibility:hidden; }   /* not while it talks */
+  .ls-bear[data-m="talk"] .ls-hint, .ls-bear[data-m="happy"] .ls-hint, .ls-bear[data-m="sad"] .ls-hint, .ls-hint.later{ visibility:hidden; }   /* not while it talks, nor once answered */   /* not while it talks */
   .ls-bears.sm .ls-hint{ display:none; }
   .ls-bears.lq:not(.sm){ margin-bottom:11vh; }
-  .ls-bear .msc{ transform-origin:50% 100%; }
   tocfl-mascot{ display:block; position:relative; width:100%; height:100%; -webkit-user-select:none; user-select:none; }
   tocfl-mascot canvas{ position:absolute; left:-20.3125%; bottom:-7.8125%; width:140.625%; height:140.625%; pointer-events:none; }   /* the frames have room above the bear for a hop, and an empty margin all round (Safari's drop-shadow wraps an edge the picture touches) */
   tocfl-mascot canvas{ filter:drop-shadow(0 0 1px rgba(255,255,255,.5)) drop-shadow(0 0 4px rgba(255,255,255,.12)); }   /* a soft light rim round the bear */
@@ -697,23 +696,10 @@
   tocfl-mascot .m-rig{ position:absolute; inset:0; transform-origin:50% 100%; }
   tocfl-mascot .m-fx{ position:absolute; left:-50%; bottom:-70%; width:200%; height:400%; pointer-events:none; }   /* the big hop's fire, behind the bear */
   tocfl-mascot[pose="idle"] .m-rig:not([class*=" m-"]){ animation:mBreathe 3.8s ease-in-out infinite alternate; }   /* resting: it breathes */
-  tocfl-mascot[pose="thinking"] .m-rig:not([class*=" m-"]){ animation:mThink 3s ease-in-out infinite alternate; }
-  .m-rig.m-hop{ animation:mHop .8s ease-in-out 1; }
-  .m-rig.m-cheer{ animation:mCheer 1.5s ease-in-out 1; }
-  .m-rig.m-dip{ animation:mDip 1s ease-in-out 1; }
-  .m-rig.m-wave{ animation:mWave 1.3s ease-in-out 1; transform-origin:50% 90%; }
-  .m-rig.m-pop{ animation:mPop .6s cubic-bezier(.3,1.6,.5,1) 1; }
   .m-rig.m-settle{ animation:mSettle .32s ease-out 1; }   /* the voice ended: a little squash back to rest */
   @keyframes mBreathe{ to{ transform:scale(1.012, 1.024); } }
-  @keyframes mThink{ from{ transform:rotate(-2deg); } to{ transform:rotate(1.5deg); } }
-  @keyframes mHop{ 0%{ transform:none; } 14%{ transform:scale(1.07,.91); } 40%{ transform:translateY(-14%) scale(.96,1.05); } 64%{ transform:scale(1.05,.95); } 82%{ transform:scale(.99,1.01); } 100%{ transform:none; } }
-  @keyframes mCheer{ 0%{ transform:none; } 9%{ transform:scale(1.07,.92); } 24%{ transform:translateY(-14%) scale(.96,1.05); } 38%{ transform:scale(1.05,.94); } 50%{ transform:scale(1.06,.93); } 66%{ transform:translateY(-12%) scale(.97,1.04); } 80%{ transform:scale(1.04,.96); } 90%{ transform:scale(.99,1.01); } 100%{ transform:none; } }
-  @keyframes mDip{ 0%{ transform:none; } 25%{ transform:translateY(3%) scale(1.04,.94) rotate(-4deg); } 50%{ transform:translateY(3%) scale(1.04,.94) rotate(4deg); } 75%{ transform:translateY(1%) scale(1.01,.98) rotate(-1.5deg); } 100%{ transform:none; } }
-  @keyframes mWave{ 0%,100%{ transform:none; } 20%{ transform:rotate(-4deg); } 40%{ transform:rotate(3deg); } 60%{ transform:rotate(-3deg); } 80%{ transform:rotate(1.5deg); } }
-  @keyframes mPop{ 0%{ transform:scale(.9); } 50%{ transform:scale(1.1); } 100%{ transform:none; } }
   @keyframes mSettle{ 0%{ transform:scale(1.07,.9); } 45%{ transform:scale(.96,1.05); } 75%{ transform:scale(1.02,.98); } 100%{ transform:none; } }
   @media (prefers-reduced-motion:reduce){ tocfl-mascot .m-rig{ animation:none !important; } }
-  @media (prefers-reduced-motion:reduce){ .ls-bear .msc{ animation:none !important; } }
   .ls-bub{ position:absolute; top:-4px; right:-22px; z-index:1; padding:0 7px 2px; border-radius:10px 10px 10px 3px; background:#fff; border:1px solid #1b1a17; color:#1b1a17; font-size:.95rem; font-weight:700; line-height:1.3; letter-spacing:.04em; visibility:hidden; }   /* white, edged in the dark page's black, on any page */
   .ls-bears.sm .ls-bub{ right:-18px; font-size:.85rem; }
   .ls-bear[data-m="talk"] .ls-bub{ visibility:visible; }   /* … only while it talks */
@@ -774,7 +760,7 @@
   .ls-opt.ls-otr{ font-size:.95rem; text-align:left; padding:10px 14px; }
   .ls-fb .sp{ font-size:.85rem; color:var(--sub); }
   .ls-line{ display:flex; flex-wrap:wrap; justify-content:center; gap:8px; min-height:58px; padding:8px 0; margin:8px 0 6px; border-bottom:2px solid var(--border); }
-  .ls-bank{ display:flex; flex-wrap:wrap; justify-content:center; gap:8px; margin-top:auto; padding-top:16px; }
+  .ls-bank{ display:flex; flex-wrap:wrap; justify-content:center; gap:8px; margin-top:auto; padding-top:16px; position:relative; z-index:2; }
   .ls-tile{ padding:8px 14px; min-width:48px; border-radius:12px; border:1.5px solid var(--border); background:var(--card-bg); color:var(--text); font:inherit; font-size:1.35rem; cursor:pointer; }
   .ls-tile.gone{ visibility:hidden; }
   .ls-tile.ok{ border-color:#1e9e5a; background:rgba(30,158,90,.14); } .ls-tile.bad{ border-color:#d64545; background:rgba(214,69,69,.12); }
@@ -838,6 +824,7 @@
   .ln-go{ background:var(--accent); color:#fff; border-radius:999px; padding:5px 12px; font-size:.78rem; font-weight:700; }
   .ln-end{ position:relative; text-align:center; color:var(--sub); font-size:.72rem; line-height:1.5; margin-top:34px; min-height:46px; display:flex; align-items:center; justify-content:center; }
   .ln-words{ display:flex; flex-direction:column; gap:2px; margin:4px 0 0; text-align:left; }
+  .ls-more{ align-self:center; margin-top:8px; padding:6px 16px; border-radius:20px; border:0; background:transparent; color:var(--sub); font:inherit; font-size:.85rem; font-weight:700; cursor:pointer; }
   .ln-w{ display:grid; grid-template-columns:auto 1fr; column-gap:12px; align-items:baseline; padding:7px 2px; border-bottom:1px solid var(--border); }
   .ln-w:last-child{ border-bottom:0; }
   .ln-w .h{ font-size:1.15rem; grid-row:span 2; }
@@ -1776,18 +1763,17 @@ function isLearnGroup(name){ return name === '\u{1F393}'; }
 function lnAnyDone(){ try{ const s = JSON.parse(localStorage.getItem('tocfl-learn-v1') || '{}'); return !!(s.done && Object.keys(s.done).length); }catch(e){ return false; } }
 const MASCOT_IMG = (() => { const o = {}; document.querySelectorAll('script.mascotImg').forEach(e => Object.assign(o, JSON.parse(e.textContent))); return o; })();   // the bear's pictures: in their own blocks, so loading shows progress through them
 // ---------- the mascot: one component for the whole app ----------
-// <tocfl-mascot pose="idle | talking | happy | celebrating | sad | thinking | surprised | waving">
+// <tocfl-mascot pose="idle | talking | happy | celebrating | sad | waving" variant="bear | brown">
 // or from script: mascotHTML('bear', 'happy'). The bear (Ollie) moves from animations made with Masko: each is a sheet of
 // 256 px frames (8 a row, made at 24 a second, played at 30: a little brisker), drawn on a canvas. A pose = a clip played once or looped, or one held frame.
 // Size it with CSS on the element; the picture is drawn a little larger than the box, so a hop can leave it.
-const MASCOT_POSES = ['idle', 'talking', 'happy', 'celebrating', 'sad', 'thinking', 'surprised', 'waving'];
 const mascotVariant = v => v === 'brown' ? 'brown' : 'bear';   // the black bear; 'brown': the same bear in brown (a dialog's second voice)
 // how high the feet are in each frame of the hop (frame pixels): the big hop adds an arc on top, so the feet fly a clean curve
 const MASCOT_HOP_LIFT = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1.6,9.6,22.4,36.8,40,42.8,44.8,47.6,48,48,48,46,44,42,38.4,28.4,18.4,0.4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0], MASCOT_HOP_UP = 18.5, MASCOT_HOP_DOWN = 36;
 const MASCOT_FPS = 30, MASCOT_PX = 256, MASCOT_COLS = 8, MASCOT_CELL = 264;   // 4 px of empty room round each frame: no edge of the next one bleeds in
 // clip: the sheet; fps: its own speed; from/to: the frames played; times: how often (0 = loop); hold: the frame it stays on after
 const MASCOT_POSE_ANIM = {
-  idle: {hold: ['talk', 0]}, thinking: {hold: ['talk', 0]}, surprised: {hold: ['happy', 46]},
+  idle: {hold: ['talk', 0]},
   talking: {clip: 'talk', fps: 35, times: 0, hold: ['talk', 0]},   // chattier than the rest
   happy: {clip: 'happy', fps: 52, hold: ['happy', 55]},   // the hop: brisker than the rest
   celebrating: {clip: 'happy', fps: 52, times: 2, hold: ['happy', 55]},
@@ -1820,20 +1806,8 @@ function mascotBrown(im){
   return c;
 }
 const mascotFrames = k => MASCOT_IMG[`n-${k}`] || 56;
-// Motion on top of the frames (the whole picture): thinking sways, surprised pops. A new clip or pose cuts the running one off.
-//   el.play('correct')                  // happy, then idle
-//   el.play('celebration', {settle: null})   // stays celebrating
-//   el.dispatch('lesson:incorrect')     // the app's events, mapped to clips (MASCOT_EVENTS)
-//   el.replay()                         // the current pose's clip again (a second right answer in a row)
-//   el.stop();
-const MASCOT_CLIPS = {
-  idle: {pose: 'idle'}, talking: {pose: 'talking'}, thinking: {pose: 'thinking'},
-  hello: {pose: 'waving', ms: 1800}, correct: {pose: 'happy', ms: 1300},
-  celebration: {pose: 'celebrating', ms: 2600}, reassure: {pose: 'sad', ms: 1600},
-  sad: {pose: 'sad'}, surprised: {pose: 'surprised', move: 'pop', ms: 800}
-};
-const MASCOT_EVENTS = {'lesson:correct': 'correct', 'lesson:incorrect': 'reassure', 'lesson:streak': 'celebration', 'lesson:loading': 'thinking',
-  'lesson:complete': 'celebration', 'user:enter': 'hello', 'assistant:speech': 'talking'};
+// From script: el.play('hello') waves, then rests (idle); el.replay() runs the pose's clip again; el.stop() rests.
+const MASCOT_CLIPS = {idle: {pose: 'idle'}, hello: {pose: 'waving', ms: 1800}};
 class TocflMascot extends HTMLElement {
   static get observedAttributes(){ return ['variant', 'pose']; }
   connectedCallback(){ if(!this.hasAttribute('aria-label')) this.setAttribute('aria-hidden', 'true'); this.render(); }
@@ -1873,7 +1847,8 @@ class TocflMascot extends HTMLElement {
     mascotSheet(k, this._v);
     let t0 = 0;
     const rocket = this.dataset.rocket === '1'; delete this.dataset.rocket;
-    const big = rocket || this._p === 'celebrating' && times >= 3;   // three stars (or a third tap on a right answer): the last hop goes higher, on fire
+    const boxH = this.offsetHeight || 108;   // read once, not on every frame
+    const big = rocket || this._p === 'celebrating' && times >= 3 && this.dataset.fire === '1';   // three stars (or a third tap on a right answer): the last hop goes higher, on fire
     const tick = now => {
       if(!this.isConnected){ this._raf = 0; return; }
       const s = mascotSheet(k, this._v);
@@ -1886,11 +1861,11 @@ class TocflMascot extends HTMLElement {
         if(this._p === 'waving'){ this.lower(); return; }   // the paw comes down (the raise at the clip's start, backwards)
         this.draw(...a.hold); return; }
       if(big && f >= len * (times - 1)){   // the last hop: feet on a smooth arc, 1.6 bodies high, in step with the frames
-        const fx = ff % len, fl = Math.floor(fx), u = (fx - MASCOT_HOP_UP) / (MASCOT_HOP_DOWN - MASCOT_HOP_UP), box = this.offsetHeight || 108, px = box * 1.40625 / (MASCOT_PX + 32);
+        const fx = ff % len, fl = Math.floor(fx), u = (fx - MASCOT_HOP_UP) / (MASCOT_HOP_DOWN - MASCOT_HOP_UP), box = boxH, px = box * 1.40625 / (MASCOT_PX + 32);
         const lift = (MASCOT_HOP_LIFT[fl] || 0) + ((MASCOT_HOP_LIFT[fl + 1] || 0) - (MASCOT_HOP_LIFT[fl] || 0)) * (fx - fl);   // smooth in time, between two frames
         const arc = u > 0 && u < 1 ? box * 1.6 * 4 * u * (1 - u) : 0, up = arc ? arc - lift * px : 0;
         this.rig.style.transform = up > 0 ? `translateY(${(-up).toFixed(1)}px)` : '';
-        if(arc) this.fire(arc, u);   // in the air: a rocket going up, a meteor coming down
+        if(arc) this.fire(arc, u, boxH);   // in the air: a rocket going up, a meteor coming down
       }
       this.draw(k, from + f % len);
       this._raf = requestAnimationFrame(tick);
@@ -1912,12 +1887,12 @@ class TocflMascot extends HTMLElement {
     this._raf = requestAnimationFrame(tick);
   }
   // fire for the big hop: sparks behind the bear on a canvas of their own (they stay where they were left, so they trail)
-  fire(h, u){
+  fire(h, u, box){
     if(!this.fx){
       this.fx = document.createElement('canvas'); this.fx.className = 'm-fx'; this.prepend(this.fx);
       this.fxc = this.fx.getContext('2d'); this.sparks = [];
     }
-    const box = this.offsetHeight || 108, W = box * 2, H = box * 4, dpr = Math.min(2, window.devicePixelRatio || 1);
+    const W = box * 2, H = box * 4, dpr = Math.min(2, window.devicePixelRatio || 1);
     if(this.fx.width !== Math.round(W * dpr)){ this.fx.width = Math.round(W * dpr); this.fx.height = Math.round(H * dpr); }
     const cx = W / 2, feet = H - box * .7 - h, rising = u < .5;
     for(let i = 0; i < (rising ? 5 : 4); i++){
@@ -1946,17 +1921,10 @@ class TocflMascot extends HTMLElement {
     const c = MASCOT_CLIPS[name] || MASCOT_CLIPS.idle;
     clearTimeout(this._t);
     if(this.getAttribute('pose') === c.pose) this.replay(); else this.setAttribute('pose', c.pose);
-    if(this.rig){ this.rig.className = 'm-rig'; if(c.move){ void this.rig.offsetWidth; this.rig.classList.add('m-' + c.move); } }
     const ms = duration || c.ms;
     if(ms && settle) this._t = setTimeout(() => { if(this.getAttribute('pose') === c.pose) this.play(settle, {settle: null}); }, ms);   // only if nothing else took over
     return this;
   }
-  dispatch(event, payload = {}){
-    const clip = MASCOT_EVENTS[event]; if(!clip) return false;
-    if(event === 'assistant:speech' && payload.active === false){ this.play('idle'); return true; }
-    this.play(clip, payload); return true;
-  }
-  setVariant(v){ this.setAttribute('variant', mascotVariant(v)); return this; }
   stop(){ clearTimeout(this._t); if(this.rig) this.rig.className = 'm-rig'; this.setAttribute('pose', 'idle'); return this; }
 }
 if(!customElements.get('tocfl-mascot')) customElements.define('tocfl-mascot', TocflMascot);
@@ -4367,7 +4335,7 @@ function unlockSpeech(){
 // a ▶︎ you tap always plays while Sound is on in Settings; the quiz speaker (READ_ON) only stops what plays by itself
 let speakManual = false;
 function toggleSpeak(btn, text){ if(!SOUND_ON) return; if(btn.classList.contains('playing')) stopSpeech(); else { speakManual = true; try{ speak(text, btn); } finally { speakManual = false; } } }
-function speak(text, btn, after){   // after: once the speech has ended (or failed / was stopped)   // btn: the ▶︎ that shows ■ while speaking (none for the quiz's automatic answer)
+function speak(text, btn, after, started){   // after: once the speech has ended (or failed / was stopped); started: once the voice is heard   // btn: the ▶︎ that shows ■ while speaking (none for the quiz's automatic answer)
   if(!HAS_TTS || !(speakManual ? SOUND_ON : ttsOn())) return;
   stopSpeech();
   const ss = window.speechSynthesis, picked = pickVoice();
@@ -4380,7 +4348,7 @@ function speak(text, btn, after){   // after: once the speech has ended (or fail
     const u = new SpeechSynthesisUtterance(text);
     u.lang = 'zh-TW'; if(vv){ u.voice = vv; u.lang = vv.lang; }
     u.rate = 0.85;
-    u.onstart = () => { t0 = performance.now(); if(btn && btn === qzPlay) qzWave(); };   // the dots start with the voice, not before
+    u.onstart = () => { t0 = performance.now(); if(btn && btn === qzPlay) qzWave(); if(started && seq === speakSeq){ const f = started; started = null; f(); } };   // the dots (and the bear's mouth) start with the voice, not before
     u.onend = () => { ended = true; if(t0 && seq === speakSeq) learnSyl(text, performance.now() - t0); done(); };   // only when heard to the end
     u.onerror = e => { if(e && e.error === 'interrupted' && seq === speakSeq && !t0) return; ended = true; done(); };
     speak.last = u;                                   // held, or Chrome may drop it before it ends
@@ -7901,7 +7869,7 @@ Object.assign(ID_TEXT, {"Review": "Ulangan", "What does it mean?": "Apa artinya?
   "{0}% correct": "{0}% benar", "{0} words saved in your Learn group": "{0} kata masuk grup Belajar", "The Learn group fills itself with your lessons": "Grup Belajar terisi sendiri dari pelajaranmu", "Reset progress": "Reset progres", "Reset progress?": "Reset progres?", "All lessons, stars, the streak and the daily reviews start over, and the Learn group is emptied. This cannot be undone": "Semua pelajaran, bintang, hari beruntun, dan review harian mulai dari awal, dan grup Belajar dikosongkan. Tindakan ini tidak bisa dibatalkan", "Reset": "Reset", "You need {0}% to pass.": "Butuh {0}% untuk lulus.",
   "Back": "Kembali", "{0} questions": "{0} soal", "Practice again the words you missed most.": "Latihan lagi kata-kata yang paling sering salah.",
   "{0} questions from all the words of {1}. {2}% opens the next level.": "{0} soal dari semua kata {1}. Dapat {2}% untuk membuka level berikutnya.",
-  "Tap to hear it again": "Ketuk untuk dengar lagi", "Tap Ollie to hear it again": "Ketuk Ollie untuk dengar lagi", "Today’s goal reached!": "Target hari ini tercapai!", "{0} is open!": "{0} terbuka!",
+  "Tap to hear it again": "Ketuk untuk dengar lagi", "Tap Ollie to hear it again": "Ketuk Ollie untuk dengar lagi", "+ {0} more": "+ {0} lagi", "Today’s goal reached!": "Target hari ini tercapai!", "{0} is open!": "{0} terbuka!",
   "Play": "Putar", "Mistakes": "Salah", "Time": "Waktu", "Skip ahead": "Lompati", "Already know these words? Pass it and every lesson up to here counts as done.": "Sudah hafal kata-katanya? Lulus ujian ini dan semua pelajaran sampai di sini dianggap selesai.", "{0} lessons skipped.": "{0} pelajaran dilompati.", "Daily review": "Ulangan harian", "Swipe left to go back to the cards": "Geser ke kiri untuk kembali ke kartu", "Swipe right for Learn 學": "Geser ke kanan untuk mode Belajar 學", "Mock test": "Tryout", "{0} questions · {1} minutes": "{0} soal · {1} menit", "{0} questions ({1} listening, then {1} reading) from all the A1 and A2 practice, in {2} minutes. Like the real test, the answers are only checked at the end.": "{0} soal ({1} mendengar, lalu {1} membaca) dari semua latihan A1 dan A2, dalam {2} menit. Seperti ujian sungguhan, jawaban baru diperiksa di akhir.", "Time is up": "Waktu habis", "Finish": "Selesai", "Aim for at least {0}% before the real test.": "Targetkan minimal {0}% sebelum ujian sungguhan.", "Exam practice {0}": "Latihan ujian {0}", "TOCFL format · {0} questions": "Format TOCFL · {0} soal", "Reading": "Membaca", "Listening": "Mendengar", "Listen to the dialog": "Dengarkan percakapannya", "Read real-life texts and listen to short dialogs, as in the TOCFL test. The questions and answers are in Chinese; the translation comes after you answer.": "Baca teks sehari-hari dan dengarkan percakapan pendek, seperti di ujian TOCFL. Soal dan jawabannya dalam bahasa Mandarin; terjemahannya muncul setelah kamu menjawab.", "Grammar": "Tata bahasa", "{0} words to review today": "{0} kata perlu diulang hari ini", "All caught up for today": "Semua sudah diulang hari ini", "Nothing to review today": "Hari ini tidak ada yang perlu diulang", "What does the sentence mean?": "Apa arti kalimat ini?", "Listen: what does it mean?": "Dengarkan: apa artinya?"});
 lnIcon.review = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19.5 9.5A8 8 0 0 0 5 7.6M4.5 14.5A8 8 0 0 0 19 16.4"/><path d="M5 3.5v4.3h4.3M19 20.5v-4.3h-4.3"/></svg>';
 const LN_PASS = .8, LN_TEST_N = 20, LN_LESSON_N = 15, LN_REVIEW_N = 12, LN_GROUP = '🎓';
@@ -8213,7 +8181,7 @@ function lsExam(q){
     const xexp = `<div class="ls-xexp">${it.t === 'l' ? `<div lang="zh-TW">${it.d.map(d => `<p><b>${d[0]}：</b>${esc(d[1])}</p>`).join('')}</div>` : ''}<p class="tr">${esc(it.tr[L])}</p></div>`;
     lsFb.className = 'ls-fb ' + (ok ? 'ok' : 'bad');
     lsFb.innerHTML = `<b>${ok ? tx('Correct!') : tx('Not quite')}</b><span class="w">${esc(it.qt[L])} → <span lang="zh-TW">${esc(it.o[it.a])}</span></span>` + xexp;
-    lsSetGo(tx('Continue'), ok ? 'ok' : 'bad');
+    lsSetGo(tx('Continue'), ok ? 'ok' : 'bad'); lsFit();
   });
 }
 
@@ -8296,26 +8264,17 @@ function lsLayout(){
 }
 // ---- the bear: a Formosan black bear that talks in listening questions (tap it to hear again), smiles at a right answer, frowns at a wrong one.
 // Still the rest of the time (no idle animation). In a dialog, a second bear speaks B's lines.
-let lsBearN = 0;
 const lsBearSVG = b => mascotHTML(b ? 'brown' : 'bear', 'idle', 'msc');   // a dialog's second voice: the same bear, in brown
 let lsBearT = null;
 function lsBearSet(m, who){
   lsBody.querySelectorAll('.ls-bear').forEach((b, i) => {
     if(who != null && i !== who) return;
-    if(b.dataset.m === 'talk' && m !== 'talk') lsBearEase(b);
+    if(b.dataset.m === 'talk' && m !== 'talk'){ const h = b.querySelector('.ls-hint.later'); if(h) setTimeout(() => h.classList.remove('later'), 340); }   // its first words said and the bounce done: now the 'tap me' note
     b.dataset.m = m;
     const mc = b.querySelector('tocfl-mascot');   // the lesson's moods as poses; the end of a lesson, happy: celebrating
-    if(mc){ if(LS && LS.done && LS.stars) mc.dataset.hops = LS.stars; else delete mc.dataset.hops; }   // at the end: a hop for each star
-    if(mc) mc.setAttribute('pose', m === 'talk' ? 'talking' : m === 'happy' ? (lsCheer() ? 'celebrating' : 'happy') : m === 'sad' ? 'sad' : 'idle');
+    if(mc){ const st = LS && LS.done && m === 'happy' ? LS.stars : 0; if(st >= 2){ mc.dataset.hops = 3; mc.dataset.fire = st >= 3 ? '1' : ''; } else { delete mc.dataset.hops; delete mc.dataset.fire; } }   // at the end: 2 stars, three hops; 3 stars, the third on fire
+    if(mc) mc.setAttribute('pose', m === 'talk' ? 'talking' : m === 'happy' ? (LS && LS.done && LS.stars === 1 ? 'waving' : lsCheer() ? 'celebrating' : 'happy') : m === 'sad' ? 'sad' : 'idle');   // one star: a wave
   });
-}
-// the talking bob stops by easing back from where it is, not with a jump
-function lsBearEase(b){
-  const s = b.querySelector('.msc'), t = getComputedStyle(s).transform;
-  if(!t || t === 'none') return;
-  s.style.transition = 'none'; s.style.transform = t; s.style.animation = 'none'; void s.offsetWidth;
-  s.style.transition = 'transform .35s ease-out'; s.style.transform = 'none';
-  setTimeout(() => { s.style.transition = s.style.transform = s.style.animation = ''; }, 380);
 }
 const lsBearRest = () => lsBearSet((LS && LS.mood) || 'idle');
 // celebrate: at the end of a lesson, and for every 5 right answers in a row
@@ -8326,15 +8285,16 @@ function lsBearReact(){
   lsBody.querySelectorAll('.ls-bear tocfl-mascot').forEach(m => m.replay());   // the clip again: a second right answer hops again
 }
 // a word or sentence read aloud: the bear talks until it ends (at most 10 s, in case the phone never says it ended)
-let lsSaySeq = 0;
+let lsSaySeq = 0, lsVoiceOn = false;   // lsVoiceOn: a word being heard right now
 function lsSay(text, btn, talk, after){
   if(!HAS_TTS || !SOUND_ON){ if(after) after(); return; }
   const seq = ++lsSaySeq;   // a new word cuts the old one off: the old one's end must not stop the bear talking the new one
   clearTimeout(lsBearT);
-  if(talk){ lsBearSet('talk', 0); lsBearT = setTimeout(() => { if(seq === lsSaySeq) lsBearRest(); }, 10000); }
-  else if(lsBody.querySelector('.ls-bear[data-m="talk"]')) lsBearRest();
+  if(lsBody.querySelector('.ls-bear[data-m="talk"]')) lsBearRest();
+  // the bear starts talking when the voice does (a voice can take a moment to load), and stops when it ends
+  const go = () => { lsVoiceOn = true; if(talk && seq === lsSaySeq){ lsBearSet('talk', 0); clearTimeout(lsBearT); lsBearT = setTimeout(() => { if(seq === lsSaySeq) lsBearRest(); }, 10000); } };
   speakManual = true;
-  try{ speak(text, btn, () => { if(talk && seq === lsSaySeq){ clearTimeout(lsBearT); lsBearRest(); } if(after) after(); }); } finally { speakManual = false; }
+  try{ speak(text, btn, () => { if(seq === lsSaySeq) lsVoiceOn = false; if(talk && seq === lsSaySeq){ clearTimeout(lsBearT); lsBearRest(); } if(after) after(); }, go); } finally { speakManual = false; }
 }
 // placed just above the answers (or under a new word / the result); left out when the screen has no room for it
 function lsBearPlace(anchor){
@@ -8344,20 +8304,22 @@ function lsBearPlace(anchor){
   el.innerHTML = `<div class="ls-bear" data-m="idle">${lsBearSVG(false)}<span class="ls-bub">…</span></div>${two ? `<div class="ls-bear b" data-m="idle">${lsBearSVG(true)}<span class="ls-bub">…</span></div>` : ''}`;
   const replay = LS && LS.replay;
   if(anchor && LS && LS.listen) el.classList.add('lq');   // a listening question: lots of room above the answers, the bear sits higher
-  if(replay && LS.listen && !LS.done) el.querySelector('.ls-bear').insertAdjacentHTML('beforeend', `<div class="ls-hint" aria-hidden="true"><span>${tx('Tap Ollie to hear it again')}</span><svg viewBox="0 0 60 34" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4c4 16 22 26 46 22"/><path d="M41.5 21L53 25.5l-9.5 7.5"/></svg></div>`);   // the sound is on the bear: say so, with an arrow
+  if(replay && LS.listen && !LS.done) setTimeout(() => { const h = el.querySelector('.ls-hint.later'); if(h && !el.querySelector('.ls-bear[data-m="talk"]')) h.classList.remove('later'); }, 4000);   // no voice came: show it anyway
+  if(replay && LS.listen && !LS.done) el.querySelector('.ls-bear').insertAdjacentHTML('beforeend', `<div class="ls-hint later" aria-hidden="true"><span>${tx('Tap Ollie to hear it again')}</span><svg viewBox="0 0 60 34" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4c4 16 22 26 46 22"/><path d="M41.5 21L53 25.5l-9.5 7.5"/></svg></div>`);   // the sound is on the bear: say so, with an arrow
   if(anchor) anchor.before(el); else lsBody.appendChild(el);
-  const speaking = HAS_TTS && (window.speechSynthesis.speaking || window.speechSynthesis.pending);
+  const speaking = lsVoiceOn;   // heard now (not just asked for: a voice can take a while to start)
   lsBearSet(speaking && LS.listen && !two ? 'talk' : (LS && LS.mood) || 'idle');
   // a tap: before the answer, the sound again (a new word, a listening question) or else a wave; after it, the hop or the sigh again
   const poke = b => {
     const m = LS && LS.mood, mc = b.querySelector('tocfl-mascot');
     if(b.dataset.m === 'talk'){ if(replay) replay(); if(mc) mc.replay(); return; }   // talking: the sound and the mouth start over
     if(replay && LS.listen && (!m || m === 'idle')){ replay(); return; }   // a new word or a listening question: the sound again
-    if(!mc) return;
-    if(m === 'happy' && !LS.done){   // a right answer: every third tap, the rocket hop
-      const key = LS.step + '/' + LS.qi; if(b._tapKey !== key){ b._tapKey = key; b._taps = 0; }
+    if(!mc || mc._raf) return;   // still moving: let it finish (only the voice starts over)
+    if(m === 'happy'){   // a right answer (or the lesson's end, once its show is over): one hop a tap, every third the rocket hop
+      const key = LS.done ? 'end' : LS.step + '/' + LS.qi; if(b._tapKey !== key){ b._tapKey = key; b._taps = 0; }
       if(++b._taps % 3 === 0) mc.dataset.rocket = '1';
-      mc.replay();
+      delete mc.dataset.hops; delete mc.dataset.fire;
+      if(mc.getAttribute('pose') !== 'happy') mc.setAttribute('pose', 'happy'); else mc.replay();
     }
     else if(m === 'happy' || m === 'sad') mc.replay(); else mc.play('hello');
   };
@@ -8520,7 +8482,16 @@ function lsJudge(q, ok){
   lsFb.innerHTML = `<b>${ok ? tx('Correct!') : tx('Not quite')}</b>` + (q.p
     ? `<span class="w"><span class="sp">${esc(q.p.e.py || '')}</span>${q.k === 'b' || q.k === 'o' ? '' : `<br>${esc(exTrans(q.p.e))}`}</span>`   // the sentence (and for b / o its translation) is on screen already
     : `<span class="w"><span lang="zh-TW">${esc(fullWord(r[0]))}</span> ${colorPinyin(pyOf(r))} · ${esc(shortMeaning(r))}</span>`);
-  lsSetGo(tx('Continue'), ok ? 'ok' : 'bad');
+  lsSetGo(tx('Continue'), ok ? 'ok' : 'bad'); lsFit();
+}
+// answered: the explanation takes room. Rather than the answers running off the bottom, they move up, over the bear if need be
+function lsFit(){
+  requestAnimationFrame(() => {
+    const bs = lsBody.querySelector('.ls-bears'); if(!bs || !LS || !LS.answered) return;
+    bs.style.marginBottom = '0px';
+    const d = lsBody.scrollHeight - lsBody.clientHeight;
+    if(d > 0) bs.style.marginBottom = `-${d + 4}px`;
+  });
 }
 function lsAnswer(q, opts, i){
   if(LS.answered) return;
@@ -8569,6 +8540,22 @@ function lsMockFinish(){
   LS.mood = stars ? 'happy' : 'sad';
   LS.done = true; LS.answered = true;
   lsSetGo(tx('Continue'));
+}
+// the words to go over again on the result: as many as fit on the screen (the bear's room kept), and "+ n more" for the rest
+function lsWordRows(rows, all, shown){
+  const row = r => `<div class="ln-w"><span class="h" lang="zh-TW">${esc(fullWord(r[0]))}</span><span class="p">${colorPinyin(pyOf(r))}</span><span class="m">${esc(shortMeaning(r))}</span></div>`;
+  if(all || rows.length <= shown) return rows.map(row).join('');
+  return rows.slice(0, shown).map(row).join('') + `<button type="button" class="ls-more">${tx('+ {0} more', rows.length - shown)}</button>`;
+}
+function lsWordFit(rows){
+  const list = lsBody.querySelector('.ls-missed'); if(!list || !list.firstElementChild) return;
+  const rowH = list.firstElementChild.offsetHeight + 2, other = lsBody.scrollHeight - list.offsetHeight;
+  const room = lsBody.clientHeight - other - 124 - 36;   // 124: the bear, 36: the "+ n" button
+  const fit = Math.max(3, Math.floor(room / rowH));
+  if(rows.length <= fit + 1) return;   // one more than fits: just show it
+  list.innerHTML = lsWordRows(rows, false, fit);
+  const more = list.querySelector('.ls-more');   // the rest on a tap (the screen scrolls then)
+  more.onclick = () => { more.outerHTML = lsWordRows(rows.slice(fit), true); };
 }
 // the result's stars: the ones you earned light up one after another, each with a chime a little higher than the last
 const LS_STAR_GAP = 450, LS_STAR_START = 350;
@@ -8635,7 +8622,8 @@ function lsFinish(){
     ${!passed ? `<div class="ls-note">${tx('You need {0}% to pass.', LN_PASS * 100)}</div>` : ''}
     ${added ? `<div class="ls-note">${tx('{0} words saved in your Learn group', added)}</div>` : ''}
     ${note ? `<div class="ls-note hot">${esc(note)}</div>` : ''}
-    ${LS.missed.size ? `<div class="ln-words ls-missed">${[...LS.missed].map(r => `<div class="ln-w"><span class="h" lang="zh-TW">${esc(fullWord(r[0]))}</span><span class="p">${colorPinyin(pyOf(r))}</span><span class="m">${esc(shortMeaning(r))}</span></div>`).join('')}</div>` : ''}</div>`;
+    ${LS.missed.size ? `<div class="ln-words ls-missed">${lsWordRows([...LS.missed], true)}</div>` : ''}</div>`;
+  lsWordFit([...LS.missed]);
   LS.stars = mode === 'daily' ? 1 : stars;   // the bear hops once for each star
   LS.mood = passed ? 'happy' : 'sad';
   LS.done = true; LS.answered = true;
