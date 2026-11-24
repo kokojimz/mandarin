@@ -146,6 +146,8 @@
   .fm-err{ color:#d64545; font-size:.78rem; margin:20px 0 0; text-align:center; }
   .fm-err:empty{ display:none; }
   .fm-actions{ display:flex; gap:8px; margin-top:20px; }
+  /* a long dialog: its buttons stay at the bottom, the rest scrolls behind them */
+  #formBox .fm-actions{ position:sticky; bottom:-26px; z-index:2; margin:8px 0 -26px; padding:12px 0 26px; background:var(--card-bg); }
   .fm-actions .cf-btn{ padding:11px 4px; font-size:.85rem; }
   .pk-tools{ display:flex; justify-content:center; gap:10px; margin-top:12px; }
   .gp-list{ display:flex; flex-direction:column; border:1px solid var(--border); border-radius:12px; overflow:hidden; }
@@ -920,7 +922,13 @@
   #formBox.ch-dlg{ display:flex; flex-direction:column; overflow:hidden; }
   #formBox.ch-dlg .ch-list{ flex:1 1 auto; min-height:0; overflow-y:auto; overscroll-behavior:contain; -webkit-overflow-scrolling:touch; }
   #formBox.ch-dlg .ch-head, #formBox.ch-dlg .ch-tones{ flex:none; }
-  #formBox.ch-dlg .x-close{ align-self:flex-end; }   /* ✕ stays top right (float doesn't work in a flex column) */
+  #formBox.ch-dlg .x-close{ align-self:flex-end; }
+  /* a lesson's words: only the list scrolls; the title and Start stay */
+  #formBox.ln-dlg{ display:flex; flex-direction:column; overflow:hidden; }
+  #formBox.ln-dlg .ln-words{ flex:1 1 auto; min-height:0; overflow-y:auto; overscroll-behavior:contain; -webkit-overflow-scrolling:touch; }
+  #formBox.ln-dlg > :not(.ln-words){ flex:none; }
+  #formBox.ln-dlg .x-close{ align-self:flex-end; }
+  #formBox.ln-dlg .fm-actions{ position:static; margin:14px 0 0; padding:0; }   /* ✕ stays top right (float doesn't work in a flex column) */
   /* ⓘ of a fill in the blank sentence: the sentence and its translation on top, a line, then each character */
   .ch-head{ text-align:center; padding:0 22px 14px; margin-bottom:16px; border-bottom:1px solid var(--border); }
   .ch-sent{ font-size:1.3rem; line-height:1.45; }
@@ -5080,7 +5088,7 @@ function openForm(html, stack = false){
   fmBox.onkeydown = null;                   // a dialog's own key handler never outlives it
   fmGuard = pressDown; fmGuardReleased = false;
   fmBox.innerHTML = X_HTML() + html;
-  fmBox.classList.remove('narrow', 'ch-dlg', 'az-dlg', 'ph-dlg');   // a dialog that wants the confirm width (or its own layout) adds it back after opening
+  fmBox.classList.remove('narrow', 'ch-dlg', 'az-dlg', 'ph-dlg', 'ln-dlg');   // a dialog that wants the confirm width (or its own layout) adds it back after opening
   fmOverlay.classList.add('on');
   fmOverlay.setAttribute('aria-hidden', 'false');
   fmBox.scrollTop = 0;
@@ -7239,6 +7247,8 @@ function lnRender(){
     : `<div class="ln-daily done"><span class="ln-seal" lang="zh-TW">溫</span><span class="ln-tx"><span class="ln-t">${tx('Daily review')}</span><span class="ln-s">${tx('All caught up for today')}</span></span><span class="ln-r">${lnIcon.check}</span></div>`;
   let lastLv = '', lastUnit = '', step = 0, lessonNo = 0;
   const opened = lnOpenLoad(), curUk = cur >= 0 && !list[cur].test && !list[cur].exam && !list[cur].tryout ? list[cur].lv + '.' + list[cur].ui : '';
+  // moved on to a new unit: it opens, even if it was closed with its arrow before
+  try{ if(curUk && localStorage.getItem(LS_LNCUR) !== curUk){ if(localStorage.getItem(LS_LNCUR) != null){ opened[curUk] = true; localStorage.setItem(LS_LNOPEN, JSON.stringify(opened)); } localStorage.setItem(LS_LNCUR, curUk); } }catch(e){}
   list.forEach((l, i) => {
     if(l.lv !== lastLv){
       lastLv = l.lv;
@@ -7273,6 +7283,7 @@ function lnRender(){
 }
 // which units are opened / closed with their arrow (kept in this browser; a unit never touched: open only if you are in it)
 const LS_LNOPEN = 'tocfl-learn-open-v1';
+const LS_LNCUR = 'tocfl-learn-curunit-v1';   // the unit you were in last time the path was drawn
 function lnOpenLoad(){ try{ return JSON.parse(localStorage.getItem(LS_LNOPEN) || '{}') || {}; }catch(e){ return {}; } }
 function lnToggleUnit(h){
   const open = !h.classList.contains('open'), o = lnOpenLoad();
@@ -7857,7 +7868,7 @@ function lnOpenLesson(l){
     <div class="fm-sub">${tx('{0} words', l.words.length)}</div>
     <div class="ln-words">${l.words.map((hz, i) => { const r = rows[i]; return `<div class="ln-w"><span class="h" lang="zh-TW">${esc(hz)}</span><span class="p">${r ? colorPinyin(pyOf(r)) : ''}</span><span class="m">${r ? esc(shortMeaning(r)) : ''}</span></div>`; }).join('')}</div>
     <div class="fm-actions"><button type="button" class="cf-btn cf-yes" id="fmOk">${tx('Start')}</button></div>`);
-  fmBox.classList.add('narrow');
+  fmBox.classList.add('narrow', 'ln-dlg');
   document.getElementById('fmOk').onclick = () => { closeForm(); lsStart(l); };
 }
 // ---------- Learn, stage 2: the lessons themselves ----------
@@ -8271,7 +8282,7 @@ let lsBearT = null;
 function lsBearSet(m, who){
   lsBody.querySelectorAll('.ls-bear').forEach((b, i) => {
     if(who != null && i !== who) return;
-    if(b.dataset.m === 'talk' && m !== 'talk'){ const h = b.querySelector('.ls-hint.later'); if(h) setTimeout(() => h.classList.remove('later'), 340); }   // its first words said and the bounce done: now the 'tap me' note
+    if(b.dataset.m === 'talk' && m !== 'talk'){ const h = b.querySelector('.ls-hint'); if(h){ h.classList.add('later'); clearTimeout(h._t); h._t = setTimeout(() => h.classList.remove('later'), 340); } }   // done talking: the 'tap me' note once the bounce is over (each time)
     b.dataset.m = m;
     const mc = b.querySelector('tocfl-mascot');   // the lesson's moods as poses; the end of a lesson, happy: celebrating
     if(mc){ const st = LS && LS.done && m === 'happy' ? LS.stars : 0; if(st >= 2){ mc.dataset.hops = 3; mc.dataset.fire = st >= 3 ? '1' : ''; } else { delete mc.dataset.hops; delete mc.dataset.fire; } }   // at the end: 2 stars, three hops; 3 stars, the third on fire
@@ -8490,9 +8501,8 @@ function lsJudge(q, ok){
 function lsFit(){
   requestAnimationFrame(() => {
     const bs = lsBody.querySelector('.ls-bears'); if(!bs || !LS || !LS.answered) return;
-    bs.style.marginBottom = '0px';
-    const d = lsBody.scrollHeight - lsBody.clientHeight;
-    if(d > 0) bs.style.marginBottom = `-${d + 4}px`;
+    const m0 = parseFloat(getComputedStyle(bs).marginBottom) || 0, d = lsBody.scrollHeight - lsBody.clientHeight;
+    if(d > 0) bs.style.marginBottom = `${m0 - d - 4}px`;   // the bear stays put; only when the answers run off does it give way
   });
 }
 function lsAnswer(q, opts, i){
