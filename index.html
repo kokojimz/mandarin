@@ -4460,7 +4460,7 @@ let speechUnlocked = false, tonePlayT = null;
 // iPhone, the first voice after the app opens (or comes back): "start" comes a while before the voice is heard (it is still
 // loading; its first-word event comes early too). Then whatever moves with the voice (the bear's mouth, the dots) waits
 // TTS_COLD_MS after "start". Once a voice was heard to the end, "start" is on time again.
-const TTS_COLD_MS = 800;
+const TTS_COLD_MS = 900;
 let ttsWarm = false;
 function ttsOnHeard(u, go){
   const cold = IS_IOS && !ttsWarm;
