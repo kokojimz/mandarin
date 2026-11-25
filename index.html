@@ -725,7 +725,7 @@
   .ls-bears.lq:not(.sm){ margin-bottom:11vh; }
   .ls-bears:has(.m-front){ position:relative; z-index:5; }   /* moving: over the answers; still: behind them */
   tocfl-mascot{ display:block; position:relative; width:100%; height:100%; -webkit-user-select:none; user-select:none; }
-  tocfl-mascot canvas{ transform-origin:50% 94%; position:absolute; left:-20.3125%; bottom:-7.8125%; width:140.625%; height:140.625%; pointer-events:none; }   /* the frames have room above the bear for a hop, and an empty margin all round (Safari's drop-shadow wraps an edge the picture touches) */
+  tocfl-mascot canvas{ position:absolute; left:-20.3125%; bottom:-7.8125%; width:140.625%; height:140.625%; pointer-events:none; }   /* the frames have room above the bear for a hop, and an empty margin all round (Safari's drop-shadow wraps an edge the picture touches) */
   tocfl-mascot canvas{ filter:drop-shadow(0 0 1px rgba(255,255,255,.5)) drop-shadow(0 0 4px rgba(255,255,255,.12)); }   /* a soft light rim round the bear */
   :root[data-theme="light"] tocfl-mascot canvas{ filter:drop-shadow(0 0 1px rgba(0,0,0,.35)) drop-shadow(0 0 4px rgba(0,0,0,.1)); }   /* on a light page: a soft dark one */
   tocfl-mascot .m-rig{ position:absolute; inset:0; transform-origin:50% 100%; }
@@ -1882,7 +1882,8 @@ const mascotFrames = k => MASCOT_IMG[`n-${k}`] || 56;
 const MASCOT_CLIPS = {idle: {pose: 'idle'}, hello: {pose: 'waving', ms: 1800}};
 // the mouth for a line of speech: [frame, ms] steps, the same every time. A Chinese character is a syllable (other words: their vowels).
 // Each syllable opens the mouth wide (4) and half shuts it (3); the last one before a comma, a stop or the end shuts it (0) for a breath.
-// The speech's real pace isn't known, so the times are a guess; past the end it starts over.
+// Played once, at about the voice's pace (rate .85: some 3 syllables a second); then the mouth stays shut until the voice ends,
+// so a one-syllable word (錢) opens it once, not twice.
 function mascotMouth(text){
   const syl = [], t = String(text || '');
   for(const w of t.match(/[\u3400-\u9fff\uf900-\ufaff]|[A-Za-z\u00c0-\u024f]+|[，。！？、；：,.!?;:]/g) || []){
@@ -1895,8 +1896,8 @@ function mascotMouth(text){
   syl.forEach((x, n) => {
     if(!x) return;
     const last = !syl[n + 1];   // a comma, a stop or the end comes next
-    out.push([4, 150], last ? [3, 60] : [3, 120]);
-    if(last) out.push([0, n + 1 < syl.length ? 220 : 380]);
+    out.push(last ? [4, 220] : [4, 170], [3, last ? 120 : 130]);
+    if(last && n + 1 < syl.length) out.push([0, 220]);
   });
   return out;
 }
@@ -1917,10 +1918,9 @@ class TocflMascot extends HTMLElement {
     else if(!this._raf) this.draw(...this.holdOf(p));
   }
   holdOf(p){ return (MASCOT_POSE_ANIM[p] || MASCOT_POSE_ANIM.idle).hold; }
-  // the voice ended: the head eases back down (the frames' bob), a wide mouth shuts through the half-open one
+  // the voice ended: a wide mouth shuts through the half-open one
   hush(start){
-    const cv = this.cv, wide = this._mouth === 4;
-    if(cv){ cv.style.transition = 'transform .2s ease-out'; clearTimeout(this._ht); this._ht = setTimeout(() => { cv.style.transition = ''; }, 220); }
+    const wide = this._mouth === 4;
     start();
     if(wide && !this._raf && this._shown === 'talk0'){ this.draw('talk', 3); setTimeout(() => { if(!this._raf && this._shown === 'talk3') this.draw('talk', 0); }, 70); }
   }
@@ -1953,22 +1953,18 @@ class TocflMascot extends HTMLElement {
       go(0);
     }, 2200 + Math.random() * 3300);
   }
-  // talking: the mouth to the words (dataset.say), the head bobbing a little as it opens
+  // talking: the mouth to the words (dataset.say); only the mouth moves
   talk(){
-    const steps = mascotMouth(this.dataset.say), total = steps.reduce((a, x) => a + x[1], 0), cv = this.cv;
-    clearTimeout(this._ht); cv.style.transition = '';
-    const h = this.offsetHeight || 108;   // read once, not on every frame
-    let t0 = 0, bob = this._bob || 0, open = 0;   // a tap mid-word starts the words over, the head goes on from where it is
+    const steps = mascotMouth(this.dataset.say);
+    let t0 = 0;
     const tick = now => {
       if(!this.isConnected){ this._raf = 0; return; }
       const s = mascotSheet('talk', this._v);
       if(!s.ready){ this._raf = requestAnimationFrame(tick); return; }
       if(!t0) t0 = now;
-      let ms = (now - t0) % total, f = 0;
+      let ms = now - t0, f = 0;   // past the end: shut
       for(const [fr, d] of steps){ if(ms < d){ f = fr; break; } ms -= d; }
-      open = [0, .45, .4, .75, 1][f]; this._mouth = f;
-      bob += (open - bob) * .18; this._bob = bob;   // eased: the head follows the mouth, softly
-      cv.style.transform = `translateY(${(-bob * h * .025).toFixed(2)}px) scaleY(${(1 + bob * .012).toFixed(4)})`;
+      this._mouth = f;
       this.draw('talk', f);
       this._raf = requestAnimationFrame(tick);
     };
@@ -1978,7 +1974,6 @@ class TocflMascot extends HTMLElement {
   start(){
     cancelAnimationFrame(this._raf); this._raf = 0; this.classList.remove('m-front'); if(this.rig) this.rig.style.transform = '';
     const a = MASCOT_POSE_ANIM[this._p] || MASCOT_POSE_ANIM.idle;
-    if(!a.talk && this.cv){ this.cv.style.transform = ''; this._bob = 0; }
     if(!this._bt) this.blinks();
     if(a.talk && !matchMedia('(prefers-reduced-motion: reduce)').matches){ this.classList.add('m-front'); this.talk(); return; }
     if(!a.clip || matchMedia('(prefers-reduced-motion: reduce)').matches){ this.draw(...a.hold); return; }
