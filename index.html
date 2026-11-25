@@ -4458,15 +4458,13 @@ function stopSpeech(){
 // iPhone only lets a page speak from inside a tap; one silent utterance in the tap unlocks the later (delayed) ones
 let speechUnlocked = false, tonePlayT = null;
 // iPhone, the first voice after the app opens (or comes back): "start" comes a while before the voice is heard (it is still
-// loading). Then whatever moves with the voice (the bear's mouth, the dots) waits for its first word instead (the boundary
-// event), or 0.6 s at most. Once a voice was heard, "start" is on time again.
+// loading; its first-word event comes early too). Then whatever moves with the voice (the bear's mouth, the dots) waits
+// TTS_COLD_MS after "start". Once a voice was heard to the end, "start" is on time again.
+const TTS_COLD_MS = 800;
 let ttsWarm = false;
 function ttsOnHeard(u, go){
-  let fired = false, t = 0;
-  const fire = () => { if(fired) return; fired = true; clearTimeout(t); go(); };
   const cold = IS_IOS && !ttsWarm;
-  u.addEventListener('start', () => { if(cold) t = setTimeout(fire, 600); else fire(); });
-  u.addEventListener('boundary', () => { ttsWarm = true; fire(); });
+  u.addEventListener('start', () => { if(cold) setTimeout(go, TTS_COLD_MS); else go(); });
   u.addEventListener('end', () => { ttsWarm = true; });
 }
 // back from another app, iPhone's voice is often stuck: paused, or "speaking" with nothing coming out, and the unlock
