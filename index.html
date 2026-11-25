@@ -787,7 +787,8 @@
   .ls-tw{ color:var(--accent); font-weight:inherit; }
   .ls-unk{ font:inherit; color:inherit; background:none; border:0; padding:0; cursor:pointer; text-decoration:underline dotted var(--sub); text-underline-offset:6px; text-decoration-thickness:2px; }
   .ls-blank{ color:var(--accent); }
-  .ls-blank.ok{ color:#1e9e5a; } .ls-blank.bad{ color:#d64545; text-decoration:line-through; }
+  .ls-blank:not(.ok):not(.bad){ letter-spacing:-.25em; padding-right:.25em; }   /* the ＿＿ as one line, no gaps between them */
+  .ls-blank.ok, .ls-blank.bad{ color:#1e9e5a; }   /* answered: the right word, in green (wrong or not: the wrong pick is marked on its button) */
   .ls-tr{ text-align:center; color:var(--sub); font-size:.92rem; line-height:1.45; margin:0 6px 4px; }
   .ls-trq{ color:var(--text); font-size:1.1rem; font-weight:600; margin:14px 6px 10px; }
   .ls-opt.ls-otr{ font-size:.95rem; text-align:left; padding:10px 14px; }
@@ -4464,8 +4465,10 @@ const TTS_COLD_MS = 900;
 let ttsWarm = false;
 function ttsOnHeard(u, go){
   const cold = IS_IOS && !ttsWarm;
-  u.addEventListener('start', () => { if(cold) setTimeout(go, TTS_COLD_MS); else go(); });
-  u.addEventListener('end', () => { ttsWarm = true; });
+  let t = 0;
+  u.addEventListener('start', () => { if(cold) t = setTimeout(go, TTS_COLD_MS); else go(); });
+  u.addEventListener('end', () => { ttsWarm = true; clearTimeout(t); });   // over (or cut off) before the wait: nothing starts after it
+  u.addEventListener('error', () => clearTimeout(t));
 }
 // back from another app, iPhone's voice is often stuck: paused, or "speaking" with nothing coming out, and the unlock
 // from an earlier tap no longer counts. Clear it on the way out, wake it on the way back; the next tap unlocks again.
@@ -4497,7 +4500,7 @@ function speak(text, btn, after, started){   // after: once the speech has ended
     u.lang = 'zh-TW'; if(vv){ u.voice = vv; u.lang = vv.lang; }
     u.rate = 0.85;
     u.onstart = () => { t0 = performance.now(); };
-    ttsOnHeard(u, () => { if(btn && btn === qzPlay) qzWave(); if(started && seq === speakSeq){ const f = started; started = null; f(); } });   // the dots (and the bear's mouth) start with the voice, not before
+    ttsOnHeard(u, () => { if(seq !== speakSeq) return; if(btn && btn === qzPlay) qzWave(); if(started){ const f = started; started = null; f(); } });   // the dots (and the bear's mouth) start with the voice, not before
     u.onend = () => { ended = true; if(t0 && seq === speakSeq) learnSyl(text, performance.now() - t0); done(); };   // only when heard to the end
     u.onerror = e => { if(e && e.error === 'interrupted' && seq === speakSeq && !t0) return; ended = true; done(); };
     speak.last = u;                                   // held, or Chrome may drop it before it ends
@@ -8616,7 +8619,7 @@ function lsSentHTML(q, blank){
   let wi = -1, bi = q.g ? q.p.hit : -1;   // the blank: the pattern word the question is about (a word question: its first place)
   if(bi < 0) bi = q.p.toks.filter(t => !t.p).findIndex(t => hit.has(t.w));
   return q.p.toks.map(t => { if(t.p) return esc(t.w); wi++;
-    if(blank && wi === bi) return '<span class="ls-blank">＿＿</span>';
+    if(blank && wi === bi) return `<span class="ls-blank">${'＿'.repeat([...t.w].length)}</span>`;   // a ＿ for each character of the answer
     if(hit.has(t.w) && (!q.g || !blank)) return `<b class="ls-tw">${esc(t.w)}</b>`;
     return q.p.unk.has(t.w) ? `<button type="button" class="ls-unk" data-w="${escAttr(t.w)}">${esc(t.w)}</button>` : esc(t.w); }).join('');
 }
