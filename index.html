@@ -829,7 +829,7 @@
   /* icon and number on one middle line, whatever the font: the icon sits on the text's baseline, lowered by half its height and raised by half the digits' height (.36em) */
   .ln-stat svg{ width:19px; height:19px; flex:none; transform:translateY(calc(9.5px - .36em + var(--ink, 0px))); }
   .ln-allstars svg{ --ink:.17px; } .ln-goal svg{ --ink:-.11px; } .ln-streak svg{ --ink:-.03px; }   /* each shape's own middle (its ink) on that line */
-  .ln-stat.ln-goal:not(.hot) > span, .ln-stat.ln-streak:not(.hot) > span{ color:var(--sub); }   /* numbers grey: the day's goal until it is reached, the streak until something is done today */
+  .ln-stat:not(.hot) > span{ color:var(--sub); }   /* numbers grey: the stars until all are got, the day's goal until it is reached, the streak until something is done today */
   .ln-top .ln-goal, .ln-top .ln-streak{ margin-left:3px; }   /* side by side, the same make */
   @media (max-width:350px){ .ln-top .ln-tot{ display:none; } }   /* a narrow phone: the stars got, not the total */
   .ln-top .ln-reset{ margin-left:auto; }
@@ -7399,7 +7399,7 @@ function lnRender(){
   const cur = list.findIndex(l => !s.done[l.key]);   // the first lesson not done: the one open now (all before it are done)
   const today = s.days[lnDay()] || 0, streak = lnStreak(s), starsGot = list.reduce((a, l) => a + (s.stars[l.key] || 0), 0);
   let html = `<div class="ln-head"><div class="ln-top">
-      <span class="ln-stat ln-allstars" title="${escAttr(tx('Stars'))}">${lnIcon.star}<span>${starsGot}<span class="ln-tot">/${list.length * 3}</span></span></span>
+      <span class="ln-stat ln-allstars${starsGot >= list.length * 3 ? ' hot' : ''}" title="${escAttr(tx('Stars'))}">${lnIcon.star}<span>${starsGot}<span class="ln-tot">/${list.length * 3}</span></span></span>
       <span class="ln-stat ln-goal${today >= LN_GOAL ? ' hot' : ''}" title="${escAttr(tx('Daily goal'))}">${lnIcon.goal}<span>${Math.min(today, LN_GOAL)}/${LN_GOAL}</span></span>
       <span class="ln-stat ln-streak${s.days[lnDay()] || s.kept[lnDay()] ? ' hot' : ''}" title="${escAttr(tx('Days in a row'))}">${lnIcon.flame}<span>${streak}</span></span>
       <button type="button" class="ln-reset" id="lnReset" title="${escAttr(tx('Reset progress'))}">${tx('Reset')}</button>
