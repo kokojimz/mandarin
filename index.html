@@ -4457,11 +4457,23 @@ function stopSpeech(){
 }
 // iPhone only lets a page speak from inside a tap; one silent utterance in the tap unlocks the later (delayed) ones
 let speechUnlocked = false, tonePlayT = null;
+// iPhone, the first voice after the app opens (or comes back): "start" comes a while before the voice is heard (it is still
+// loading). Then whatever moves with the voice (the bear's mouth, the dots) waits for its first word instead (the boundary
+// event), or 0.6 s at most. Once a voice was heard, "start" is on time again.
+let ttsWarm = false;
+function ttsOnHeard(u, go){
+  let fired = false, t = 0;
+  const fire = () => { if(fired) return; fired = true; clearTimeout(t); go(); };
+  const cold = IS_IOS && !ttsWarm;
+  u.addEventListener('start', () => { if(cold) t = setTimeout(fire, 600); else fire(); });
+  u.addEventListener('boundary', () => { ttsWarm = true; fire(); });
+  u.addEventListener('end', () => { ttsWarm = true; });
+}
 // back from another app, iPhone's voice is often stuck: paused, or "speaking" with nothing coming out, and the unlock
 // from an earlier tap no longer counts. Clear it on the way out, wake it on the way back; the next tap unlocks again.
 if(HAS_TTS) document.addEventListener('visibilitychange', () => {
   const s = window.speechSynthesis;
-  if(document.hidden){ speechUnlocked = false; try{ if(s.speaking || s.pending) s.cancel(); }catch(e){} return; }
+  if(document.hidden){ speechUnlocked = false; ttsWarm = false; try{ if(s.speaking || s.pending) s.cancel(); }catch(e){} return; }
   try{ if(s.paused) s.resume(); if(s.speaking && !s.pending) s.cancel(); }catch(e){}
   loadVoices();   // the voice objects can go stale too
 });
@@ -4486,7 +4498,8 @@ function speak(text, btn, after, started){   // after: once the speech has ended
     const u = new SpeechSynthesisUtterance(text);
     u.lang = 'zh-TW'; if(vv){ u.voice = vv; u.lang = vv.lang; }
     u.rate = 0.85;
-    u.onstart = () => { t0 = performance.now(); if(btn && btn === qzPlay) qzWave(); if(started && seq === speakSeq){ const f = started; started = null; f(); } };   // the dots (and the bear's mouth) start with the voice, not before
+    u.onstart = () => { t0 = performance.now(); };
+    ttsOnHeard(u, () => { if(btn && btn === qzPlay) qzWave(); if(started && seq === speakSeq){ const f = started; started = null; f(); } });   // the dots (and the bear's mouth) start with the voice, not before
     u.onend = () => { ended = true; if(t0 && seq === speakSeq) learnSyl(text, performance.now() - t0); done(); };   // only when heard to the end
     u.onerror = e => { if(e && e.error === 'interrupted' && seq === speakSeq && !t0) return; ended = true; done(); };
     speak.last = u;                                   // held, or Chrome may drop it before it ends
@@ -8347,7 +8360,7 @@ function lsDialog(lines, btn){
     const [who, text] = lines[i++], u = new SpeechSynthesisUtterance(text);
     u.lang = 'zh-TW'; if(v){ u.voice = v; u.lang = v.lang; }
     u.rate = .9; u.pitch = who === 'A' ? 1.25 : .8;
-    u.onstart = () => { if(seq === lsDlgSeq) lsBearSet('talk', who === 'A' ? 0 : 1, text); };   // A and B take turns
+    ttsOnHeard(u, () => { if(seq === lsDlgSeq) lsBearSet('talk', who === 'A' ? 0 : 1, text); });   // A and B take turns
     u.onend = () => { if(seq !== lsDlgSeq) return; lsBearSet((LS && LS.mood) || 'idle', who === 'A' ? 0 : 1); setTimeout(next, 350); };
     u.onerror = () => { if(seq !== lsDlgSeq) return; lsBearRest(); if(btn) btn.classList.remove('playing'); };   // a replay cut it off: leave the new one alone
     try{ window.speechSynthesis.speak(u); }catch(e){}
