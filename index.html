@@ -8568,7 +8568,7 @@ function lsBearPlace(anchor){
       b.onkeydown = e => { if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); poke(b); } }; } });
   if(lsBody.scrollHeight > lsBody.clientHeight + 1){ if(replay) el.classList.add('sm'); else el.remove(); }
   else if(LS && LS.done) lsBearReact();
-  else if(LS && !LS.greeted && el.isConnected && (LS.mood || 'idle') === 'idle' && !(speaking && LS.listen)){   // the first screen of a lesson: hello
+  else if(LS && !LS.greeted && el.isConnected && (LS.mood || 'idle') === 'idle' && !(LS.listen && HAS_TTS && SOUND_ON)){   // the first screen of a lesson: hello (not when it is about to speak: the voice can take a moment)
     LS.greeted = true; el.querySelectorAll('tocfl-mascot').forEach(m => m.play('hello'));
   }
 }
