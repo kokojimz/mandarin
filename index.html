@@ -8585,7 +8585,7 @@ function lsLayout(){
 // Still the rest of the time (no idle animation). In a dialog, a second bear speaks B's lines.
 const lsBearSVG = b => mascotHTML(b ? 'brown' : 'bear', 'idle', 'msc');   // a dialog's second voice: the same bear, in brown
 let lsBearT = null;
-const LS_HINT_MS = 3000;   // the 'tap Ollie' note: this long after the voice ends
+const LS_HINT_MS = 2400;   // the 'tap Ollie' note: this long after the voice ends
 function lsBearSet(m, who, say){
   if(LS && LS.medalHold && m !== 'talk') m = 'idle';   // a new medal on screen: the bear waits
   lsBody.querySelectorAll('.ls-bear').forEach((b, i) => {
