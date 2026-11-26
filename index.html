@@ -489,14 +489,15 @@
   @media (min-width:1250px){ footer{ max-width:1122px; } }
   /* the portal to Learn mode: a glowing round door at the right of the footer (and back, at the end of the path) */
   #learn{ position:fixed; inset:0; z-index:50; background:var(--bg); overflow-y:auto; -webkit-overflow-scrolling:touch; overscroll-behavior:contain;
-    visibility:hidden; transform:translate3d(-100%,0,0); will-change:transform; box-shadow:12px 0 40px rgba(0,0,0,.35); }
+    visibility:hidden; transform:translate3d(-100%,0,0); will-change:transform; }   /* (no shadow at its edge; the cards under it darken: #lnShade) */
   #learn.anim{ transition:transform .34s cubic-bezier(.22,.8,.24,1); }
+  #learn.still, #exam.still{ will-change:auto; }
   #lnShade{ position:fixed; inset:0; z-index:49; background:#000; opacity:0; visibility:hidden; pointer-events:none; }
   #lnShade.anim{ transition:opacity .34s cubic-bezier(.22,.8,.24,1); }
   @media (prefers-reduced-motion:reduce){ #learn.anim, #lnShade.anim{ transition-duration:.01s; } }
   /* the TOCFL reading test: to the right of the cards (swipe left), practice with explanations and an adaptive simulation */
   #exam{ position:fixed; inset:0; z-index:50; background:var(--bg); overflow-y:auto; -webkit-overflow-scrolling:touch; overscroll-behavior:contain;
-    visibility:hidden; transform:translate3d(100%,0,0); will-change:transform; box-shadow:-12px 0 40px rgba(0,0,0,.35); }
+    visibility:hidden; transform:translate3d(100%,0,0); will-change:transform; }
   #exam.anim{ transition:transform .34s cubic-bezier(.22,.8,.24,1); }
   @media (prefers-reduced-motion:reduce){ #exam.anim{ transition-duration:.01s; } }
   body.exam-on{ overflow:hidden; }
@@ -7492,9 +7493,12 @@ const learnEl = document.getElementById('learn'), lnWrap = document.getElementBy
 // settles with the speed of the flick. A shade dims the cards under it. (Mouse: drag the same way; touchpad: two-finger swipe.)
 const lnShade = document.createElement('div'); lnShade.id = 'lnShade'; document.body.appendChild(lnShade);
 let lnPos = 0, lnAnimT = null;   // 0 = closed, 1 = open
+// a page slid fully open: no transform and no layer kept for it any more (iPhone otherwise showed it stretched, from the
+// sliding layer, until a tap made it draw again)
+function lnStill(el){ el.style.transform = 'none'; el.classList.add('still'); }
 function lnSetPos(p, anim){
   lnPos = Math.max(0, Math.min(1, p));
-  learnEl.classList.toggle('anim', !!anim); lnShade.classList.toggle('anim', !!anim);
+  learnEl.classList.toggle('anim', !!anim); learnEl.classList.remove('still'); lnShade.classList.toggle('anim', !!anim);
   learnEl.style.transform = `translate3d(${(lnPos - 1) * 100}%,0,0)`;
   lnShade.style.opacity = (lnPos * .45).toFixed(3);
   lnShade.style.visibility = learnEl.style.visibility = lnPos > 0 || anim ? 'visible' : '';   // sliding out: seen until it is gone
@@ -7536,7 +7540,7 @@ function lnSettle(open){
   learnEl.classList.toggle('on', open);
   learnEl.setAttribute('aria-hidden', open ? 'false' : 'true');
   document.body.classList.toggle('learn-on', open);
-  lnAnimT = setTimeout(() => { learnEl.classList.remove('anim'); lnShade.classList.remove('anim'); if(!open) lnSetPos(0); }, 360);
+  lnAnimT = setTimeout(() => { learnEl.classList.remove('anim'); lnShade.classList.remove('anim'); if(!open) lnSetPos(0); else lnStill(learnEl); }, 360);
 }
 function openLearn(){ if(!learnEl.classList.contains('on') && lnPos === 0) lnShow(); lnSettle(true); lnHint('back'); }
 function closeLearn(){ lnSettle(false); }
@@ -8045,7 +8049,7 @@ document.getElementById('xmClose').addEventListener('click', () => {
 let xmPos = 0, xmAnimT = null;
 function xmSetPos(p, anim){
   xmPos = Math.max(0, Math.min(1, p));
-  examEl.classList.toggle('anim', !!anim); lnShade.classList.toggle('anim', !!anim);
+  examEl.classList.toggle('anim', !!anim); examEl.classList.remove('still'); lnShade.classList.toggle('anim', !!anim);
   examEl.style.transform = `translate3d(${(1 - xmPos) * 100}%,0,0)`;
   lnShade.style.opacity = (xmPos * .45).toFixed(3);
   lnShade.style.visibility = examEl.style.visibility = xmPos > 0 || anim ? 'visible' : '';
@@ -8057,7 +8061,7 @@ function xmSettle(open){
   examEl.classList.toggle('on', open);
   examEl.setAttribute('aria-hidden', open ? 'false' : 'true');
   document.body.classList.toggle('exam-on', open);
-  xmAnimT = setTimeout(() => { examEl.classList.remove('anim'); lnShade.classList.remove('anim'); if(!open) xmSetPos(0); }, 360);
+  xmAnimT = setTimeout(() => { examEl.classList.remove('anim'); lnShade.classList.remove('anim'); if(!open) xmSetPos(0); else lnStill(examEl); }, 360);
 }
 function openExam(){ if(!examEl.classList.contains('on') && xmPos === 0) xmShowPanel(); xmSettle(true); lnHint('xback'); }
 function closeExam(){ xmSettle(false); }
