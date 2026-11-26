@@ -1847,6 +1847,7 @@ const MASCOT_IMG = (() => { const o = {}; document.querySelectorAll('script.masc
 const mascotVariant = v => v === 'brown' ? 'brown' : 'bear';   // the black bear; 'brown': the same bear in brown (a dialog's second voice)
 // how high the feet are in each frame of the hop (frame pixels): the big hop adds an arc on top, so the feet fly a clean curve
 const MASCOT_HOP_LIFT = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1.6,9.6,22.4,36.8,40,42.8,44.8,47.6,48,48,48,46,44,42,38.4,28.4,18.4,0.4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0], MASCOT_HOP_UP = 18.5, MASCOT_HOP_DOWN = 36;
+const MASCOT_HOP_LAND = 36, MASCOT_HOP_SETTLE = .5;   // the last hop's landing frame, and how fast the bob after it plays (of the clip's speed)
 const MASCOT_FPS = 30, MASCOT_PX = 256, MASCOT_COLS = 8, MASCOT_CELL = 264;   // 4 px of empty room round each frame: no edge of the next one bleeds in
 // clip: the sheet; fps: its own speed; from/to: the frames played; times: how often (0 = loop); hold: the frame it stays on after
 const MASCOT_POSE_ANIM = {
@@ -1872,14 +1873,82 @@ function mascotSheet(k, v){
   }
   return s;
 }
-// black fur (dark, grey) back to the dark brown of the original art; the scarf, face and eyes are left alone
+// the brown bear: black fur (dark, grey) to the dark brown of the original art, no white V on the chest (fur there too),
+// and a yellow and white striped scarf with plain yellow fringe; face, eyes and tongue are left alone
 function mascotBrown(im){
   const c = document.createElement('canvas'); c.width = im.naturalWidth; c.height = im.naturalHeight;
   const x = c.getContext('2d', {willReadFrequently: true}); x.drawImage(im, 0, 0);
-  const d = x.getImageData(0, 0, c.width, c.height), p = d.data;
-  for(let i = 0; i < p.length; i += 4){
-    const r = p[i], g = p[i + 1], b = p[i + 2];
-    if(p[i + 3] && r < 72 && Math.abs(r - g) < 8 && b - r > -4 && b - r < 11){ const V = Math.min(255, r / .62); p[i] = V; p[i + 1] = V * .57; p[i + 2] = V * .43; }
+  const d = x.getImageData(0, 0, c.width, c.height), p = d.data, W = c.width, N = W * c.height;
+  const red = [], white = [], isRed = new Uint8Array(N), isWhite = new Uint8Array(N);
+  for(let i = 0; i < N; i++){
+    const j = i * 4, r = p[j], g = p[j + 1], b = p[j + 2];
+    if(!p[j + 3]) continue;
+    if(r > 110 && r > 2.2 * g && r > 2.2 * b){ isRed[i] = 1; red.push(i); }
+    else if(r > 190 && g > 190 && b > 170 && r - b < 60){ isWhite[i] = 1; white.push(i); }
+  }
+  const near = i => { const x0 = i % W, o = []; if(x0) o.push(i - 1); if(x0 < W - 1) o.push(i + 1); if(i >= W) o.push(i - W); if(i + W < N) o.push(i + W); return o; };
+  // blobs of a mask (4-connected): each a list of pixels
+  const blobs = (list, m) => { const seen = new Uint8Array(N), out = [];
+    for(const s of list){ if(seen[s]) continue; seen[s] = 1; const q = [s];
+      for(let k = 0; k < q.length; k++) for(const n of near(q[k])) if(m[n] && !seen[n]){ seen[n] = 1; q.push(n); }
+      out.push(q); }
+    return out; };
+  // pixels within n steps of a set (4-connected), as a mask
+  const grow = (list, n) => { const dist = new Int8Array(N).fill(-1); let q = list.slice(); q.forEach(i => dist[i] = 0);
+    for(let k = 0; k < n; k++){ const nx = []; for(const i of q) for(const o of near(i)) if(dist[o] < 0){ dist[o] = k + 1; nx.push(o); } q = nx; }
+    return dist; };
+  const scarf = [].concat(...blobs(red, isRed).filter(b => b.length >= 600));   // the scarf's big red blobs (the tongue is small)
+  const byScarf = grow(scarf, 3), scarfM = new Uint8Array(N); scarf.forEach(i => scarfM[i] = 1);
+  // the stripes are drawn from the middle of each frame's scarf, so they move with the bear when it hops
+  const cols = Math.ceil(W / MASCOT_CELL), STRIPE = 21, cen = [];
+  for(const i of scarf){ const k = (i / W / MASCOT_CELL | 0) * cols + (i % W / MASCOT_CELL | 0), c = cen[k] || (cen[k] = [0, 0, 0]); c[0] += i % W; c[1] += i / W | 0; c[2]++; }
+  cen.forEach(c => { if(c){ c[0] /= c[2]; c[1] /= c[2]; } });
+  // the V: a white blob under the scarf, touching it (not the bits of the face that touch it). It and its outline become fur
+  const dist = new Int8Array(N).fill(-1), furry = j => p[j] < 72 && Math.abs(p[j] - p[j + 1]) < 8 && p[j + 2] - p[j] > -4 && p[j + 2] - p[j] < 11;
+  for(const v of blobs(white, isWhite)){
+    if(v.length < 100 || v.filter(i => byScarf[i] >= 0).length < 3) continue;
+    let q = v.slice(); const seen = v.slice(); v.forEach(i => dist[i] = 0);
+    for(let k = 0; k < 7; k++){ const nx = []; for(const i of q) for(const o of near(i)) if(dist[o] < 0){ dist[o] = k + 1; nx.push(o); seen.push(o); } q = nx; }
+    // filled smoothly from the plain fur round it (relaxed: each pixel the mean of its neighbours, many times), so no seam or streak shows
+    const fill = seen.filter(i => dist[i] <= 4 && !scarfM[i] && p[i * 4 + 3]), inFill = new Set(fill);
+    seen.forEach(i => dist[i] = -1);
+    const ok = i => !inFill.has(i) && p[i * 4 + 3] === 255 && p[i * 4] >= 30 && furry(i * 4);   // plain fur, not its darker outlines and shadows
+    const nb = fill.map(i => near(i).filter(o => inFill.has(o) || ok(o)));
+    const edge = [];
+    fill.forEach((i, k) => nb[k].forEach(o => { if(!inFill.has(o)) edge.push(o); }));
+    if(!edge.length){ fill.forEach(i => { p[i * 4] = 38; p[i * 4 + 1] = 38; p[i * 4 + 2] = 42; }); continue; }   // shut in: plain fur
+    const mid = edge.sort((x, y) => p[x * 4] - p[y * 4])[edge.length >> 1] * 4;
+    fill.forEach(i => { p[i * 4] = p[mid]; p[i * 4 + 1] = p[mid + 1]; p[i * 4 + 2] = p[mid + 2]; });
+    for(let it = 0; it < 80; it++) fill.forEach((i, k) => { const o = nb[k]; if(!o.length) return; let R = 0, G = 0, B = 0;
+      for(const n of o){ R += p[n * 4]; G += p[n * 4 + 1]; B += p[n * 4 + 2]; } p[i * 4] = R / o.length; p[i * 4 + 1] = G / o.length; p[i * 4 + 2] = B / o.length; });
+  }
+  // the fringe: the scarf's strands are plain yellow, their light tips too (striped, they looked patchy). How far in each scarf pixel is:
+  const inner = new Int16Array(N).fill(-1); let q = [];
+  for(const i of scarf) if(near(i).some(o => !scarfM[o])){ inner[i] = 0; q.push(i); }
+  for(let k = 0; q.length; k++){ const nx = []; for(const i of q) for(const o of near(i)) if(scarfM[o] && inner[o] < 0){ inner[o] = k + 1; nx.push(o); } q = nx; }
+  // thin strands: what an opening of 4 px takes away. Thicker ones (up to 7 px): what one of 7 px takes away, but only by the thin ones,
+  // so a narrow fold or corner elsewhere stays striped. Each counts with its edge.
+  const thinBody = grow(scarf.filter(i => inner[i] >= 4), 4), thin = scarf.filter(i => thinBody[i] < 0), toStrand = grow(thin, 10);
+  const body = grow(scarf.filter(i => inner[i] >= 7), 7), strands = scarf.filter(i => body[i] < 0 && toStrand[i] >= 0);
+  const nearStrand = grow(strands, 2);
+  const inFringe = i => nearStrand[i] >= 0 && !(scarfM[i] && body[i] >= 0);
+  const stripeK = i => inFringe(i) || toStrand[i] >= 0 && toStrand[i] <= 3 ? 0 : 1;   // the stripes run right to the end; the strands are always plain yellow
+  for(let i = 0; i < N; i++){
+    const j = i * 4;
+    if(!p[j + 3]) continue;
+    if((inFringe(i) || toStrand[i] >= 0 && toStrand[i] <= 8) && Math.max(p[j], p[j + 1], p[j + 2]) > 110 && !(p[j] > 1.8 * p[j + 1] && p[j] > 1.8 * p[j + 2])){ const L = Math.max(p[j], p[j + 1], p[j + 2]); p[j] = L; p[j + 1] = L * .8; p[j + 2] = L * .12; continue; }   // its light bits (tips, shine, the grey strands behind): yellow
+    if(byScarf[i] >= 0 && byScarf[i] <= 1){   // red → yellow and white stripes, its shading kept
+      const t = p[j] - Math.max(p[j + 1], p[j + 2]);
+      if(t > 0){
+        const x0 = i % W, y0 = i / W | 0, c = cen[(y0 / MASCOT_CELL | 0) * cols + (x0 / MASCOT_CELL | 0)] || [0, 0];
+        const u = ((x0 - c[0]) + (y0 - c[1]) * .7) / STRIPE, f = u - Math.floor(u), tri = Math.abs(f * 2 - 1);
+        const w = Math.min(1, Math.max(0, (tri - .5) * STRIPE / 2 + .5));   // 1: white; soft for a pixel at each edge
+        if(!stripeK(i)){ const L = p[j]; p[j + 1] = Math.max(p[j + 1] * .3, L * .82); p[j + 2] = Math.min(p[j + 2], L * .14); }   // a strand: full yellow, even its pinker parts
+        else{ p[j + 1] += t * (.8 + .2 * w); p[j + 2] += t * (.05 + .85 * w); }
+      }
+    }
+    const r = p[j], g = p[j + 1], b = p[j + 2];
+    if(r < 72 && Math.abs(r - g) < 8 && b - r > -4 && b - r < 11){ const V = Math.min(255, r / .62); p[j] = V; p[j + 1] = V * .57; p[j + 2] = V * .43; }
   }
   x.putImageData(d, 0, 0);
   return c;
@@ -1908,6 +1977,7 @@ function mascotMouth(text){
   });
   return out;
 }
+let mascotBrownSoon = false;
 class TocflMascot extends HTMLElement {
   static get observedAttributes(){ return ['variant', 'pose']; }
   connectedCallback(){ if(!this.hasAttribute('aria-label')) this.setAttribute('aria-hidden', 'true'); this.render(); }
@@ -1921,6 +1991,12 @@ class TocflMascot extends HTMLElement {
       this.rig.addEventListener('animationend', e => { if(e.target === this.rig){ this.rig.className = 'm-rig'; this.rig.style.animationDuration = ''; if(!this._raf) this.classList.remove('m-front'); } });   // a movement done: back to resting
     }
     const p = this.getAttribute('pose') || 'idle', v = mascotVariant(this.getAttribute('variant'));
+    if(v === 'brown' && !mascotBrownSoon){   // the brown one's moves take a moment each to make: made while the page is idle, one at a time, not when it first hops
+      mascotBrownSoon = true;
+      const idle = window.requestIdleCallback || (f => setTimeout(f, 200)), ks = ['talk', 'happy', 'sad', 'wave'];
+      const next = () => { const k = ks.shift(); if(!k) return; const sh = mascotSheet(k, 'brown'), go = () => idle(next, {timeout: 1500}); if(sh.ready) go(); else sh.wait.push(go); };
+      idle(next, {timeout: 1500});
+    }
     if(p !== this._p || v !== this._v){ const was = this._p; this._p = p; this._v = v; this._shown = null; if(was === 'talking') this.hush(() => this.start()); else this.start(); }
     else if(!this._raf) this.draw(...this.holdOf(p));
   }
@@ -1996,8 +2072,11 @@ class TocflMascot extends HTMLElement {
       const s = mascotSheet(k, this._v);
       if(!s.ready){ this._raf = requestAnimationFrame(tick); return; }   // wait for the sheet, then start at its first frame
       if(!t0) t0 = now;
-      const fps = a.fps || MASCOT_FPS, ms = now - t0, slowAt = big ? len * (times - 1) / fps * 1000 : Infinity;
-      const ff = ms < slowAt ? ms / 1000 * fps : len * (times - 1) + (ms - slowAt) / 1000 * fps * .55;   // the big hop: a little slower, it hangs in the air
+      const fps = a.fps || MASCOT_FPS, ms = now - t0, last = len * (times - 1), lastAt = last / fps * 1000;
+      const rl = big ? .55 : 1, landAt = k === 'happy' && times ? lastAt + MASCOT_HOP_LAND / (fps * rl) * 1000 : Infinity;
+      const ff = ms < lastAt && (big || landAt < Infinity) ? ms / 1000 * fps   // the hops before the last: as they are
+        : ms < landAt ? (big ? last + (ms - lastAt) / 1000 * fps * rl : ms / 1000 * fps)   // the big hop: a little slower, it hangs in the air
+        : last + MASCOT_HOP_LAND + (ms - landAt) / 1000 * fps * MASCOT_HOP_SETTLE;   // feet down: the head bobs and settles slowly
       const f = Math.floor(ff);
       if(times && f >= len * times){ this._raf = 0; this.rig.style.transform = '';
         if(this._p === 'waving'){ this.lower(() => this.classList.remove('m-front')); return; }
@@ -7767,7 +7846,7 @@ function xmRender(){
     ? `<button type="button" class="cf-btn cf-yes xm-cta" data-resume="1">${tx('Continue the test')}<small>${tx('{0}/{1} answered · {2} left', saved.resp.length, XM_SIM_N, xmClock(saved.left))}</small></button>
        <button type="button" class="cf-btn xm-cta2" data-sim="1">${tx('Start a new test')}</button>`
     : `<button type="button" class="cf-btn cf-yes xm-cta" data-sim="1">${tx('Start the test')}</button>`;
-  xmWrap.innerHTML = `<div class="xm-head"><b>${tx('TOCFL reading test')} <span lang="zh-TW">閱讀</span></b><span>${tx('Mock tests from SC-TOP, with explanations')}</span></div>
+  xmWrap.innerHTML = `<div class="xm-head"><b>${tx('TOCFL reading test')}</b><span>${tx('Mock tests from SC-TOP, with explanations')}</span></div>
     <div class="xm-sec"><div class="xm-sh"><span class="xm-num">1</span><div><h3>${tx('Test simulation')}</h3><p>${tx('Like the real test: {0} questions, {1} minutes, no explanations until the end. Get your score (0–700) and level.', XM_SIM_N, XM_SIM_MIN)}</p></div></div>
       <div class="xm-chips"><span>⏱ ${XM_SIM_MIN} ${tx('min')}</span><span>${XM_SIM_N} ${tx('questions')}</span><span>Novice → B2</span></div>
       ${sim}${last ? `<div class="xm-last">${esc(last)}</div>` : ''}</div>
