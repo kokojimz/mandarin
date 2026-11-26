@@ -8585,11 +8585,12 @@ function lsLayout(){
 // Still the rest of the time (no idle animation). In a dialog, a second bear speaks B's lines.
 const lsBearSVG = b => mascotHTML(b ? 'brown' : 'bear', 'idle', 'msc');   // a dialog's second voice: the same bear, in brown
 let lsBearT = null;
+const LS_HINT_MS = 3000;   // the 'tap Ollie' note: this long after the voice ends
 function lsBearSet(m, who, say){
   if(LS && LS.medalHold && m !== 'talk') m = 'idle';   // a new medal on screen: the bear waits
   lsBody.querySelectorAll('.ls-bear').forEach((b, i) => {
     if(who != null && i !== who) return;
-    if(b.dataset.m === 'talk' && m !== 'talk'){ const h = b.querySelector('.ls-hint'); if(h){ h.classList.add('later'); clearTimeout(h._t); h._t = setTimeout(() => h.classList.remove('later'), 220); } }   // done talking: the 'tap me' note once the head has settled (each time)
+    if(b.dataset.m === 'talk' && m !== 'talk'){ const h = b.querySelector('.ls-hint'); if(h){ h.classList.add('later'); clearTimeout(h._t); h._t = setTimeout(() => h.classList.remove('later'), LS_HINT_MS); } }   // done talking: the 'tap me' note a while later (each time)
     b.dataset.m = m;
     const mc = b.querySelector('tocfl-mascot');
     if(mc && m === 'talk') mc.dataset.say = say || '';   // the words: the mouth moves to them
@@ -8625,21 +8626,19 @@ function lsBearPlace(anchor){
   el.className = 'ls-bears';
   el.innerHTML = `<div class="ls-bear" data-m="idle">${lsBearSVG(false)}<span class="ls-bub">…</span></div>${two ? `<div class="ls-bear b" data-m="idle">${lsBearSVG(true)}<span class="ls-bub">…</span></div>` : ''}`;
   const replay = LS && LS.replay;
-  // "Tap Ollie to hear it again": only on a lesson's first screen that speaks (its first new word or listening question),
-  // and not again in this lesson once Ollie was tapped while it showed (the next lesson shows it again)
-  const here = LS && LS.step + '/' + LS.qi;
-  const hint = replay && LS.listen && !LS.done && !LS.hintDone && (LS.hintAt == null || LS.hintAt === here);
-  if(hint) LS.hintAt = here;
+  // "Tap Ollie to hear it again": on every screen that speaks (a new word, a listening question), a while after the voice ends;
+  const hint = replay && LS.listen && !LS.done;
   if(anchor && LS && LS.listen) el.classList.add('lq');   // a listening question: lots of room above the answers, the bear sits higher
-  if(hint) setTimeout(() => { const h = el.querySelector('.ls-hint.later'); if(h && !el.querySelector('.ls-bear[data-m="talk"]')) h.classList.remove('later'); }, 4000);   // no voice came: show it anyway
+  if(hint) setTimeout(() => { const h = el.querySelector('.ls-hint.later'); if(h && !el.querySelector('.ls-bear[data-m="talk"]')) h.classList.remove('later'); }, 4000 + LS_HINT_MS);   // no voice came: show it anyway
   if(hint) el.querySelector('.ls-bear').insertAdjacentHTML('beforeend', `<div class="ls-hint later" aria-hidden="true"><span>${tx('Tap Ollie to hear it again')}</span><svg viewBox="0 0 60 34" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4c4 16 22 26 46 22"/><path d="M41.5 21L53 25.5l-9.5 7.5"/></svg></div>`);   // the sound is on the bear: say so, with an arrow
   if(anchor) anchor.before(el); else lsBody.appendChild(el);
   const speaking = lsVoiceOn;   // heard now (not just asked for: a voice can take a while to start)
   lsBearSet(speaking && LS.listen && !two ? 'talk' : (LS && LS.mood) || 'idle', null, lsSayText);
   // a tap: before the answer, the sound again (a new word, a listening question) or else a wave; after it, the hop or the sigh again
   const poke = b => {
-    const m = LS && LS.mood, mc = b.querySelector('tocfl-mascot'), h = b.querySelector('.ls-hint');
-    if(h && !h.classList.contains('later')){ h.remove(); if(LS) LS.hintDone = true; }   // tapped while the note showed: it did its job, gone for this lesson
+    const m = LS && LS.mood, mc = b.querySelector('tocfl-mascot');
+    const h = b.querySelector('.ls-hint');
+    if(h){ h.classList.add('later'); clearTimeout(h._t); h._t = setTimeout(() => { if(b.dataset.m !== 'talk') h.classList.remove('later'); }, 4000 + LS_HINT_MS); }   // tapped: the note goes, and comes back a while after this voice ends
     if(b.dataset.m === 'talk'){ if(replay) replay(); if(mc) mc.replay(); return; }   // talking: the sound and the mouth start over
     if(replay && LS.listen && (!m || m === 'idle')){ replay(); return; }   // a new word or a listening question: the sound again
     if(!mc || mc._raf) return;   // still moving: let it finish (only the voice starts over)
