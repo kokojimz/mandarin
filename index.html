@@ -492,6 +492,8 @@
     visibility:hidden; transform:translate3d(-100%,0,0); will-change:transform; }   /* (no shadow at its edge; the cards under it darken: #lnShade) */
   #learn.anim{ transition:transform .34s cubic-bezier(.22,.8,.24,1); }
   #learn.still, #exam.still{ will-change:auto; }
+  /* a phone: no scrollbar of their own (iPhone kept a scrollbar's room on the right, a little narrower, until a tap) */
+  @media (hover:none) and (pointer:coarse){ #learn, #exam{ scrollbar-width:none; } #learn::-webkit-scrollbar, #exam::-webkit-scrollbar{ display:none; width:0; height:0; } }
   #lnShade{ position:fixed; inset:0; z-index:49; background:#000; opacity:0; visibility:hidden; pointer-events:none; }
   #lnShade.anim{ transition:opacity .34s cubic-bezier(.22,.8,.24,1); }
   @media (prefers-reduced-motion:reduce){ #learn.anim, #lnShade.anim{ transition-duration:.01s; } }
@@ -7495,7 +7497,7 @@ const lnShade = document.createElement('div'); lnShade.id = 'lnShade'; document.
 let lnPos = 0, lnAnimT = null;   // 0 = closed, 1 = open
 // a page slid fully open: no transform and no layer kept for it any more (iPhone otherwise showed it stretched, from the
 // sliding layer, until a tap made it draw again)
-function lnStill(el){ el.style.transform = 'none'; el.classList.add('still'); }
+function lnStill(el){ el.style.transform = 'none'; el.classList.add('still'); el.style.overflowY = 'hidden'; void el.offsetWidth; el.style.overflowY = ''; }   // (and laid out again, at its full width)
 function lnSetPos(p, anim){
   lnPos = Math.max(0, Math.min(1, p));
   learnEl.classList.toggle('anim', !!anim); learnEl.classList.remove('still'); lnShade.classList.toggle('anim', !!anim);
