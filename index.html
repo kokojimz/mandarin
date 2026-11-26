@@ -623,12 +623,13 @@
   #lesson.on{ display:flex; }
   .ls-top{ position:sticky; top:0; z-index:2; flex:none; display:flex; align-items:center; gap:12px; width:100%; max-width:560px; margin:0 auto; padding:calc(12px + env(safe-area-inset-top,0px)) 16px 6px; background:var(--bg); }
   .ls-top .x-btn{ position:static; flex:none; }
-  .ls-hearts{ flex:none; position:relative; display:flex; align-items:center; gap:5px; color:#e5484d; font-weight:800; font-size:1.05rem; font-variant-numeric:tabular-nums; }
+  .ls-hearts{ flex:none; position:relative; display:flex; align-items:baseline; gap:5px; color:#e5484d; font-weight:800; font-size:1.05rem; font-variant-numeric:tabular-nums; }
   .ls-hearts[hidden]{ display:none; }
-  .ls-hearts i{ display:block; width:24px; height:24px; position:relative; top:-1.5px; }   /* heart and number on one middle line */
+  .ls-hearts i{ --ink:-.62px; display:block; width:24px; height:24px; transform:translateY(calc(12px - .36em + var(--ink))); }   /* the heart's middle on the digit's middle (half its cap height above the baseline), as in the Learn header */
   .ls-hearts svg{ display:block; width:100%; height:100%; fill:currentColor; }
   .ls-hearts.none{ color:var(--sub); }
-  .ls-hearts b{ color:var(--text); position:relative; top:1.5px; display:inline-block; min-width:.7em; height:1.3em; line-height:1.3em; overflow:hidden; }
+  .ls-hearts b{ color:var(--text); position:relative; display:inline-block; min-width:.7em; height:1.3em; line-height:1.3em; clip-path:inset(0 -4px); }   /* clipped for the roll, not overflow:hidden: that would move its baseline */
+  .ls-hearts b .ph{ position:static; visibility:hidden; }   /* holds the baseline while the digits roll */
   .ls-hearts b span{ position:absolute; left:0; top:0; }
   /* a heart lost: the number rolls down (old out at the bottom, new in from the top), a "-1" floats up */
   .ls-hearts b .old{ animation:lsNumOut .35s ease-in forwards; } .ls-hearts b .new{ animation:lsNumIn .35s ease-out; }
@@ -8696,7 +8697,7 @@ function lsHeartsDraw(lost){
   // one lost: the heart shakes, the number rolls down, a "-1" floats up and fades
   const num = lsHeartsEl.querySelector('b');
   lsHeartsEl.classList.remove('fx'); void lsHeartsEl.offsetWidth; lsHeartsEl.classList.add('fx');
-  num.innerHTML = `<span class="old">${left + 1}</span><span class="new">${left}</span>`;
+  num.innerHTML = `<span class="ph">${left}</span><span class="old">${left + 1}</span><span class="new">${left}</span>`;
   const m = document.createElement('span'); m.className = 'ls-minus'; m.textContent = '-1'; lsHeartsEl.append(m);
   setTimeout(() => { m.remove(); if(num.isConnected) num.textContent = left; lsHeartsEl.classList.remove('fx'); }, 900);
 }
