@@ -783,10 +783,10 @@
   .ls-gt{ text-align:center; font-weight:700; color:var(--accent); }
   .ls-gd{ margin:14px 2px 4px; line-height:1.65; font-size:.95rem; }
   .ls-gex{ display:flex; flex-direction:column; gap:10px; margin:12px 0 4px; }
-  .ls-gx{ display:flex; gap:12px; align-items:flex-start; padding:11px 12px; border:1.5px solid var(--border); border-radius:14px; background:var(--card-bg); }
+  .ls-gx{ display:flex; gap:8px; align-items:center; padding:11px 12px; border:1.5px solid var(--border); border-radius:14px; background:var(--card-bg); }
   .ls-gx .h{ font-size:1.3rem; line-height:1.4; } .ls-gx .p{ font-size:.82rem; color:var(--sub); } .ls-gx .m{ font-size:.88rem; margin-top:3px; }
-  .ls-gplay{ flex:none; width:34px; height:34px; margin-top:2px; border-radius:50%; border:1px solid var(--border); background:transparent; color:var(--accent); display:flex; align-items:center; justify-content:center; cursor:pointer; }
-  .ls-gplay svg{ width:14px; height:14px; fill:currentColor; }
+  .ls-gx > div{ flex:1; min-width:0; }
+  .ls-gplay{ flex:none; width:44px; height:44px; margin:-6px -8px -6px 0; padding:0; border:0; background:transparent; color:var(--sub); font-size:1.05rem; line-height:1; display:flex; align-items:center; justify-content:center; cursor:pointer; -webkit-tap-highlight-color:transparent; outline:0; }   /* the flashcard's ▶︎, on the right, halfway down */
   .ln-node.grammar .ln-seal{ font-size:1.15rem; font-weight:600; }
   .ls-sent{ font-size:1.65rem; line-height:1.6; text-align:center; margin:14px 4px 4px; }
   .ls-tw{ color:var(--accent); font-weight:inherit; }
@@ -5982,8 +5982,9 @@ function closeForm(){
 document.addEventListener('scroll', e => {
   const el = e.target === document ? document.documentElement : e.target;
   if(!el.classList) return;
-  el.classList.add('scrolling');
-  clearTimeout(el._sbT); el._sbT = setTimeout(() => el.classList.remove('scrolling'), 900);
+  const els = el === document.documentElement ? [el, document.body] : [el];   // the page's own bar takes its look from body
+  els.forEach(x => x.classList.add('scrolling'));
+  clearTimeout(el._sbT); el._sbT = setTimeout(() => els.forEach(x => x.classList.remove('scrolling')), 900);
 }, {capture: true, passive: true});
 // tapping outside / Esc on a page opened from Settings acts like its Cancel (back to Settings)
 const dismissForm = () => { if(fmBack) fmBack(); else closeForm(); };
@@ -8410,7 +8411,7 @@ function lsGramIntro(g){
   const hl = hz => lnSeg(hz).map(t => !t.p && g.mark.includes(t.w) ? `<b class="ls-tw">${esc(t.w)}</b>` : esc(t.w)).join('');
   lsBody.innerHTML = `<div class="ls-tag">${tx('Grammar')}</div><div class="ls-gz" lang="zh-TW">${esc(L ? g.zhen || g.zh : g.zh)}</div><div class="ls-gt">${esc(g.t[L])}</div>
     <div class="ls-gd">${esc(g.d[L])}</div>
-    <div class="ls-gex">${g.ex.map((x, i) => `<div class="ls-gx">${lsCanHear() ? `<button type="button" class="ls-gplay" data-i="${i}" aria-label="${escAttr(tx('Play'))}">${PLAY_IC}</button>` : ''}<div><div class="h" lang="zh-TW">${hl(x[0])}</div><div class="p">${esc(x[1])}</div><div class="m">${esc(L ? x[3] : x[2])}</div></div></div>`).join('')}</div>`;
+    <div class="ls-gex">${g.ex.map((x, i) => `<div class="ls-gx"><div><div class="h" lang="zh-TW">${hl(x[0])}</div><div class="p">${esc(x[1])}</div><div class="m">${esc(L ? x[3] : x[2])}</div></div>${lsCanHear() ? `<button type="button" class="ls-gplay" data-i="${i}" aria-label="${escAttr(tx('Play'))}">${PLAY_IC}</button>` : ''}</div>`).join('')}</div>`;
   lsBody.querySelectorAll('.ls-gplay').forEach(b => b.onclick = () => lsSay(g.ex[+b.dataset.i][0]));
   lsSetGo(tx('Continue'));
   LS.answered = true;
