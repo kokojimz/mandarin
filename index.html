@@ -3292,6 +3292,17 @@ function toneRows(r){
 }
 // the senses of a card (English and Indonesian), to keep look-alike meanings apart: "pretty; beautiful" -> pretty, beautiful
 const SENSES = new WeakMap();
+// words whose meanings are near enough to be confused (English short meanings): one group each
+const SYN_GROUP = new Map();
+['very|really|truly|extremely|quite|awfully|terribly|too much|excessively', 'love|be fond of|enjoy', 'beautiful|pretty|good-looking|lovely|handsome',
+ 'happy|glad|pleased|joyful|delighted|cheerful|merry', 'sad|unhappy|sorrowful', 'big|large|huge', 'small|little|tiny', 'fast|quick|quickly|rapid|rapidly',
+ 'slow|slowly', 'begin|start', 'end|finish|be over', 'return|go back|come back', 'say|speak|talk|tell', 'see|look at', 'know|understand|comprehend|realize',
+ 'want|would like|wish|hope', 'tired|exhausted|weary', 'delicious|tasty', 'cheap|inexpensive', 'expensive|costly', 'clever|smart|intelligent|bright',
+ 'afraid|scared|fear|be afraid', 'angry|mad', 'maybe|perhaps|probably|possibly', 'must|have to|need to|should|ought to', 'often|frequently|usually|constantly',
+ 'study|learn', 'help|assist', 'store|shop', 'road|street', 'thing|matter|stuff|affair', 'picture|photo|photograph', 'ill|sick', 'all|every|each',
+ 'quiet|silent', 'surely|certainly|definitely', 'fun|interesting|amusing', 'strange|odd|weird', 'wrong|incorrect|mistaken', 'finally|at last|in the end',
+ 'immediately|at once|right away']
+  .forEach((g, i) => g.split('|').forEach(w => SYN_GROUP.set(w, i)));
 function sensesOf(r){
   let set = SENSES.get(r);
   if(!set){
@@ -3300,6 +3311,11 @@ function sensesOf(r){
       x = x.replace(/^\s*(to|a|an|the)\s+/, '').replace(/[^a-z\u00c0-\u024f\s'-]/g, ' ').replace(/\s+/g, ' ').trim();
       if(x.length > 1) set.add(x);
     }));
+    // near-synonyms (from the short meaning): 很 very / 真 really — never each other's wrong option
+    String(shortMeaning(r) || '').toLowerCase().replace(/\([^)]*\)/g, ' ').split(/[;,/]/).forEach(x => {
+      x = x.replace(/^\s*(to|a|an|the)\s+/, '').replace(/[^a-z\s'-]/g, ' ').replace(/\s+/g, ' ').trim();
+      const g = SYN_GROUP.get(x); if(g != null) set.add('syn:' + g);
+    });
     SENSES.set(r, set);
   }
   return set;
@@ -3493,14 +3509,15 @@ function openQuiz(r, card){
       });
     }
     if(ord){                              // the words, shuffled, below a line; tap one to put it on the line, tap it there to take it back
-      const words = orderTiles(ord.ex), want = words.join(''), places = [...qzSent.querySelectorAll('.qz-oph')], bank = document.createElement('div');
+      const words = orderTiles(ord.ex), places = [...qzSent.querySelectorAll('.qz-oph')], bank = document.createElement('div');
       const placed = () => places.map(p => p.querySelector('button'));   // per place: its word, or null
       bank.className = 'qz-obank';
       qzOptions.append(bank);
       const order = words.map((t, i) => i);
       const prevO = qzSigMap.get(key + '#o'); let triesO = 0;
+      const rightO = lnOrders(words);
       do{ for(let k = order.length - 1; k > 0; k--){ const j = Math.floor(Math.random() * (k + 1)); [order[k], order[j]] = [order[j], order[k]]; } }
-      while(order.map(i => words[i]).join('') === want || (order.map(i => words[i]).join('|') === prevO && ++triesO < 30));   // never already in order (orderTiles makes sure another order exists), nor as last time
+      while((rightO.has(order.map(i => words[i]).join('|')) || order.map(i => words[i]).join('|') === prevO) && ++triesO < 40);   // never already in a right order (orderTiles makes sure another order exists), nor as last time
       qzSigMap.set(key + '#o', order.map(i => words[i]).join('|'));
       order.forEach(i => {
         const btn = document.createElement('button');
@@ -3527,7 +3544,7 @@ function openQuiz(r, card){
       check.addEventListener('click', ev => {
         ev.stopPropagation();
         if(quizAnswered || !placed().every(Boolean)) return;
-        settle(placed().map(b => b.dataset.w).join('') === want);
+        settle(rightO.has(placed().map(b => b.dataset.w).join('|')));   // the sentence's order or another right one (lnOrders)
       });
     }
     const opts = tone || ord ? [] : [{row:r, ok:true}, ...(meaning ? drawMeaningWrongs(r) : drawWrongs(r, blank)).map(x => ({row:x, ok:false}))];
@@ -7420,9 +7437,9 @@ function lnRender(){
   // more); all done: in the page
   const kept = s.kept[lnDay()] || 0, medal = `<button type="button" class="ln-medal" id="lnMedal" aria-label="${escAttr(tx('Medals'))}">${lnMedal(lnMedalOf(s))}</button>`;
   const seal = `<span class="ln-seal" lang="zh-TW">溫</span>`, lit = kept ? ' lit' : '';
-  const day = !learned ? '' : `<div class="ln-dayrow">${due
+  const day = !learned ? '' : `<div class="ln-dayrow">${medal}${due
     ? `<button type="button" class="ln-daily${lit}" id="lnDaily">${seal}<span class="ln-tx"><span class="ln-t">${tx('Daily review')} <span class="ln-ses">(${kept}/${kept + Math.ceil(due / LN_DAILY_N)})</span></span><span class="ln-s">${tx('{0} words today', due)}</span></span><span class="ln-go">${tx('Start')}</span></button>`
-    : `<div class="ln-daily done${lit}">${seal}<span class="ln-tx"><span class="ln-t">${tx('Daily review')}</span><span class="ln-s">${tx('Done for today')}</span></span><span class="ln-r">${lnIcon.check}</span></div>`}${medal}</div>`;
+    : `<div class="ln-daily done${lit}">${seal}<span class="ln-tx"><span class="ln-t">${tx('Daily review')}</span><span class="ln-s">${tx('Done for today')}</span></span><span class="ln-r">${lnIcon.check}</span></div>`}</div>`;   // the medal on the left
   html += due ? day + '</div>' : '</div>' + day;
   let lastLv = '', lastUnit = '', lessonNo = 0;
   const opened = lnOpenLoad(), curUk = cur >= 0 && !list[cur].test && !list[cur].exam && !list[cur].tryout ? list[cur].lv + '.' + list[cur].ui : '';
@@ -8182,6 +8199,60 @@ function lnSeg(hz){
   return out;
 }
 let LN_REAL = null;
+// other right orders of a sentence's words (an order question takes them too):
+//   a time phrase and the subject either way round, at the start: 晚上我… = 我晚上…, 前天晚上你… = 你前天晚上…, 下課以後我們… = 我們下課以後…
+//   (a noun subject: only to the time-first order, 媽媽早上… → 早上媽媽…)
+//   如果 / 因為 / 雖然 … and the subject either way round: 如果你… = 你如果…
+//   打電話 / 寫信 / 回信 … 給 X = 給 X 打電話 …
+const LN_TIME_W = new Set(('今天 明天 昨天 後天 前天 大後天 早上 上午 中午 下午 晚上 半夜 白天 今晚 現在 剛才 等一下 週末 今年 明年 去年 後年 前年 '
+  + '每天 平常 春天 夏天 秋天 冬天 星期一 星期二 星期三 星期四 星期五 星期六 星期天 星期日 禮拜一 禮拜二 禮拜三 禮拜四 禮拜五 禮拜六 禮拜天 禮拜日 '
+  + '這個週末 下個月 上個月 下星期 上星期 下禮拜 上禮拜').split(' '));
+const LN_TIME_PART = new Set('這 那 個 幾 天 下 上 每 星期 禮拜 月 年'.split(' '));   // pieces of a time phrase (這幾天, 這個星期天)
+const LN_SUBJ_W = new Set('我 你 您 妳 他 她 它 我們 你們 妳們 他們 她們 咱們 大家'.split(' '));
+// not a subject (a word before a time phrase that isn't one: 請問現在…, 老師說明天…, 非洲的夏天…)
+const LN_NOT_SUBJ = new Set('請問 請 如果 要是 假如 等到 等 說 是 到 從 在 這 那 的 了 也 都 還 就 才 又 再 比 跟 和 給'.split(' '));
+const LN_KIN_W = new Set('媽 爸 媽媽 爸爸 哥 哥哥 姊 姊姊 姐姐 弟 弟弟 妹 妹妹 老師 朋友 同學'.split(' '));
+const LN_CONJ_W = new Set('如果 要是 假如 雖然 因為 只要 既然 即使 就算'.split(' '));
+const LN_GEI_V = [['打電話'], ['打', '電話'], ['打', '個', '電話'], ['寫信'], ['寫', '信'], ['回信'], ['回電話']];
+// the time phrase at w[i]: how many words it takes (0: none). Time words with their pieces (前天晚上, 這幾天), or …以後 / …以前 / …的時候
+function lnTimeLen(w, i, wordsOnly){
+  for(let n = Math.min(4, w.length - i); n > 0; n--){
+    const t = w.slice(i, i + n), end = t[n - 1];
+    if(LN_TIME_PART.has(t[0]) && !/^(這|那|每|下|上)$/.test(t[0])) continue;   // a piece starts one only as 這 / 那 / 每 / 下 / 上 (not 天 in 下雨天, 個 in 半個小時)
+    if(t.every((x, j) => LN_TIME_W.has(x) || LN_TIME_PART.has(x) && (x !== '幾' || t[j + 1] === '天')) && t.some((x, j) => LN_TIME_W.has(x) || x === '天' && j > 0)) return n;   // (幾: only in 這幾天, not 幾點)
+    if(!wordsOnly && n <= 3 && n > 1 && (end === '以後' || end === '以前' || end === '的時候') && !t.slice(0, -1).some(x => LN_SUBJ_W.has(x) || /^(比|跟|從|和|到)$/.test(x))) return n;   // (not 比以前: a comparison)
+  }
+  return 0;
+}
+const lnSubjLen = (w, i) => LN_SUBJ_W.has(w[i]) ? (LN_KIN_W.has(w[i + 1]) && /^(我|你|他|她)$/.test(w[i]) && w[i + 1] !== '朋友' ? 2 : 1) : 0;   // 我, 我媽
+function lnOrders(words){
+  const out = new Set([words.join('|')]);
+  const add = w => out.add(w.join('|'));
+  const each = f => [...out].map(x => x.split('|')).forEach(f);
+  each(w => {   // time and subject, either way round, at the start (after them, the rest as it is)
+    let t = lnTimeLen(w, 0), s = t && lnSubjLen(w, t);
+    if(t && s) add([...w.slice(t, t + s), ...w.slice(0, t), ...w.slice(t + s)]);
+    s = lnSubjLen(w, 0); t = s && lnTimeLen(w, s);
+    if(s && t) add([...w.slice(s, s + t), ...w.slice(0, s), ...w.slice(s + t)]);
+    else if(!lnTimeLen(w, 0)) for(s = 1; s <= 2; s++){   // a noun as the subject (媽媽早上…, 垃圾車晚上…): the time first too
+      if(w.slice(0, s).some(x => LN_NOT_SUBJ.has(x) || LN_SUBJ_W.has(x))) break;
+      t = lnTimeLen(w, s, true);
+      if(t && w.length > s + t){ add([...w.slice(s, s + t), ...w.slice(0, s), ...w.slice(s + t)]); break; }
+    }
+  });
+  each(w => {   // 如果 你 ↔ 你 如果
+    if(LN_CONJ_W.has(w[0]) && LN_SUBJ_W.has(w[1])) add([w[1], w[0], ...w.slice(2)]);
+    if(LN_SUBJ_W.has(w[0]) && LN_CONJ_W.has(w[1])) add([w[1], w[0], ...w.slice(2)]);
+  });
+  each(w => {   // V 給 X ↔ 給 X V
+    for(let i = 0; i < w.length; i++) for(const v of LN_GEI_V){
+      const n = v.length;
+      if(v.every((x, j) => w[i + j] === x) && w[i + n] === '給' && w[i + n + 1]) add([...w.slice(0, i), '給', w[i + n + 1], ...v, ...w.slice(i + n + 2)]);
+      if(w[i] === '給' && w[i + 1] && v.every((x, j) => w[i + 2 + j] === x)) add([...w.slice(0, i), ...v, '給', w[i + 1], ...w.slice(i + 2 + n)]);
+    }
+  });
+  return out;
+}
 function lnRealSentence(s){ if(!LN_REAL){ LN_REAL = new Set(); lnPool().forEach(e => LN_REAL.add(e.hz.replace(/[^\u3400-\u9fff\uf900-\ufaff]/g, ''))); } return LN_REAL.has(s); }
 function lnPool(){
   if(LN_POOL) return LN_POOL;
@@ -8682,7 +8753,7 @@ function lsSentence(q){
       <div class="ls-opts">${opts.map((o, i) => `<button type="button" class="ls-opt hz" data-i="${i}" lang="zh-TW">${esc(o.t || fullWord(o.row[0]))}</button>`).join('')}</div>`;
   } else {   // 'o': put the words in order
     const words = p.toks.filter(t => !t.p).map(t => t.w);
-    let tiles = shuffle(words.map((w, i) => ({w, i}))); for(let g = 0; g < 5 && tiles.every((t, j) => t.w === words[j]); g++) tiles = shuffle(tiles);
+    const right = lnOrders(words); let tiles = shuffle(words.map((w, i) => ({w, i}))); for(let g = 0; g < 8 && right.has(tiles.map(t => t.w).join('|')); g++) tiles = shuffle(tiles);   // not already in a right order
     q.tiles = tiles; q.pick = [];
     body = `<div class="ls-q">${tx('Arrange the words')}</div><div class="ls-tr ls-trq">${esc(tr)}</div>
       <div class="ls-line" lang="zh-TW"></div><div class="ls-bank" lang="zh-TW">${tiles.map((t, j) => `<button type="button" class="ls-tile" data-j="${j}">${esc(t.w)}</button>`).join('')}</div>`;
@@ -8757,7 +8828,7 @@ lsGo.onclick = () => {
   if(!LS.answered && q && q.k === 'o' && q.pick.length === q.tiles.length){   // check the order
     LS.answered = true;
     const words = q.p.toks.filter(t => !t.p).map(t => t.w), got = q.pick.map(j => q.tiles[j].w);
-    const ok = got.join('') === words.join('') || lnRealSentence(got.join(''));
+    const ok = lnOrders(words).has(got.join('|')) || lnRealSentence(got.join(''));   // the sentence's order, another right one, or a real sentence
     lsBody.querySelectorAll('.ls-line .ls-tile').forEach((b, n) => { b.disabled = true; b.classList.add(ok || got[n] === words[n] ? 'ok' : 'bad'); });
     lsBody.querySelectorAll('.ls-bank .ls-tile').forEach(b => b.disabled = true);
     lsJudge(q, ok);
