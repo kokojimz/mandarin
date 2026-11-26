@@ -494,6 +494,8 @@
   #learn.still, #exam.still{ will-change:auto; }
   /* a phone: no scrollbar of their own (iPhone kept a scrollbar's room on the right, a little narrower, until a tap) */
   @media (hover:none) and (pointer:coarse){ #learn, #exam{ scrollbar-width:none; } #learn::-webkit-scrollbar, #exam::-webkit-scrollbar{ display:none; width:0; height:0; } }
+  /* and the cards' page the same, so every page scrolls alike (no scroll bar) */
+  @media (hover:none) and (pointer:coarse){ html, body{ scrollbar-width:none; } html::-webkit-scrollbar, body::-webkit-scrollbar{ display:none; width:0; height:0; } }
   #lnShade{ position:fixed; inset:0; z-index:49; background:#000; opacity:0; visibility:hidden; pointer-events:none; }
   #lnShade.anim{ transition:opacity .34s cubic-bezier(.22,.8,.24,1); }
   @media (prefers-reduced-motion:reduce){ #learn.anim, #lnShade.anim{ transition-duration:.01s; } }
