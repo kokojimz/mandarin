@@ -7141,7 +7141,9 @@ function backupData(){
     custom: CUSTOM,                                      // your groups: saved cards (refs) and the cards you made
     history: HIST,                                       // quiz results for the report
     learn: lnLoad(),                                     // Learn: lessons done, stars, streak days, the daily review's schedule
-    exam: xmLoad()                                       // the TOCFL test: practice answers, simulation results
+    exam: xmLoad(),                                      // the TOCFL test: practice answers, simulation results
+    examRun: xmRunLoad(),                                // a simulation left halfway: it goes on where it stopped
+    learnOpen: lnOpenLoad()                              // the units opened or closed on the path
   };
 }
 // export asks for a file name first; only the name can be changed, ".json" stays
@@ -7238,7 +7240,13 @@ function importBackup(data){
       }
       if(data.history && typeof data.history === 'object'){ HIST = readHist(data.history); saveHist(); }
       if(data.learn && typeof data.learn === 'object') lnSave(lnClean(data.learn));
+      if(data.examRun && typeof data.examRun === 'object' && data.examRun.resp && data.examRun.cur){ try{ localStorage.setItem(XM_RUN, JSON.stringify(data.examRun)); }catch(e){} }
+      else if('examRun' in data) xmRunDrop();   // none in the file: no old one left half-done here
       if(data.exam && typeof data.exam === 'object'){ xmSaveSt({p: data.exam.p || {}, h: Array.isArray(data.exam.h) ? data.exam.h : []}); xmRender(); }
+      if(data.learnOpen && typeof data.learnOpen === 'object' && !Array.isArray(data.learnOpen)){
+        const o = {}; Object.keys(data.learnOpen).slice(0, 500).forEach(k => { if(k.length < 40 && typeof data.learnOpen[k] === 'boolean') o[k] = data.learnOpen[k]; });
+        try{ localStorage.setItem(LS_LNOPEN, JSON.stringify(o)); localStorage.removeItem(LS_LNCUR); }catch(e){}
+      }
       setTimeout(lnEnsureGroup, 0);
       if(data.quiz && typeof data.quiz === 'object'){
         quizCfg = readQuizCfg(data.quiz);
