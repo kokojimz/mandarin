@@ -802,7 +802,7 @@
   .ls-bank{ display:flex; flex-wrap:wrap; justify-content:center; gap:8px; margin-top:auto; padding-top:16px; position:relative; z-index:2; }
   .ls-tile{ padding:8px 14px; min-width:48px; border-radius:12px; border:1.5px solid var(--border); background:var(--card-bg); color:var(--text); font:inherit; font-size:1.35rem; cursor:pointer; }
   .ls-tile.gone{ visibility:hidden; }
-  .ls-tile.unk{ -webkit-touch-callout:none; -webkit-user-select:none; user-select:none; text-decoration:underline dotted var(--sub); text-underline-offset:6px; text-decoration-thickness:2px; }   /* a word not learnt yet (as in the sentences): tapped, its meaning shows
+  .ls-tile.unk{ -webkit-touch-callout:none; -webkit-user-select:none; user-select:none; text-decoration:underline dotted var(--sub); text-underline-offset:6px; text-decoration-thickness:2px; }   /* a word not learnt yet (as in the sentences): tapped, its meaning shows; held, it stays put */
   .ls-tile.ok{ border-color:#1e9e5a; background:rgba(30,158,90,.14); } .ls-tile.bad{ border-color:#d64545; background:rgba(214,69,69,.12); }
   .ls-tile:disabled{ cursor:default; }
   .ln-daily{ display:flex; align-items:center; gap:12px; width:100%; margin:6px 0 4px; padding:10px 12px; border-radius:14px; border:1.5px solid var(--border); background:var(--card-bg); color:var(--text); font:inherit; text-align:left; cursor:pointer; }
@@ -8564,7 +8564,7 @@ function lsGramIntro(g){
   const hl = hz => lnSeg(hz).map(t => !t.p && g.mark.includes(t.w) ? `<b class="ls-tw">${esc(t.w)}</b>` : esc(t.w)).join('');
   lsBody.innerHTML = `<div class="ls-tag">${tx('Grammar')}</div><div class="ls-gz" lang="zh-TW">${esc(L ? g.zhen || g.zh : g.zh)}</div><div class="ls-gt">${esc(g.t[L])}</div>
     <div class="ls-gd">${esc(g.d[L])}</div>
-    <div class="ls-gex">${g.ex.map((x, i) => `<div class="ls-gx"><div><div class="h" lang="zh-TW">${hl(x[0])}</div><div class="p">${esc(x[1])}</div><div class="m">${esc(L ? x[3] : x[2])}</div></div>${lsCanHear() ? `<button type="button" class="ls-gplay" data-i="${i}" aria-label="${escAttr(tx('Play'))}">${PLAY_IC}</button>` : ''}</div>`).join('')}</div>`;
+    <div class="ls-gex">${g.ex.map((x, i) => `<div class="ls-gx"><div><div class="h" lang="zh-TW">${hl(x[0])}</div><div class="p">${esc(exPy({hz: x[0], py: dictSentPy(x[0], x[1])}))}</div><div class="m">${esc(L ? x[3] : x[2])}</div></div>${lsCanHear() ? `<button type="button" class="ls-gplay" data-i="${i}" aria-label="${escAttr(tx('Play'))}">${PLAY_IC}</button>` : ''}</div>`).join('')}</div>`;
   lsBody.querySelectorAll('.ls-gplay').forEach(b => b.onclick = () => { if(b.classList.contains('playing')) stopSpeech(); else lsSay(g.ex[+b.dataset.i][0], b); });   // ▶︎ plays, ■ stops (as on the cards)
   lsSetGo(tx('Continue'));
   LS.answered = true;
@@ -8885,7 +8885,7 @@ function lsGloss(w, e){
   lnSegInit();
   const r = LN_ANY.get(w), fix = LS_GLOSS[w], m = fix ? fix[LANG === 'id' ? 1 : 0] : r ? shortMeaning(r) : '';
   let py = '';
-  const rows = e && sentSyllables0(e);
+  const rows = e && sentSyllables(e);   // its tones as set (Settings › Pinyin)
   if(rows){ const hz = rows.map(x => x.c).join(''), at = hz.indexOf(w); if(at >= 0) py = rows.slice(at, at + [...w].length).map(x => x.syl).join(''); }
   if(!py && r) py = pyOf(r);
   if(!m){ toast(w); return; }
@@ -8991,7 +8991,7 @@ function lsSentence(q){
       if(q.pick.length === q.tiles.length){ lsSetGo(tx('Check')); } else lsHideGo();
       line.querySelectorAll('.ls-tile').forEach(b => { hold(b, () => q.tiles[q.pick[+b.dataset.n]].w); b.onclick = () => { if(b._held){ b._held = false; return; } if(LS.answered) return; q.pick.splice(+b.dataset.n, 1); draw(); }; });
     };
-    bank.querySelectorAll('.ls-tile').forEach(b => { hold(b, () => q.tiles[+b.dataset.j].w); b.onclick = () => { if(b._held){ b._held = false; return; } if(LS.answered || q.pick.includes(+b.dataset.j)) return; const w = q.tiles[+b.dataset.j].w; q.pick.push(+b.dataset.j); lsSay(w); if(b.classList.contains('unk')) lsGloss(w, e); draw(); }; });   // a word not learnt yet: its meaning too
+    bank.querySelectorAll('.ls-tile').forEach(b => { hold(b, () => q.tiles[+b.dataset.j].w); b.onclick = () => { if(b._held){ b._held = false; return; } if(LS.answered || q.pick.includes(+b.dataset.j)) return; const w = q.tiles[+b.dataset.j].w; q.pick.push(+b.dataset.j); lsSay(w); draw(); }; });   // a tap only places it: the meaning of a word not learnt yet shows when held
     draw();
   }
 }
@@ -9018,7 +9018,7 @@ function lsJudge(q, ok){
   if(!LS.listen) setTimeout(() => { if(LS && LS.answered && LS.qs[LS.qi] === me) lsSay(say); }, dur + 80);
   lsFb.className = 'ls-fb ' + (ok ? 'ok' : 'bad');
   lsFb.innerHTML = `<b>${ok ? tx('Correct!') : tx('Not quite')}</b>` + (q.p
-    ? `<span class="w"><span class="sp">${esc(q.p.e.py || '')}</span>${q.k === 'b' || q.k === 'o' ? '' : `<br>${esc(exTrans(q.p.e))}`}</span>`   // the sentence (and for b / o its translation) is on screen already
+    ? `<span class="w"><span class="sp">${esc(exPy(q.p.e))}</span>${q.k === 'b' || q.k === 'o' ? '' : `<br>${esc(exTrans(q.p.e))}`}</span>`   // the sentence (and for b / o its translation) is on screen already
     : `<span class="w"><span lang="zh-TW">${esc(fullWord(r[0]))}</span> ${colorPinyin(pyOf(r))} · ${esc(shortMeaning(r))}</span>`);
   lsSetGo(tx('Continue'), ok ? 'ok' : 'bad'); lsFit();
 }
@@ -9035,7 +9035,7 @@ function lsAnswer(q, opts, i){
   LS.answered = true;
   const ok = opts[i].ok;
   lsBody.querySelectorAll('.ls-opt').forEach((b, j) => { b.disabled = true; if(opts[j].ok) b.classList.add('ok'); else if(j === i) b.classList.add('bad'); });
-  if(q.k === 'l'){ const h = lsBody.querySelector('.ls-q'); if(h) h.insertAdjacentHTML('afterend', `<div class="ls-sent" lang="zh-TW">${lsSentHTML(q)}</div>`); }
+  if(q.k === 'l'){ const h = lsBody.querySelector('.ls-q'); if(h){ h.insertAdjacentHTML('afterend', `<div class="ls-sent" lang="zh-TW">${lsSentHTML(q)}</div>`); h.nextElementSibling.querySelectorAll('.ls-unk').forEach(b => b.onclick = ev => { ev.stopPropagation(); lsGloss(b.dataset.w, q.p.e); }); } }   // shown only now: its dotted words tap for their meaning too
   if(q.k === 'b'){ const bl = lsBody.querySelector('.ls-blank'); if(bl){ bl.textContent = q.g ? q.ans : fullWord(q.r[0]); bl.classList.add(ok ? 'ok' : 'bad'); } }
   lsJudge(q, ok);
 }
