@@ -1206,6 +1206,8 @@
   #ldScreen{position:fixed;inset:0;z-index:9999;background:var(--bg);display:flex;align-items:center;justify-content:center;padding-bottom:12vh;transition:opacity .3s}   /* a little above the middle: dead centre looks low on a phone */
   #ldRing{position:relative;width:96px;height:96px;opacity:0;animation:ldIn .25s .6s forwards}   /* only shows when loading takes longer than 0.6 s */
   @keyframes ldIn{to{opacity:1}}
+  #ldScreen{bottom:-25vh}   /* past the bottom: while the browser's bars move, no strip of the page shows under it */
+  html.ld-on body > :not(#ldScreen){visibility:hidden}   /* the page behind stays hidden until the loading screen fades */
   #ldRing svg{width:100%;height:100%;transform:rotate(-90deg)}
   #ldRing circle{fill:none;stroke-width:7}
   #ldRing .bg{stroke:var(--border)}
@@ -1213,7 +1215,7 @@
   #ldPct{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:1.1rem;font-weight:600;color:var(--text);font-variant-numeric:tabular-nums}
 </style>
 <div id="ldScreen"><div id="ldRing"><svg viewBox="0 0 100 100"><circle class="bg" cx="50" cy="50" r="42"/><circle class="fg" id="ldBar" cx="50" cy="50" r="42"/></svg><div id="ldPct">0%</div></div>
-<script>(function(){ var l = document.getElementById("ldScreen"), r = document.getElementById("ldRing"), h = window.innerHeight; if(l && r && h > 200){ l.style.alignItems = "flex-start"; l.style.paddingBottom = "0"; r.style.marginTop = Math.round(h * .44 - 48) + "px"; } })();</script>   <!-- the ring held where it starts: when the page behind is built and the browser's bars change the screen's height, it doesn't slide down --></div>
+<script>(function(){ var l = document.getElementById("ldScreen"), r = document.getElementById("ldRing"), h = window.innerHeight; document.documentElement.classList.add("ld-on"); if(l && r && h > 200){ l.style.alignItems = "flex-start"; l.style.paddingBottom = "0"; r.style.marginTop = Math.round(h * .44 - 48) + "px"; } })();</script>   <!-- the ring held where it starts: when the page behind is built and the browser's bars change the screen's height, it doesn't slide down --></div>
 
 <div class="tools action-row">
   <button id="settingsBtn" title="Settings" aria-label="Settings" data-tx-title="Settings"><svg class="tb-ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
@@ -9238,8 +9240,9 @@ document.addEventListener('keydown', e => {
   document.body.appendChild(s);
   const ld = document.getElementById('ldScreen'), ring = document.getElementById('ldRing');
   if(ld){
-    if(ring && getComputedStyle(ring).opacity === '0') ld.remove();   // a quick open: the ring was never shown, so no loading screen at all
-    else { __ldp(100); setTimeout(() => { ld.style.opacity = '0'; setTimeout(() => ld.remove(), 300); }, 150); }
+    const show = () => document.documentElement.classList.remove('ld-on');
+    if(ring && getComputedStyle(ring).opacity === '0'){ ld.remove(); show(); }   // a quick open: the ring was never shown, so no loading screen at all
+    else { __ldp(100); setTimeout(() => { show(); ld.style.opacity = '0'; setTimeout(() => ld.remove(), 300); }, 150); }
   }
 })();</script>
 </body>
