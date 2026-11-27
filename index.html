@@ -623,9 +623,9 @@
   #lesson.on{ display:flex; }
   .ls-top{ position:sticky; top:0; z-index:2; flex:none; display:flex; align-items:center; gap:12px; width:100%; max-width:560px; margin:0 auto; padding:calc(12px + env(safe-area-inset-top,0px)) 16px 6px; background:var(--bg); }
   .ls-top .x-btn{ position:static; flex:none; }
-  .ls-hearts{ flex:none; position:relative; display:flex; align-items:baseline; gap:5px; transform:translateY(var(--gy, 0px)); color:#e5484d; font-weight:800; font-size:1.05rem; font-variant-numeric:tabular-nums; }
+  .ls-hearts{ flex:none; position:relative; display:flex; align-items:baseline; gap:5px; translate:0 var(--gy, 0px); color:#e5484d; font-weight:800; font-size:1.05rem; font-variant-numeric:tabular-nums; }
   .ls-hearts[hidden]{ display:none; }
-  .ls-hearts i{ display:block; width:24px; height:24px; transform:translateY(var(--hy, calc(12px - .36em))); }   /* --hy, --gy: set by lsHeartsAlign from the font in use */   /* the heart's middle on the digit's middle (half its cap height above the baseline), as in the Learn header */
+  .ls-hearts i{ display:block; width:24px; height:24px; translate:0 var(--hy, calc(12px - .36em)); }   /* --hy, --gy: set by lsHeartsAlign from the font in use; `translate`, not transform: the shake (a transform) keeps it */   /* the heart's middle on the digit's middle (half its cap height above the baseline), as in the Learn header */
   .ls-hearts svg{ display:block; width:100%; height:100%; fill:currentColor; }
   .ls-hearts.none{ color:var(--sub); }
   .ls-hearts b{ color:var(--text); position:relative; display:inline-block; min-width:.7em; height:1.3em; line-height:1.3em; clip-path:inset(0 -4px); }   /* clipped for the roll, not overflow:hidden: that would move its baseline */
