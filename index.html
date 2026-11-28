@@ -8308,7 +8308,7 @@ let LN_REAL = null;
 //   打電話 / 寫信 / 回信 … 給 X = 給 X 打電話 …
 const LN_TIME_W = new Set(('今天 明天 昨天 後天 前天 大後天 早上 上午 中午 下午 晚上 半夜 白天 今晚 現在 剛才 等一下 週末 今年 明年 去年 後年 前年 '
   + '每天 平常 春天 夏天 秋天 冬天 星期一 星期二 星期三 星期四 星期五 星期六 星期天 星期日 禮拜一 禮拜二 禮拜三 禮拜四 禮拜五 禮拜六 禮拜天 禮拜日 '
-  + '這個週末 下個月 上個月 下星期 上星期 下禮拜 上禮拜').split(' '));
+  + '這個週末 下個月 上個月 下星期 上星期 下禮拜 上禮拜 周末 春假 暑假 寒假 學期 最近 剛剛 今後 將來 當初 接下來').split(' '));
 const LN_TIME_PART = new Set('這 那 個 幾 天 下 上 每 星期 禮拜 月 年'.split(' '));   // pieces of a time phrase (這幾天, 這個星期天)
 const LN_SUBJ_W = new Set('我 你 您 妳 他 她 它 我們 你們 妳們 他們 她們 咱們 大家'.split(' '));
 // not a subject (a word before a time phrase that isn't one: 請問現在…, 老師說明天…, 非洲的夏天…)
@@ -8321,6 +8321,7 @@ function lnTimeLen(w, i, wordsOnly){
   for(let n = Math.min(4, w.length - i); n > 0; n--){
     const t = w.slice(i, i + n), end = t[n - 1];
     if(w[i + n] === '的') continue;   // 早上的空氣: it describes a noun, not when
+    if(n > 1 && /^(這|那|每|下|上|個|幾)$/.test(end)) continue;   // a piece that only starts one doesn't end it (下學期 | 上任, 最近 | 這陣子)
     if(LN_TIME_PART.has(t[0]) && !/^(這|那|每|下|上)$/.test(t[0])) continue;   // a piece starts one only as 這 / 那 / 每 / 下 / 上 (not 天 in 下雨天, 個 in 半個小時)
     if(t.every((x, j) => LN_TIME_W.has(x) || LN_TIME_PART.has(x) && (x !== '幾' || t[j + 1] === '天')) && t.some((x, j) => LN_TIME_W.has(x) || x === '天' && j > 0)) return n;   // (幾: only in 這幾天, not 幾點)
     if(!wordsOnly && n <= 3 && n > 1 && (end === '以後' || end === '以前' || end === '的時候') && !t.slice(0, -1).some(x => LN_SUBJ_W.has(x) || /^(比|跟|從|和|到)$/.test(x))) return n;   // (not 比以前: a comparison)
@@ -8346,6 +8347,15 @@ function lnOrders(words){
       if(t && w.length > s + t){ add([...w.slice(s, s + t), ...w.slice(0, s), ...w.slice(s + t)]); break; }
     }
   });
+  each(w => {   // 你為什麼… ↔ 為什麼你…, 你什麼時候… ↔ 什麼時候你…: the question word before or after who
+    const q = i => w[i] === '為什麼' ? 1 : w[i] === '什麼' && w[i + 1] === '時候' ? 2 : 0;
+    for(let i = 0; i < w.length; i++){
+      const s = lnSubjLen(w, i), n = s && q(i + s);
+      if(n && w.length > i + s + n) add([...w.slice(0, i), ...w.slice(i + s, i + s + n), ...w.slice(i, i + s), ...w.slice(i + s + n)]);
+      const m = q(i), t = m && lnSubjLen(w, i + m);
+      if(t && w.length > i + m + t) add([...w.slice(0, i), ...w.slice(i + m, i + m + t), ...w.slice(i, i + m), ...w.slice(i + m + t)]);
+    }
+  });
   each(w => {   // 如果 你 ↔ 你 如果
     if(LN_CONJ_W.has(w[0]) && LN_SUBJ_W.has(w[1])) add([w[1], w[0], ...w.slice(2)]);
     if(LN_SUBJ_W.has(w[0]) && LN_CONJ_W.has(w[1])) add([w[1], w[0], ...w.slice(2)]);
@@ -8356,6 +8366,13 @@ function lnOrders(words){
       const a = w.slice(0, k), z = w.slice(k);
       if(addr(a) && greet(z) || greet(a) && addr(z)) add([...z, ...a]);
     }
+  });
+  const LN_YISI_NOT = new Set(['你', '您', '我', '他', '她', '它', '你們', '我們', '他們', '她們', '這', '那', '這樣', '那樣']);
+  each(w => {   // 這個字是什麼意思 ↔ 這個字意思是什麼: what something means, asked either way
+    const n = w.length, end = (...x) => n > x.length && x.every((y, j) => w[n - x.length + j] === y);
+    if(LN_YISI_NOT.has(w[n - 4])) return;   // 你是什麼意思 / 你這是什麼意思 (what do you mean): only the one way
+    if(end('是', '什麼', '意思')) add([...w.slice(0, n - 3), '意思', '是', '什麼']);
+    if(end('意思', '是', '什麼') && w[n - 4] !== '的') add([...w.slice(0, n - 3), '是', '什麼', '意思']);
   });
   each(w => {   // V 給 X ↔ 給 X V
     for(let i = 0; i < w.length; i++) for(const v of LN_GEI_V){
