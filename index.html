@@ -8845,7 +8845,8 @@ function lsBearPlace(anchor){
     if(b.dataset.m === 'talk'){ if(replay) replay(); if(mc) mc.replay(); return; }   // talking: the sound and the mouth start over
     if(replay && LS.listen && (!m || m === 'idle')){ replay(); return; }   // a new word or a listening question: the sound again
     if(!mc || mc._raf) return;   // still moving: let it finish (only the voice starts over)
-    if(m === 'happy'){   // a right answer (or the lesson's end, once its show is over): one hop a tap, every third the rocket hop
+    if(m === 'happy' && LS.done && LS.stars === 1){ if(mc.getAttribute('pose') !== 'waving') mc.setAttribute('pose', 'waving'); else mc.replay(); }   // one star: a tap waves again, as at the end
+    else if(m === 'happy'){   // a right answer (or the lesson's end, once its show is over): one hop a tap, every third the rocket hop
       const key = LS.done ? 'end' : LS.step + '/' + LS.qi; if(b._tapKey !== key){ b._tapKey = key; b._taps = 0; }
       if(++b._taps % 3 === 0) mc.dataset.rocket = '1';
       delete mc.dataset.hops; delete mc.dataset.fire;
