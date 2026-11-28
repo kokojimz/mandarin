@@ -789,6 +789,7 @@
   .ls-gx > div{ flex:1; min-width:0; }
   .ls-gplay{ flex:none; width:44px; height:44px; margin:-6px -8px -6px 0; padding:0; border:0; background:transparent; color:var(--sub); font-size:1.05rem; line-height:1; display:flex; align-items:center; justify-content:center; cursor:pointer; -webkit-tap-highlight-color:transparent; outline:0; }   /* the flashcard's ▶︎, on the right, halfway down */
   .ls-gplay.playing{ font-size:.9rem; }
+  .ls-gplay:disabled{ opacity:.35; cursor:default; }   /* another example is playing */
   .ln-node.grammar .ln-seal{ font-size:1.15rem; font-weight:600; }
   .ls-sent{ font-size:1.65rem; line-height:1.6; text-align:center; margin:14px 4px 4px; }
   .ls-tw{ color:var(--accent); font-weight:inherit; }
@@ -4600,24 +4601,16 @@ function speak(text, btn, after, started){   // after: once the speech has ended
   // an online voice that did not start before (Edge's "Online (Natural)" voices): the computer's own voice straight away
   const localOf = x => VOICES.find(y => y !== x && y.localService && isMandarin(y));
   const v = picked && picked.localService === false && speak.badOnline && localOf(picked) || picked;
-  const done = ()=>{ if(!(btn && playingBtn === btn && seq !== speakSeq)){ setIdle(btn); if(playingBtn === btn) playingBtn = null; }   // (the same ▶︎ playing again since: it stays ■)
-    if(after){ const f = after; after = null; f(); } };
-  let t0 = 0, ended = false; const seq = ++speakSeq, tCall = performance.now();
-  // iPhone sends an end (or error) now and then while the voice is still heard (after another voice): the ■ would turn back
-  // to ▶︎ too soon. An end waits until the voice no longer speaks and three quarters of the time this text takes have gone by
-  // (from the voice's own pace), so the ■ stays as long as the sound (at most 15 s)
-  const expect = ([...text].filter(c => /\p{Script=Han}/u.test(c)).length * sylMs() + (text.match(/[，,。！？；、]/g) || []).length * 250) * .75;
-  const settle = f => { const now = performance.now();
-    if(seq === speakSeq && ((ss.speaking || ss.pending) || now < (t0 || tCall) + expect) && now - tCall < 15000){ setTimeout(() => settle(f), 150); return; }
-    f(); };
+  const done = ()=>{ setIdle(btn); if(playingBtn === btn) playingBtn = null; if(after){ const f = after; after = null; f(); } };
+  let t0 = 0, ended = false; const seq = ++speakSeq;
   const make = (vv = v) => {
     const u = new SpeechSynthesisUtterance(text);
     u.lang = 'zh-TW'; if(vv){ u.voice = vv; u.lang = vv.lang; }
     u.rate = 0.85;
     u.onstart = () => { t0 = performance.now(); };
     ttsOnHeard(u, () => { if(seq !== speakSeq) return; if(btn && btn === qzPlay) qzWave(); if(started){ const f = started; started = null; f(); } });   // the dots (and the bear's mouth) start with the voice, not before
-    u.onend = () => { const te = performance.now(), real = t0 && te >= t0 + expect; settle(() => { ended = true; if(real && seq === speakSeq) learnSyl(text, te - t0); done(); }); };   // (the pace learnt only from an end that came in time)   // only when heard to the end
-    u.onerror = e => { if(e && e.error === 'interrupted' && seq === speakSeq && !t0) return; settle(() => { ended = true; done(); }); };
+    u.onend = () => { ended = true; if(t0 && seq === speakSeq) learnSyl(text, performance.now() - t0); done(); };   // only when heard to the end
+    u.onerror = e => { if(e && e.error === 'interrupted' && seq === speakSeq && !t0) return; ended = true; done(); };
     speak.last = u;                                   // held, or Chrome may drop it before it ends
     return u;
   };
@@ -4630,8 +4623,8 @@ function speak(text, btn, after, started){   // after: once the speech has ended
     if(t0 || ended || seq !== speakSeq) return;
     const local = online && localOf(v);
     if(local) speak.badOnline = true;                // for the rest of this visit: no more waiting for it
-    try{ if(ss.speaking || ss.pending) ss.cancel(); ss.resume(); ss.speak(make(local || v)); }catch(e){ done(); }   // (a cancel just before would drop it again on iPhone)
-    setTimeout(() => { if(!t0 && !ended && seq === speakSeq) settle(() => { ended = true; done(); }); }, 4000);   // still nothing: give up quietly
+    try{ ss.cancel(); ss.resume(); ss.speak(make(local || v)); }catch(e){ done(); }
+    setTimeout(() => { if(!t0 && !ended && seq === speakSeq){ ended = true; done(); } }, 4000);   // still nothing: give up quietly
   }, online ? 2500 : 1500);
 }
 
@@ -8603,7 +8596,12 @@ function lsGramIntro(g){
   lsBody.innerHTML = `<div class="ls-tag">${tx('Grammar')}</div><div class="ls-gz" lang="zh-TW">${esc(L ? g.zhen || g.zh : g.zh)}</div><div class="ls-gt">${esc(g.t[L])}</div>
     <div class="ls-gd">${esc(g.d[L])}</div>
     <div class="ls-gex">${g.ex.map((x, i) => `<div class="ls-gx"><div><div class="h" lang="zh-TW">${hl(x[0])}</div><div class="p">${esc(exPy({hz: x[0], py: dictSentPy(x[0], x[1])}))}</div><div class="m">${esc(L ? x[3] : x[2])}</div></div>${lsCanHear() ? `<button type="button" class="ls-gplay" data-i="${i}" aria-label="${escAttr(tx('Play'))}">${PLAY_IC}</button>` : ''}</div>`).join('')}</div>`;
-  lsBody.querySelectorAll('.ls-gplay').forEach(b => b.onclick = () => { if(b.classList.contains('playing')) stopSpeech(); else lsSay(g.ex[+b.dataset.i][0], b); });   // ▶︎ plays, ■ stops (as on the cards)
+  const gps = [...lsBody.querySelectorAll('.ls-gplay')];
+  gps.forEach(b => {
+    b.onclick = () => { if(b.classList.contains('playing')) stopSpeech(); else lsSay(g.ex[+b.dataset.i][0], b); };   // ▶︎ plays, ■ stops (as on the cards)
+    // while one plays the others are off; they come back when it is stopped or ends (its ■ turns back to ▶︎)
+    new MutationObserver(() => { const on = b.classList.contains('playing'); gps.forEach(o => { if(o !== b) o.disabled = on; }); }).observe(b, {attributes: true, attributeFilter: ['class']});
+  });
   lsSetGo(tx('Continue'));
   LS.answered = true;
 }
