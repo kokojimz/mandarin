@@ -4601,7 +4601,7 @@ function speak(text, btn, after, started){   // after: once the speech has ended
   const localOf = x => VOICES.find(y => y !== x && y.localService && isMandarin(y));
   const v = picked && picked.localService === false && speak.badOnline && localOf(picked) || picked;
   const done = ()=>{ setIdle(btn); if(playingBtn === btn) playingBtn = null; if(after){ const f = after; after = null; f(); } };
-  let t0 = 0, ended = false; const seq = ++speakSeq;
+  let t0 = 0, ended = false, again = false; const seq = ++speakSeq;
   const make = (vv = v) => {
     const u = new SpeechSynthesisUtterance(text);
     u.lang = 'zh-TW'; if(vv){ u.voice = vv; u.lang = vv.lang; }
@@ -4609,7 +4609,7 @@ function speak(text, btn, after, started){   // after: once the speech has ended
     u.onstart = () => { t0 = performance.now(); };
     ttsOnHeard(u, () => { if(seq !== speakSeq) return; if(btn && btn === qzPlay) qzWave(); if(started){ const f = started; started = null; f(); } });   // the dots (and the bear's mouth) start with the voice, not before
     u.onend = () => { ended = true; if(t0 && seq === speakSeq) learnSyl(text, performance.now() - t0); done(); };   // only when heard to the end
-    u.onerror = e => { if(e && e.error === 'interrupted' && seq === speakSeq && !t0) return; ended = true; done(); };
+    u.onerror = () => { if(seq === speakSeq && !t0){ if(!again){ again = true; setTimeout(() => { if(seq === speakSeq && !t0 && !ended) try{ ss.speak(make()); }catch(e){} }, 60); } return; } ended = true; done(); };   // not started yet and still the one asked for: the stuck-voice check below says it again (iPhone drops a voice asked for right after another was stopped)
     speak.last = u;                                   // held, or Chrome may drop it before it ends
     return u;
   };
@@ -4622,7 +4622,8 @@ function speak(text, btn, after, started){   // after: once the speech has ended
     if(t0 || ended || seq !== speakSeq) return;
     const local = online && localOf(v);
     if(local) speak.badOnline = true;                // for the rest of this visit: no more waiting for it
-    try{ ss.cancel(); ss.resume(); ss.speak(make(local || v)); }catch(e){ done(); }
+    again = true;   // this is the one more try: the old one's error (from this cancel) must not ask for another
+    try{ if(ss.speaking || ss.pending) ss.cancel(); ss.resume(); ss.speak(make(local || v)); }catch(e){ done(); }   // (a cancel just before would drop it again on iPhone)
     setTimeout(() => { if(!t0 && !ended && seq === speakSeq){ ended = true; done(); } }, 4000);   // still nothing: give up quietly
   }, online ? 2500 : 1500);
 }
