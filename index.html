@@ -4600,16 +4600,20 @@ function speak(text, btn, after, started){   // after: once the speech has ended
   // an online voice that did not start before (Edge's "Online (Natural)" voices): the computer's own voice straight away
   const localOf = x => VOICES.find(y => y !== x && y.localService && isMandarin(y));
   const v = picked && picked.localService === false && speak.badOnline && localOf(picked) || picked;
-  const done = ()=>{ setIdle(btn); if(playingBtn === btn) playingBtn = null; if(after){ const f = after; after = null; f(); } };
-  let t0 = 0, ended = false, again = false; const seq = ++speakSeq;
+  const done = ()=>{ if(!(btn && playingBtn === btn && seq !== speakSeq)){ setIdle(btn); if(playingBtn === btn) playingBtn = null; }   // (the same ▶︎ playing again since: it stays ■)
+    if(after){ const f = after; after = null; f(); } };
+  let t0 = 0, ended = false; const seq = ++speakSeq, tCall = performance.now();
+  // iPhone: when one voice is stopped for the next, the old one's end can come to the new one while it is still heard. An end
+  // while the voice still speaks waits for it to stop, so the ■ stays as long as the sound (at most 15 s)
+  const settle = f => { if(seq === speakSeq && (ss.speaking || ss.pending) && performance.now() - tCall < 15000){ setTimeout(() => settle(f), 200); return; } f(); };
   const make = (vv = v) => {
     const u = new SpeechSynthesisUtterance(text);
     u.lang = 'zh-TW'; if(vv){ u.voice = vv; u.lang = vv.lang; }
     u.rate = 0.85;
     u.onstart = () => { t0 = performance.now(); };
     ttsOnHeard(u, () => { if(seq !== speakSeq) return; if(btn && btn === qzPlay) qzWave(); if(started){ const f = started; started = null; f(); } });   // the dots (and the bear's mouth) start with the voice, not before
-    u.onend = () => { ended = true; if(t0 && seq === speakSeq) learnSyl(text, performance.now() - t0); done(); };   // only when heard to the end
-    u.onerror = () => { if(seq === speakSeq && !t0){ if(!again){ again = true; setTimeout(() => { if(seq === speakSeq && !t0 && !ended) try{ ss.speak(make()); }catch(e){} }, 60); } return; } ended = true; done(); };   // not started yet and still the one asked for: the stuck-voice check below says it again (iPhone drops a voice asked for right after another was stopped)
+    u.onend = () => settle(() => { ended = true; if(t0 && seq === speakSeq) learnSyl(text, performance.now() - t0); done(); });   // only when heard to the end
+    u.onerror = e => { if(e && e.error === 'interrupted' && seq === speakSeq && !t0) return; settle(() => { ended = true; done(); }); };
     speak.last = u;                                   // held, or Chrome may drop it before it ends
     return u;
   };
@@ -4622,7 +4626,6 @@ function speak(text, btn, after, started){   // after: once the speech has ended
     if(t0 || ended || seq !== speakSeq) return;
     const local = online && localOf(v);
     if(local) speak.badOnline = true;                // for the rest of this visit: no more waiting for it
-    again = true;   // this is the one more try: the old one's error (from this cancel) must not ask for another
     try{ if(ss.speaking || ss.pending) ss.cancel(); ss.resume(); ss.speak(make(local || v)); }catch(e){ done(); }   // (a cancel just before would drop it again on iPhone)
     setTimeout(() => { if(!t0 && !ended && seq === speakSeq){ ended = true; done(); } }, 4000);   // still nothing: give up quietly
   }, online ? 2500 : 1500);
